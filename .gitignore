@@ -1,0 +1,29 @@
+/node_modules
+/.vagrant
+
+__pycache__
+*.egg-info
+*.egg
+/build
+/dist
+
+.python-version
+.coverage
+
+*.DS_Store
+*thumb
+*~
+
+# sublime
+/*.sublime-settings
+/*.sublime-project
+/*.sublime-workspace
+
+# vim
+*.swo
+*.swp
+
+# other IDEs
+/.codeintel
+/.ropeproject
+/.idea

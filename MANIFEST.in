@@ -1,0 +1,6 @@
+include README.rst
+include setup.cfg
+include tests/*.py
+include doc/*.rst
+include doc/conf.py
+include doc/Makefile
