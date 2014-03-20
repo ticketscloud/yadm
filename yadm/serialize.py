@@ -9,5 +9,8 @@ def to_mongo(document, exclude=(), include=None):
     else:
         return {k: v for k, v in result.items() if (k not in exclude and k in include)}
 
-def from_mongo(document_class, data):
-    return structures.from_dict(document_class, data)
+
+def from_mongo(document_class, data, clear_fields_changed=True):
+    doc = structures.from_dict(document_class, data)
+    doc.__fields_changed__.clear()
+    return doc
