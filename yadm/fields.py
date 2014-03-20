@@ -1,7 +1,9 @@
 from bson import ObjectId
 import structures
 
-from yadm.descriptors import DatabaseFieldDescriptor
+
+class DatabaseFieldDescriptor(structures.descriptors.FieldDescriptor):
+    pass
 
 
 class DatabaseFieldMixin:
