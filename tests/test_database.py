@@ -72,6 +72,7 @@ class DatabaseSaveTest(BaseDatabaseTest):
         self.assertEqual(self.db.db.testdocs.find().count(), 1)
         self.assertEqual(self.db.db.testdocs.find()[0]['i'], 13)
         self.assertFalse(td.__fields_changed__)
+        self.assertIs(td.__db__, self.db)
 
     def test_save_new(self):
         td = self.TestDoc()
@@ -82,6 +83,7 @@ class DatabaseSaveTest(BaseDatabaseTest):
         self.assertEqual(self.db.db.testdocs.find().count(), 1)
         self.assertEqual(self.db.db.testdocs.find()[0]['i'], 13)
         self.assertFalse(td.__fields_changed__)
+        self.assertIs(td.__db__, self.db)
 
     def test_save(self):
         col = self.db.db.testdocs
@@ -95,3 +97,4 @@ class DatabaseSaveTest(BaseDatabaseTest):
         self.assertEqual(self.db.db.testdocs.find().count(), 1)
         self.assertEqual(self.db.db.testdocs.find()[0]['i'], 26)
         self.assertFalse(td.__fields_changed__)
+        self.assertIs(td.__db__, self.db)

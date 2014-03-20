@@ -23,6 +23,7 @@ class Database:
     def insert(self, document):
         ret = self._get_collection(document).insert(to_mongo(document))
         document.__fields_changed__.clear()
+        document.__db__ = self
         return ret
 
     def save(self, document, upsert=False):
@@ -38,6 +39,7 @@ class Database:
                 multi=False,
             )
             document.__fields_changed__.clear()
+            document.__db__ = self
             return ret
         else:
             return self.insert(document)

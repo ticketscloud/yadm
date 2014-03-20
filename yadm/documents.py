@@ -4,10 +4,13 @@ from yadm.fields import ObjectIdField
 
 
 class BaseDocument(Structure):
-    __collection__ = None
+    pass
 
 
 class Document(BaseDocument):
+    __collection__ = None
+    __db__ = None
+
     _id = ObjectIdField
 
     @property

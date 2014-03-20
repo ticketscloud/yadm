@@ -12,6 +12,11 @@ class DocumentsTest(TestCase):
 
         self.TestDoc = TestDoc
 
+    def test__db(self):
+        td = self.TestDoc()
+        self.assertIs(td.__db__, None)
+
+
     def test_fields(self):
         print(self.TestDoc.i)
         self.assertEqual(set(self.TestDoc.__fields__), {'_id', 'i', 'b'})

@@ -17,20 +17,33 @@ class QuerySet:
         return self.count()
 
     def __iter__(self):
-        return (from_mongo(self._document_class, i) for i in self._cursor)
+        return self._from_mongo_list(self._cursor)
 
     def __getitem__(self, item):
         if isinstance(item, slice):
-            return (from_mongo(self._document_class, i) for i in self._cursor[slice])
+            return self._from_mongo_list(self._cursor[slice])
 
         elif isinstance(item, int):
-            return from_mongo(self._document_class, self._cursor[item])
+            return self._from_mongo_one(self._cursor[item])
 
         else:
             raise TypeError('Only slice or int accepted')
 
     def __call__(self, criteria=None, projection=None):
         return self.find(criteria, projection)
+
+    def _from_mongo_one(self, data):
+        """ Create document from raw data
+        """
+        doc = from_mongo(self._document_class, data)
+        doc.__db__ = self._db
+        return doc
+
+    def _from_mongo_list(self, data):
+        """ Generator for got documents from raw data list (cursor)
+        """
+        for d in data:
+            yield self._from_mongo_one(d)
 
     @property
     def _collection(self):
@@ -109,7 +122,7 @@ class QuerySet:
         qs = self.copy(criteria=criteria, projection=projection)
         collection = qs._db._get_collection(qs._document_class)
         data = collection.find_one(qs._criteria, qs._projection)
-        return from_mongo(qs._document_class, data)
+        return self._from_mongo_one(data)
 
     def with_id(self, id):
         """ Find document with id
@@ -117,7 +130,7 @@ class QuerySet:
         doc = self._document_class()
         doc._id = id
         data = self._collection.find_one({'_id': doc._id})
-        return from_mongo(self._document_class, data)
+        return self._from_mongo_one(data)
 
     def update(self, update, multi=True):
         """ Update documents in queryset
