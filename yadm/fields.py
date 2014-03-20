@@ -1,9 +1,13 @@
 from bson import ObjectId
 import structures
 
+from yadm.descriptors import DatabaseFieldDescriptor
+
 
 class DatabaseFieldMixin:
-    pass
+    def contribute_to_structure(self, structure, name):
+        super().contribute_to_structure(structure, name)
+        setattr(structure, name, DatabaseFieldDescriptor(name, self))
 
 
 class ObjectIdField(DatabaseFieldMixin, structures.SimpleField):
