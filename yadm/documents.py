@@ -3,9 +3,11 @@ from structures import Structure
 from yadm.fields import ObjectIdField
 
 
-class Document(Structure):
+class BaseDocument(Structure):
     __collection__ = None
 
+
+class Document(BaseDocument):
     _id = ObjectIdField
 
     @property
