@@ -3,6 +3,8 @@ from yadm.serialize import to_mongo
 
 
 class Database:
+    """ Main object for work with database
+    """
     def __init__(self, client, name):
         self.client = client
         self.name = name
@@ -14,20 +16,30 @@ class Database:
     def __call__(self, *args, **kwargs):
         return self.get_queryset(*args, **kwargs)
 
-    def _get_collection(self, document):
-        return self.db[document.__collection__]
+    def _get_collection(self, document_class):
+        """ Return pymongo collection for document class
+        """
+        return self.db[document_class.__collection__]
 
-    def get_queryset(self, document):
-        return QuerySet(self, document)
+    def get_queryset(self, document_class):
+        """ Return queryset for document class
+        """
+        return QuerySet(self, document_class)
 
     def insert(self, document):
-        ret = self._get_collection(document).insert(to_mongo(document))
-        document.__fields_changed__.clear()
+        """ Insert document to database
+        """
         document.__db__ = self
-        return ret
+        document._id = self._get_collection(document).insert(to_mongo(document))
+        document.__fields_changed__.clear()
+        return document
 
     def save(self, document, upsert=False):
+        """ Save document to database
+        """
         if hasattr(document, '_id'):
+            document.__db__ = self
+
             ret = self._get_collection(document).update(
                 {'_id': document.id},
                 {'$set': to_mongo(
@@ -39,7 +51,6 @@ class Database:
                 multi=False,
             )
             document.__fields_changed__.clear()
-            document.__db__ = self
-            return ret
+            return document
         else:
             return self.insert(document)
