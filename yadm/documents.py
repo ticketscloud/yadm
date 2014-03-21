@@ -4,7 +4,11 @@ from yadm.fields import ObjectIdField
 
 
 class BaseDocument(Structure):
-    pass
+    def __str__(self):
+        return self(id(self))
+
+    def __repr__(self):
+        return '{}({})'.format(self.__class__.name, str(self))
 
 
 class Document(BaseDocument):
@@ -12,6 +16,9 @@ class Document(BaseDocument):
     __db__ = None
 
     _id = ObjectIdField
+
+    def __str__(self):
+        return 'collection: "{}"'.format(self.__collection__)
 
     @property
     def id(self):
