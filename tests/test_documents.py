@@ -18,7 +18,6 @@ class DocumentsTest(TestCase):
 
 
     def test_fields(self):
-        print(self.TestDoc.i)
         self.assertEqual(set(self.TestDoc.__fields__), {'_id', 'i', 'b'})
 
     def test_inheritance_fields(self):
