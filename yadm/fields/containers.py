@@ -84,3 +84,21 @@ class ContainerField(DatabaseFieldMixin, structures.Field):
 
     def from_mongo(self, document, value):
         return NotImplemented
+
+
+class ArrayField(ContainerField):
+    container = Container
+
+    def to_mongo(self, document, value):
+        result = []
+
+        for item in value:
+            if hasattr(self.item_field, 'to_mongo'):
+                result.append(self.item_field.to_mongo(document, item))
+            else:
+                result.append(item)
+
+        return result
+
+    def from_mongo(self, document, value):
+        return self.container(document, self, value)
