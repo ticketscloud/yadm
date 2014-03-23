@@ -1,7 +1,7 @@
 from yadm.fields.containers import (
     ContainerDescriptor,
     Container,
-    ContainerField,
+    ArrayField,
 )
 
 
@@ -61,7 +61,7 @@ class List(Container):
             self._load_from_mongo(getattr(doc, self._field_name))
 
 
-class ListField(ContainerField):
+class ListField(ArrayField):
     """ Field for list values
 
     For example, document with list of integers:
@@ -70,20 +70,8 @@ class ListField(ContainerField):
             __collection__ = 'testdoc'
             li = fields.ListField(fields.IntegerField())
     """
+    container = List
+
     @property
     def default(self):
         return []
-
-    def to_mongo(self, document, value):
-        result = []
-
-        for item in value:
-            if hasattr(self.item_field, 'to_mongo'):
-                result.append(self.item_field.to_mongo(document, item))
-            else:
-                result.append(item)
-
-        return result
-
-    def from_mongo(self, document, value):
-        return List(document, self, value)
