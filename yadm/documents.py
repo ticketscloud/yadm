@@ -8,7 +8,7 @@ class BaseDocument(Structure):
         return self(id(self))
 
     def __repr__(self):
-        return '{}({})'.format(self.__class__.name, str(self))
+        return '{}({})'.format(self.__class__.__name__, str(self))
 
 
 class Document(BaseDocument):
