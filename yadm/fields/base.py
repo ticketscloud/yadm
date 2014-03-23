@@ -13,9 +13,11 @@ class DatabaseFieldDescriptor(structures.descriptors.FieldDescriptor):
 
 
 class DatabaseFieldMixin:
+    descriptor_class = DatabaseFieldDescriptor
+
     def contribute_to_structure(self, structure, name):
         super().contribute_to_structure(structure, name)
-        setattr(structure, name, DatabaseFieldDescriptor(name, self))
+        setattr(structure, name, self.descriptor_class(name, self))
 
 
 class ObjectIdField(DatabaseFieldMixin, structures.SimpleField):
