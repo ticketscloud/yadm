@@ -8,4 +8,5 @@ from yadm.fields.base import (
     StringField,
 )
 
+from yadm.fields.list import ListField
 from yadm.fields.reference import ReferenceField
