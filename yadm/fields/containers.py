@@ -49,7 +49,7 @@ class Container:
     def _set_changed(self):
         """ Add field to __fields_changed__
         """
-        self._document.__fields_changed__.append(self._field_name)  # set!
+        self._document.__fields_changed__.add(self._field_name)  # set!
 
     def __iter__(self):
         return (i for i in self._data)
