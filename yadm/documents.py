@@ -5,7 +5,7 @@ from yadm.fields import ObjectIdField
 
 class BaseDocument(Structure):
     def __str__(self):
-        return self(id(self))
+        return str(id(self))
 
     def __repr__(self):
         return '{}({})'.format(self.__class__.__name__, str(self))
