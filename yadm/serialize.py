@@ -21,6 +21,17 @@ def to_mongo(document, exclude=(), include=None):
         else:
             result[name] = value
 
+    if include:
+        include_groups = {}
+
+        for name in (f for f in include if '.' in f):
+            first, last = name.split('.', 1)
+            include_groups.setdefault(first, set()).add(last)
+
+        for name, subinclude in include_groups.items():
+            edoc = getattr(document, name)
+            result[name] = to_mongo(edoc, include=subinclude)
+
     return result
 
 
