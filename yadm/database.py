@@ -45,7 +45,8 @@ class Database:
                 {'$set': to_mongo(
                     document,
                     exclude=['_id'],
-                    include=document.__fields_changed__),
+                    include=document.__fields__.keys()),
+                    # include=document.__fields_changed__),  # must be!
                 },
                 upsert=upsert,
                 multi=False,

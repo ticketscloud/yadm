@@ -4,6 +4,12 @@ from yadm.fields import ObjectIdField
 
 
 class BaseDocument(Structure):
+    def __init__(self, **kwargs):
+        super().__init__()
+
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
     def __str__(self):
         return str(id(self))
 
@@ -31,3 +37,7 @@ class Document(BaseDocument):
     @id.deleter
     def id(self, id):
         del self._id
+
+
+class EmbeddedDocument(BaseDocument):
+    pass
