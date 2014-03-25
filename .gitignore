@@ -1,6 +1,8 @@
 /node_modules
 /.vagrant
 
+/doc/html
+
 __pycache__
 *.egg-info
 *.egg

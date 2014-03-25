@@ -1,3 +1,7 @@
+"""
+Base classes for containers.
+"""
+
 import structures
 
 from yadm.fields import DatabaseFieldDescriptor, DatabaseFieldMixin
@@ -77,19 +81,43 @@ class ContainerField(DatabaseFieldMixin, structures.Field):
 
     @property
     def default(self):
+        """ Return default value
+
+        Must be implemented in field class.
+        """
         return NotImplemented
 
     def to_mongo(self, document, value):
+        """ Serialize field value to data for MongoDB
+
+        Must be implemented in field class.
+
+        :param BaseDocument document: document with this value
+        :param value: python value
+        :return: MongoDB data
+        """
         return value
 
     def from_mongo(self, document, value):
+        """ Deserialize field value from MongoDB data
+
+        Must be implemented in field class.
+
+        :param BaseDocument document: document with this value
+        :param value: MongoDB data
+        :return: python value
+        """
         return NotImplemented
 
 
 class ArrayField(ContainerField):
+    """ Base class for array containers like as lists or set
+    """
     container = Container
 
     def to_mongo(self, document, value):
+        """ See :py:meth:`ContainerField.to_mongo`
+        """
         result = []
 
         for item in value:
@@ -101,4 +129,6 @@ class ArrayField(ContainerField):
         return result
 
     def from_mongo(self, document, value):
+        """ See :py:meth:`ContainerField.from_mongo`
+        """
         return self.container(document, self, value)

@@ -1,9 +1,32 @@
+"""
+Basic documents classes for build models.
+
+It based on `structures`_.
+
+.. _structures: https://github.com/zzzsochi/structures
+
+
+.. code-block:: python
+
+    class User(Document):
+        __collection__ = 'users'
+
+        first_name = fields.StringField
+        last_name = fields.StringField
+        age = fields.IntegerField
+
+
+All fields placed in :py:mod:`yadm.fields` package.
+"""
+
 from structures import Structure
 
 from yadm.fields import ObjectIdField
 
 
 class BaseDocument(Structure):
+    """ Base class for all documents
+    """
     def __init__(self, **kwargs):
         super().__init__()
 
@@ -11,6 +34,8 @@ class BaseDocument(Structure):
             setattr(self, key, value)
 
     def __str__(self):
+        """ Implement it for pretty str and repr documents
+        """
         return str(id(self))
 
     def __repr__(self):
@@ -18,13 +43,18 @@ class BaseDocument(Structure):
 
 
 class Document(BaseDocument):
+    """ Class for build first level documents
+    """
     __collection__ = None
     __db__ = None
 
     _id = ObjectIdField
 
     def __str__(self):
-        return 'collection: "{}"'.format(self.__collection__)
+        if hasattr(self, '_id'):
+            return '{!s}:{!s}'.format(self.__collection__, self._id)
+        else:
+            return '{!s}:{no id}'.format(self.__collection__)
 
     @property
     def id(self):
@@ -40,4 +70,5 @@ class Document(BaseDocument):
 
 
 class EmbeddedDocument(BaseDocument):
-    pass
+    """ Class for build embedded documents
+    """

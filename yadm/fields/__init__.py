@@ -1,3 +1,7 @@
+"""
+This package contain all fields.
+"""
+
 from yadm.fields.base import (
     DatabaseFieldDescriptor,
     DatabaseFieldMixin,

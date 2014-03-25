@@ -4,12 +4,19 @@ Yet Another Document Mapper
 
 It's small and simple ODM for use with MongoDB.
 
+.. toctree::
+   :maxdepth: 5
+
+   database
+   documents
+   fields/index
+   serialize
 
 -----------
 Quick start
 -----------
 
-::
+.. code-block:: python
 
     import pymongo
     from yadm import Database, Document, fields
@@ -29,7 +36,7 @@ Quick start
     post.body = 'Bla-bla-bla...'
 
     # Connect to database
-    self.client = pymongo.MongoClient("localhost", 27017)
+    client = pymongo.MongoClient("localhost", 27017)
     db = Database(self.client, 'test')
 
     # Insert post to database

@@ -1,3 +1,9 @@
+"""
+Field with sets.
+
+Similar as :py:mod:`yadm.fields.list`.
+"""
+
 from yadm.fields.containers import (
     ContainerDescriptor,
     Container,
@@ -21,7 +27,9 @@ class Set(Container):
                 self._data.add(self._func(item))
 
     def add(self, item):
-        """ Append item to list
+        """ Append item to set
+
+        :param item: item for add
 
         This method does not save object!
         """
@@ -29,7 +37,9 @@ class Set(Container):
         self._set_changed()
 
     def remove(self, item):
-        """ Remove item from list
+        """ Remove item from set
+
+        :param item: item for remove
 
         This method does not save object!
         """
@@ -38,6 +48,8 @@ class Set(Container):
 
     def add_to_set(self, item):
         """ Add item directly to database
+
+        :param item: item for `$addToSet`
 
         See `$addToSet` in MongoDB's `update`.
         """
@@ -49,9 +61,10 @@ class Set(Container):
     def pull(self, query, reload=True):
         """ Pull item from database
 
-        See `$pull` in MongoDB's `update`.
+        :param query: query for `$pull` on this field
+        :param bool reload: automatically reload all values from database
 
-        :reload: automatically reload all values from database
+        See `$pull` in MongoDB's `update`.
         """
         qs = self._get_queryset()
         qs.update({'$pull': {self._field_name: query}}, multi=False)
@@ -62,13 +75,7 @@ class Set(Container):
 
 
 class SetField(ArrayField):
-    """ Field for list values
-
-    For example, document with list of integers:
-
-        class TestDoc(Document):
-            __collection__ = 'testdoc'
-            li = fields.ListField(fields.IntegerField())
+    """ Field for set values
     """
     container = Set
 

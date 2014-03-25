@@ -1,7 +1,17 @@
+"""
+Functions for serialize and deserialize data.
+"""
+
 import structures
 
 
 def to_mongo(document, exclude=(), include=None):
+    """ Serialize document to MongoDB data
+
+    :param BaseDocument document: document for serializing
+    :param list exclude: exclude fields
+    :param list include: include only fields (all by default)
+    """
     result = {}
 
     for name, field in document.__fields__.items():
@@ -36,6 +46,13 @@ def to_mongo(document, exclude=(), include=None):
 
 
 def from_mongo(document_class, data, clear_fields_changed=True):
+    """ Deserialize MongoDB data to document
+
+    :param document_class: document class
+    :param dict data: data from MongoDB
+    :param bool clear_fields_changed: clear changed flags
+        for new document (default True)
+    """
     document = document_class()
 
     for name, field in document.__fields__.items():

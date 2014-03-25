@@ -1,9 +1,37 @@
+"""
+This module for provide work with MongoDB database.
+
+.. code-block:: python
+
+    import pymongo
+    from yadm.database import Database
+
+    from mydocs import Doc
+
+    client = pymongo.MongoClient("localhost", 27017)
+    db = Database(self.client, 'test')
+
+    doc = Doc()
+    db.insert(doc)
+
+    doc.arg = 13
+    db.save(doc)
+
+    qs = db.get_queryset(Doc).find({'arg': {'$gt': 10}})
+    for doc in qs:
+        print(doc)
+
+"""
+
 from yadm.queryset import QuerySet
 from yadm.serialize import to_mongo
 
 
 class Database:
-    """ Main object for work with database
+    """ Main object who provide work with database
+
+    :param pymongo.Client client: database connection
+    :param str name: database name
     """
     def __init__(self, client, name):
         self.client = client
@@ -23,11 +51,20 @@ class Database:
 
     def get_queryset(self, document_class):
         """ Return queryset for document class
+
+        :param document_class: :class:`yadm.documents.Document`
+
+        This create instance of :class:`yadm.queryset.QuerySet`
+        with presetted document's collection information.
         """
         return QuerySet(self, document_class)
 
     def insert(self, document):
         """ Insert document to database
+
+        :param Document document: document instance for insert to database
+
+        It's set :attr:`yadm.documents.Document._id`.
         """
         document.__db__ = self
         document._id = self._get_collection(document).insert(to_mongo(document))
@@ -36,6 +73,11 @@ class Database:
 
     def save(self, document, upsert=False):
         """ Save document to database
+
+        :param Document document: document instance for save
+        :param bool upsert: see documentation for MongoDB's `update`
+
+        If document has not `id` this :meth:`insert` new document.
         """
         if hasattr(document, '_id'):
             document.__db__ = self
