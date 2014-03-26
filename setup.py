@@ -17,7 +17,7 @@ setup(
     url='https://github.com/zzzsochi/yadm',
     license='BSD',
     platforms='any',
-    install_requires=['structures', 'pymongo']
+    install_requires=['structures >= 3.0', 'pymongo'],
 
     classifiers=[
             'Development Status :: 3 - Alpha',
