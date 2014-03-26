@@ -27,5 +27,5 @@ setup(
             'Programming Language :: Python :: 3',
           ],
 
-    packages=['yadm'],
+    packages=['yadm', 'yadm.fields'],
 )
