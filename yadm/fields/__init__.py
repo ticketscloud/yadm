@@ -15,6 +15,8 @@ from yadm.fields.simple import (
     StringField,
 )
 
+from yadm.fields.datetime import DatetimeField
+
 from yadm.fields.embedded import EmbeddedDocumentField
 
 from yadm.fields.list import ListField
