@@ -67,7 +67,8 @@ class Database:
         It's set :attr:`yadm.documents.Document._id`.
         """
         document.__db__ = self
-        document._id = self._get_collection(document).insert(to_mongo(document))
+        collection = self._get_collection(document.__class__)
+        document._id = collection.insert(to_mongo(document))
         document.__fields_changed__.clear()
         return document
 
@@ -82,7 +83,7 @@ class Database:
         if hasattr(document, '_id'):
             document.__db__ = self
 
-            ret = self._get_collection(document).update(
+            self._get_collection(document).update(
                 {'_id': document.id},
                 {'$set': to_mongo(
                     document,
