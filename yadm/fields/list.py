@@ -5,7 +5,7 @@ List of objects
 
     class Doc(Document):
         __collection__ = 'docs'
-        integers = fields.List(fields.IntegerField)
+        integers = fields.ListField(fields.IntegerField)
 
     doc = Doc()
     doc.integers.append(1)
@@ -37,9 +37,7 @@ List of objects
 
 """
 
-
 from yadm.fields.containers import (
-    ContainerDescriptor,
     Container,
     ArrayField,
 )
@@ -56,7 +54,7 @@ class List(Container):
 
         for item in data:
             if hasattr(self._field.item_field, 'from_mongo'):
-                self._data.append(self._field.item_field.from_mongo(item))
+                self._data.append(self._field.item_field.from_mongo(None, item))
             else:
                 self._data.append(self._func(item))
 
