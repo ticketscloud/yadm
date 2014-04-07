@@ -5,7 +5,6 @@ Similar as :py:mod:`yadm.fields.list`.
 """
 
 from yadm.fields.containers import (
-    ContainerDescriptor,
     Container,
     ArrayField,
 )
@@ -22,7 +21,7 @@ class Set(Container):
 
         for item in data:
             if hasattr(self._field.item_field, 'from_mongo'):
-                self._data.add(self._field.item_field.from_mongo(item))
+                self._data.add(self._field.item_field.from_mongo(None, item))
             else:
                 self._data.add(self._func(item))
 
