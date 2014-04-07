@@ -21,7 +21,7 @@ class Set(Container):
 
         for item in data:
             if hasattr(self._field.item_field, 'from_mongo'):
-                self._data.add(self._field.item_field.from_mongo(None, item))
+                self._data.add(self._field.item_field.from_mongo(self._document, item))
             else:
                 self._data.add(self._func(item))
 

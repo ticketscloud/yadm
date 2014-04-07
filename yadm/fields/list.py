@@ -54,7 +54,7 @@ class List(Container):
 
         for item in data:
             if hasattr(self._field.item_field, 'from_mongo'):
-                self._data.append(self._field.item_field.from_mongo(None, item))
+                self._data.append(self._field.item_field.from_mongo(self._document, item))
             else:
                 self._data.append(self._func(item))
 
