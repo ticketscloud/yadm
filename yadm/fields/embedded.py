@@ -14,9 +14,6 @@ Work with embedded documents.
     doc.edoc = EDoc()
     doc.edoc.i = 13
     db.insert(doc)
-
-
-TODO: work with lists of embedded documents
 """
 
 import structures
