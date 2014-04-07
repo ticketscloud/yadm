@@ -1,5 +1,3 @@
-from unittest import TestCase
-
 from bson import ObjectId
 
 from yadm.documents import Document
