@@ -54,7 +54,7 @@ class Document(BaseDocument):
         if hasattr(self, '_id'):
             return '{!s}:{!s}'.format(self.__collection__, self._id)
         else:
-            return '{!s}:{no id}'.format(self.__collection__)
+            return '{!s}:<empty>'.format(self.__collection__)
 
     @property
     def id(self):
