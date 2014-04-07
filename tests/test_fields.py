@@ -2,7 +2,6 @@ from unittest import TestCase
 
 from bson import ObjectId
 
-from yadm import fields
 from yadm.documents import Document
 
 

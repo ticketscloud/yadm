@@ -22,8 +22,6 @@ Work with references.
     assert doc.rdoc.i == 13
 
 
-TODO: work with lists of references
-
 TODO: many2many collections
 """
 
@@ -59,7 +57,6 @@ class ReferenceField(DatabaseFieldMixin, structures.Field):
 
         else:
             raise TypeError('value must be ObjectId, Document or dict')
-
 
     def to_mongo(self, document, value):
         from yadm.documents import Document  # recursive imports
