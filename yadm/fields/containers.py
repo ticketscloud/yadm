@@ -14,7 +14,7 @@ class ContainerDescriptor(DatabaseFieldDescriptor):
         value = super().__get__(instance, owner)
 
         if (instance is not None
-            and not isinstance(instance.__data__[self.name], self.field.__class__)):
+                and not isinstance(instance.__data__[self.name], self.field.__class__)):
 
             instance.__data__[self.name] = value
 
