@@ -16,6 +16,7 @@ from yadm.fields.simple import (
 )
 
 from yadm.fields.datetime import DatetimeField
+from yadm.fields.decimal import DecimalField
 
 from yadm.fields.embedded import EmbeddedDocumentField
 
