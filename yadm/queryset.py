@@ -95,7 +95,6 @@ class QuerySet:
         if 'sort' in kwargs and kwargs['sort'] is not None:
             self._sort.extend(kwargs['sort'])
 
-
     def copy(self, **kwargs):
         """ Copy queryset and update it
 

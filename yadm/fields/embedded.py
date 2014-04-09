@@ -16,8 +16,6 @@ Work with embedded documents.
     db.insert(doc)
 """
 
-import structures
-
 from yadm.fields.base import Field
 from yadm.serialize import to_mongo
 
@@ -37,7 +35,7 @@ class EmbeddedDocumentField(Field):
             return value
         else:
             raise TypeError('Only {!r} or dict is alowed, but {!r} given'
-                ''.format(self.embedded_document_class, type(value)))
+                            ''.format(self.embedded_document_class, type(value)))
 
     def to_mongo(self, document, value):
         return to_mongo(value)

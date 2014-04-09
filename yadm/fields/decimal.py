@@ -37,8 +37,8 @@ class DecimalField(Field):
     :param decimal.Decimal default:
     """
     def __init__(self, context=None, default=structures.markers.NoDefault):
-        super().__init__(default=default)
         self.context = context
+        super().__init__(default=default)
 
     @property
     def context(self):

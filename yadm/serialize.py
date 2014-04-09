@@ -2,8 +2,6 @@
 Functions for serialize and deserialize data.
 """
 
-import structures
-
 
 def to_mongo(document, exclude=(), include=None):
     """ Serialize document to MongoDB data
