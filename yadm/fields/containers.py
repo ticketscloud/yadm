@@ -2,8 +2,6 @@
 Base classes for containers.
 """
 
-import structures
-
 from yadm.fields import DatabaseFieldDescriptor, Field
 
 
@@ -77,6 +75,9 @@ class ContainerField(Field):
     descriptor_class = ContainerDescriptor
 
     def __init__(self, item_field):
+        if isinstance(item_field, type):
+            item_field = item_field()
+
         self.item_field = item_field
 
     @property

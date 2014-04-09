@@ -8,20 +8,42 @@ import structures
 from yadm.fields.base import Field
 
 
-class ObjectIdField(Field):
+class SimpleField(Field):
+    """ Base field for simple types
+
+    :param default: default value
+    :param set choices: set of possible values
+    """
+    type = NotImplemented
+    choices = None
+
+    def __init__(self, default=structures.markers.NoDefault, choices=None):
+        if self.type is NotImplemented:
+            raise ValueError('Attribute "type" not implemented!')
+
+        self.choices = choices
+
+        super().__init__(default)
+
+    def func(self, value):
+        if not isinstance(value, self.type):
+            value = self.type(value)
+
+        if self.choices is not None and value not in self.choices:
+            raise ValueError('value not in choices: {!r}'.format(value))
+
+        return value
+
+
+class ObjectIdField(SimpleField):
     """ Field for ObjectId
 
     :param bool default_gen: generate default value if not set
     """
-    @staticmethod
-    def func(value):
-        if isinstance(value, ObjectId):
-            return value
-        else:
-            return ObjectId(value)
+    type = ObjectId
 
-    def __init__(self, default_gen=False):
-        super().__init__()
+    def __init__(self, default_gen=False, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.default_gen = default_gen
 
     @property
@@ -30,25 +52,6 @@ class ObjectIdField(Field):
             return ObjectId()
         else:
             return structures.markers.NoDefault
-
-
-class SimpleField(Field):
-    """ Base field for simple types
-    """
-    type = NotImplemented
-
-    def __init__(self, default=structures.markers.NoDefault):
-        if self.type is NotImplemented:
-            raise ValueError('Attribute "type" not implemented!')
-
-        super().__init__(default)
-
-    @classmethod
-    def func(cls, value):
-        if isinstance(value, cls.type):
-            return value
-        else:
-            return cls.type(value)
 
 
 class BooleanField(SimpleField):
