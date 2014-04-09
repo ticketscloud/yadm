@@ -17,14 +17,17 @@ class DatabaseFieldDescriptor(structures.descriptors.FieldDescriptor):
             return value
 
 
-class DatabaseFieldMixin:
-    """ Mixin for mix with stricture's Field
+class Field(structures.Field):
+    """ Base field for all batabase fields
 
     .. py:attribute:: descriptor_class
 
         Class of desctiptor for work with field
     """
     descriptor_class = DatabaseFieldDescriptor
+
+    def __init__(self, default=structures.markers.NoDefault):
+        super().__init__(self.func, default)
 
     def contribute_to_structure(self, structure, name):
         super().contribute_to_structure(structure, name)

@@ -2,17 +2,17 @@ import datetime
 
 import structures.fields_datetime
 
-from yadm.fields.base import DatabaseFieldMixin
+from yadm.fields.base import Field
 
 
-class DatetimeField(DatabaseFieldMixin, structures.fields_datetime.DateTime):
+class DatetimeField(Field, structures.fields_datetime.DateTime):
     """ Field for time stamp
 
     :param bool auto_now: datetime.now as default
         (default: False)
     """
     def __init__(self, auto_now=False):
-        super().__init__()
+        super(Field, self).__init__()
         self.auto_now = auto_now
 
     @property

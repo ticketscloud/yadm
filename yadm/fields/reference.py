@@ -26,13 +26,12 @@ TODO: many2many collections
 """
 
 from bson import ObjectId
-import structures
 
 from yadm.serialize import from_mongo
-from yadm.fields import DatabaseFieldMixin
+from yadm.fields import Field
 
 
-class ReferenceField(DatabaseFieldMixin, structures.Field):
+class ReferenceField(Field):
     """ Field for work with references
 
     :param document_class: class for refered documents

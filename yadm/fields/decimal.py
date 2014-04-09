@@ -26,10 +26,10 @@ from functools import reduce
 
 import structures
 
-from yadm.fields.base import DatabaseFieldMixin
+from yadm.fields.base import Field
 
 
-class DecimalField(DatabaseFieldMixin, structures.Field):
+class DecimalField(Field):
     """ Field for work with :class:`decimal.Decimal`
 
     :param decimal.Context context: context for decimal operations
@@ -37,7 +37,7 @@ class DecimalField(DatabaseFieldMixin, structures.Field):
     :param decimal.Decimal default:
     """
     def __init__(self, context=None, default=structures.markers.NoDefault):
-        super().__init__(self.func, default=default)
+        super().__init__(default=default)
         self.context = context
 
     @property

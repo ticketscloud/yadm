@@ -18,11 +18,11 @@ Work with embedded documents.
 
 import structures
 
-from yadm.fields.base import DatabaseFieldMixin
+from yadm.fields.base import Field
 from yadm.serialize import to_mongo
 
 
-class EmbeddedDocumentField(DatabaseFieldMixin, structures.Field):
+class EmbeddedDocumentField(Field):
     """ Field for embedded objects
 
     :param EmbeddedDocument embedded_document_class: class for embedded document

@@ -4,7 +4,7 @@ Base classes for containers.
 
 import structures
 
-from yadm.fields import DatabaseFieldDescriptor, DatabaseFieldMixin
+from yadm.fields import DatabaseFieldDescriptor, Field
 
 
 class ContainerDescriptor(DatabaseFieldDescriptor):
@@ -71,7 +71,7 @@ class Container:
         return self._data == other
 
 
-class ContainerField(DatabaseFieldMixin, structures.Field):
+class ContainerField(Field):
     """ Base class for container fields
     """
     descriptor_class = ContainerDescriptor
