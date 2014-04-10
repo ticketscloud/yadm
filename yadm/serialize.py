@@ -2,6 +2,8 @@
 Functions for serialize and deserialize data.
 """
 
+from yadm.markers import NotLoaded
+
 
 def to_mongo(document, exclude=(), include=None):
     """ Serialize document to MongoDB data
@@ -62,6 +64,9 @@ def from_mongo(document_class, data, clear_fields_changed=True):
                 setattr(document, name, field_data)
             else:
                 setattr(document, name, value)
+
+        else:
+            document.__data__[name] = NotLoaded
 
     if clear_fields_changed:
         document.__fields_changed__.clear()

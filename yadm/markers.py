@@ -1,2 +1,5 @@
-AttributeNotSet = type('AttributeNotSet', (), {})
-NoDefault = type('NoDefault', (), {})
+Marker = type('Marker', (), {})
+
+AttributeNotSet = type('AttributeNotSet', (Marker,), {})
+NoDefault = type('NoDefault', (Marker,), {})
+NotLoaded = type('NotLoaded', (Marker,), {})

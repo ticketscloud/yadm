@@ -2,7 +2,7 @@
 Base classes for build database fields.
 """
 
-from yadm.markers import AttributeNotSet, NoDefault
+from yadm.markers import AttributeNotSet, NoDefault, NotLoaded
 
 
 class FieldDescriptor(object):
@@ -22,6 +22,11 @@ class FieldDescriptor(object):
 
             if value is AttributeNotSet or value is NoDefault:
                 raise AttributeError(self.name)
+
+            elif value is NotLoaded:
+                value = self.load_deferred(instance)
+                instance.__data__[self.name] = value
+                return value
 
             elif hasattr(self.field, 'from_mongo'):
                 return self.field.from_mongo(instance, value)
@@ -47,6 +52,12 @@ class FieldDescriptor(object):
     def __delete__(self, instance):
         if not isinstance(instance, type):
             setattr(instance, self.name, AttributeNotSet)
+
+    def load_deferred(self, instance):
+        qs = instance.__db__.get_queryset(instance.__class__)
+        qs = qs.fields(self.name)
+        doc = qs.with_id(instance.id)
+        return getattr(doc, self.name)
 
 
 class Field(object):

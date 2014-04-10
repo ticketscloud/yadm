@@ -1,10 +1,6 @@
-from unittest import TestCase
-
-from yadm.database import Database
 from yadm.documents import Document
-from yadm.queryset import QuerySet
-from yadm.serialize import from_mongo
 from yadm import fields
+from yadm.markers import NotLoaded
 
 from .test_database import BaseDatabaseTest
 
@@ -44,7 +40,7 @@ class QuerySetTest(BaseDatabaseTest):
     def test_find(self):
         qs = self.qs.find({'i': {'$gte': 6}})
         self.assertEqual(len([d for d in qs]), 4)
-        self.assertEqual(set([d.i for d in qs]), set([6, 7, 8, 9]))
+        self.assertEqual(set([d.i for d in qs]), {6, 7, 8, 9})
 
     def test_sort(self):
         qs = self.qs.find({'i': {'$gte': 6}}).sort(('i', -1))
@@ -52,17 +48,19 @@ class QuerySetTest(BaseDatabaseTest):
 
     def test_fields(self):
         doc = self.qs.fields('s').find_one({'i': 3})
+        self.assertIn('i', doc.__data__)
+        self.assertIs(doc.__data__['i'], NotLoaded)
         self.assertEqual(doc.s, 'str(3)')
-        self.assertRaises(AttributeError, getattr, doc, 'i')
 
     def test_fields_all(self):
         doc = self.qs.fields('s').fields_all().find_one({'i': 3})
+        self.assertIn('i', doc.__data__)
+        self.assertIs(doc.__data__['i'], 3)
         self.assertEqual(doc.s, 'str(3)')
         self.assertEqual(doc.i, 3)
 
-    def test_fields_all(self):
+    def test_with_id(self):
         id = self.db.db.testdocs.find_one({'i': 4}, {'_id': True})['_id']
         doc = self.qs.with_id(id)
         self.assertEqual(doc.s, 'str(4)')
         self.assertEqual(doc.i, 4)
-
