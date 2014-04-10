@@ -2,7 +2,7 @@ from setuptools import setup
 
 # python setup.py sdist --formats=bztar
 
-version = '0.3'
+version = '0.4'
 description = 'Yet Another Document Mapper (ODM) for MongoDB'
 long_description = open('README.rst', 'rb').read().decode('utf8')
 
@@ -17,15 +17,15 @@ setup(
     url='https://github.com/zzzsochi/yadm',
     license='BSD',
     platforms='any',
-    install_requires=['structures >= 3.0', 'pymongo'],
+    install_requires=['pymongo'],
 
     classifiers=[
-            'Development Status :: 3 - Alpha',
+            'Development Status :: 4 - Beta',
             'Topic :: Database',
             'Intended Audience :: Developers',
             'Operating System :: OS Independent',
             'Programming Language :: Python :: 3',
-          ],
+    ],
 
     packages=['yadm', 'yadm.fields'],
 )

@@ -28,7 +28,7 @@ class EmbeddedDocumentField(Field):
     def __init__(self, embedded_document_class):
         self.embedded_document_class = embedded_document_class
 
-    def func(self, value):
+    def prepare_value(self, value):
         if isinstance(value, dict):
             return self.embedded_document_class(**value)
         elif isinstance(value, self.embedded_document_class):

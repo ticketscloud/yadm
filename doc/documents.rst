@@ -5,6 +5,9 @@ Documents
 .. automodule:: yadm.documents
 
 
+.. autoclass:: MetaDocument(**kwargs)
+
+
 .. autoclass:: BaseDocument(**kwargs)
     :members: __str__
 

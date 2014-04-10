@@ -2,10 +2,10 @@
 Base classes for containers.
 """
 
-from yadm.fields import DatabaseFieldDescriptor, Field
+from yadm.fields import FieldDescriptor, Field
 
 
-class ContainerDescriptor(DatabaseFieldDescriptor):
+class ContainerDescriptor(FieldDescriptor):
     """ Descriptor for containers
     """
     def __get__(self, instance, owner):
@@ -28,10 +28,10 @@ class Container:
         self._field_name = field.name
         self._load_from_mongo(data)
 
-    def _func(self, item):
-        """ `func` function for `item_field`
+    def _prepare_value(self, item):
+        """ `prepare_value` function for `item_field`
         """
-        return self._field.item_field.func(item)
+        return self._field.item_field.prepare_value(item)
 
     def _load_from_mongo(self, data):
         """ Load data from pymongo

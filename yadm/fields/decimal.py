@@ -24,9 +24,8 @@ This code save to MongoDB document:
 from decimal import Decimal, getcontext
 from functools import reduce
 
-import structures
-
 from yadm.fields.base import Field
+from yadm.markers import NoDefault
 
 
 class DecimalField(Field):
@@ -36,7 +35,7 @@ class DecimalField(Field):
         (default: run :func:`decimal.getcontext` when need)
     :param decimal.Decimal default:
     """
-    def __init__(self, context=None, default=structures.markers.NoDefault):
+    def __init__(self, context=None, default=NoDefault):
         self.context = context
         super().__init__(default=default)
 
@@ -67,7 +66,7 @@ class DecimalField(Field):
 
         return reduce(reduce_func, enumerate(reversed(digits)), 0)
 
-    def func(self, value):
+    def prepare_value(self, value):
         """ Cast value to :class:`decimal.Decimal`
         """
         return Decimal(value, context=self.context)

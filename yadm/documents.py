@@ -1,11 +1,6 @@
 """
 Basic documents classes for build models.
 
-It based on `structures`_.
-
-.. _structures: https://github.com/zzzsochi/structures
-
-
 .. code-block:: python
 
     class User(Document):
@@ -19,16 +14,38 @@ It based on `structures`_.
 All fields placed in :py:mod:`yadm.fields` package.
 """
 
-from structures import Structure
+from yadm.fields.base import Field
+from yadm.fields.simple import ObjectIdField
 
-from yadm.fields import ObjectIdField
+
+class MetaDocument(type):
+    '''Metaclass for documents'''
+    def __init__(cls, name, bases, cls_dict):
+        cls.__fields__ = {}
+
+        for base in reversed(bases):
+            if hasattr(base, '__fields__'):
+                cls.__fields__.update(base.__fields__.copy())
+
+        for attr, field in cls_dict.items():
+            if isinstance(field, type) and issubclass(field, Field):
+                field = field()
+
+            if hasattr(field, 'contribute_to_class'):
+                field.contribute_to_class(cls, attr)
+
+            else:
+                setattr(cls, attr, field)
+
+        super().__init__(name, bases, cls_dict)
 
 
-class BaseDocument(Structure):
+class BaseDocument(metaclass=MetaDocument):
     """ Base class for all documents
     """
     def __init__(self, **kwargs):
-        super().__init__()
+        self.__data__ = {}
+        self.__fields_changed__ = set()
 
         for key, value in kwargs.items():
             setattr(self, key, value)

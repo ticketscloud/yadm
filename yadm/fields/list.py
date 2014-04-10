@@ -56,7 +56,7 @@ class List(Container):
             if hasattr(self._field.item_field, 'from_mongo'):
                 self._data.append(self._field.item_field.from_mongo(self._document, item))
             else:
-                self._data.append(self._func(item))
+                self._data.append(self._prepare_value(item))
 
     def append(self, item):
         """ Append item to list
@@ -65,7 +65,7 @@ class List(Container):
 
         This method does not save object!
         """
-        self._data.append(self._func(item))
+        self._data.append(self._prepare_value(item))
         self._set_changed()
 
     def remove(self, item):
@@ -85,7 +85,7 @@ class List(Container):
 
         See `$push` in MongoDB's `update`.
         """
-        item = self._func(item)
+        item = self._prepare_value(item)
         qs = self._get_queryset()
         qs.update({'$push': {self._field_name: item}}, multi=False)
         self._data.append(item)

@@ -33,19 +33,19 @@ class DecimalFieldUnitTest(TestCase):
 
     def test_func_int(self):
         field = fields.DecimalField()
-        dec = field.func(13)
+        dec = field.prepare_value(13)
         self.assertIsInstance(dec, Decimal)
         self.assertEqual(dec, Decimal(13))
 
     def test_func_str(self):
         field = fields.DecimalField()
-        dec = field.func('3.14')
+        dec = field.prepare_value('3.14')
         self.assertIsInstance(dec, Decimal)
         self.assertEqual(dec, Decimal('3.14'))
 
     def test_func_error(self):
         field = fields.DecimalField()
-        self.assertRaises(TypeError, field.func, type)
+        self.assertRaises(TypeError, field.prepare_value, type)
 
     def test_context_default(self):
         field = fields.DecimalField()

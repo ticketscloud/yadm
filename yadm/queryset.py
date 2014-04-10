@@ -123,11 +123,11 @@ class QuerySet:
         data = collection.find_one(qs._criteria, qs._projection)
         return self._from_mongo_one(data)
 
-    def with_id(self, id):
+    def with_id(self, _id):
         """ Find document with id
         """
         doc = self._document_class()
-        doc._id = id
+        doc._id = _id
         data = self._collection.find_one({'_id': doc._id})
         return self._from_mongo_one(data)
 

@@ -54,15 +54,14 @@ def from_mongo(document_class, data, clear_fields_changed=True):
     document = document_class()
 
     for name, field in document.__fields__.items():
-        if name not in data:
-            continue
+        if name in data:
+            value = data[name]
 
-        value = data[name]
-
-        if hasattr(field, 'from_mongo'):
-            setattr(document, name, field.from_mongo(document, value))
-        else:
-            setattr(document, name, value)
+            if hasattr(field, 'from_mongo'):
+                field_data = field.from_mongo(document, value)
+                setattr(document, name, field_data)
+            else:
+                setattr(document, name, value)
 
     if clear_fields_changed:
         document.__fields_changed__.clear()

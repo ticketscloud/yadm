@@ -23,7 +23,7 @@ class Set(Container):
             if hasattr(self._field.item_field, 'from_mongo'):
                 self._data.add(self._field.item_field.from_mongo(self._document, item))
             else:
-                self._data.add(self._func(item))
+                self._data.add(self._prepare_value(item))
 
     def add(self, item):
         """ Append item to set
@@ -32,7 +32,7 @@ class Set(Container):
 
         This method does not save object!
         """
-        self._data.add(self._func(item))
+        self._data.add(self._prepare_value(item))
         self._set_changed()
 
     def remove(self, item):
@@ -52,7 +52,7 @@ class Set(Container):
 
         See `$addToSet` in MongoDB's `update`.
         """
-        item = self._func(item)
+        item = self._prepare_value(item)
         qs = self._get_queryset()
         qs.update({'$addToSet': {self._field_name: item}}, multi=False)
         self._data.add(item)

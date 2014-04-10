@@ -4,7 +4,8 @@ Base fields
 
 .. automodule:: yadm.fields.base
 
-.. autoclass:: DatabaseFieldDescriptor
+.. autoclass:: FieldDescriptor
     :members:
 
-.. autoclass:: DatabaseFieldMixin
+.. autoclass:: Field
+    :members:

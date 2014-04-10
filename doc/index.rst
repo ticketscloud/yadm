@@ -43,7 +43,7 @@ Quick start
     db.insert(post)
 
     # Query posts
-    qs = db.get_queryset(BlogPost).find({'title': {'$regex': '^s.*'})
+    qs = db.get_queryset(BlogPost).find({'title': {'$regex': '^s.*'}})
     assert qs.count() > 0
 
     for post in qs:

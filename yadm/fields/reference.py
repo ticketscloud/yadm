@@ -27,29 +27,32 @@ TODO: many2many collections
 
 from bson import ObjectId
 
+from yadm.documents import Document
+from yadm.fields.base import Field, FieldDescriptor
 from yadm.serialize import from_mongo
-from yadm.fields import Field
 
 
 class ReferenceField(Field):
     """ Field for work with references
 
-    :param document_class: class for refered documents
+    :param reference_document_class: class for refered documents
     """
-    def __init__(self, document_class):
-        self.document_class = document_class
+
+    def __init__(self, reference_document_class):
+        self.reference_document_class = reference_document_class
 
     def from_mongo(self, document, value):
         from yadm.documents import Document  # recursive imports
 
         if isinstance(value, ObjectId):
             if document.__db__ is not None:
-                return document.__db__.get_queryset(self.document_class).with_id(value)
+                qs = document.__db__.get_queryset(self.reference_document_class)
+                return qs.with_id(value)
             else:
                 return value
 
         elif isinstance(value, dict):
-            return from_mongo(self.document_class, value)
+            return from_mongo(self.reference_document_class, value)
 
         elif isinstance(value, Document):
             return value

@@ -2,7 +2,7 @@
 This package contain all fields.
 """
 
-from yadm.fields.base import DatabaseFieldDescriptor, Field
+from yadm.fields.base import FieldDescriptor, Field
 
 from yadm.fields.simple import (
     ObjectIdField,

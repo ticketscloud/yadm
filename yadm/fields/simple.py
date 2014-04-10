@@ -3,9 +3,9 @@ Fields for basic data types.
 """
 
 from bson import ObjectId
-import structures
 
 from yadm.fields.base import Field
+from yadm.markers import NoDefault
 
 
 class SimpleField(Field):
@@ -17,7 +17,7 @@ class SimpleField(Field):
     type = NotImplemented
     choices = None
 
-    def __init__(self, default=structures.markers.NoDefault, choices=None):
+    def __init__(self, default=NoDefault, choices=None):
         if self.type is NotImplemented:
             raise ValueError('Attribute "type" not implemented!')
 
@@ -25,7 +25,7 @@ class SimpleField(Field):
 
         super().__init__(default)
 
-    def func(self, value):
+    def prepare_value(self, value):
         if not isinstance(value, self.type):
             value = self.type(value)
 
@@ -51,7 +51,7 @@ class ObjectIdField(SimpleField):
         if self.default_gen:
             return ObjectId()
         else:
-            return structures.markers.NoDefault
+            return NoDefault
 
 
 class BooleanField(SimpleField):
