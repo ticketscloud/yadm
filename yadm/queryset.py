@@ -128,7 +128,7 @@ class QuerySet:
         """
         doc = self._document_class()
         doc._id = _id
-        data = self._collection.find_one({'_id': doc._id})
+        data = self._collection.find_one({'_id': doc._id}, self._projection or None)
         return self._from_mongo_one(data)
 
     def update(self, update, multi=True):
