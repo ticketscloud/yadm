@@ -141,6 +141,11 @@ class QuerySet:
             upsert=False,
         )
 
+    def remove(self):
+        """ Remove documents from queryset
+        """
+        return self._collection.remove(self._criteria)
+
     def fields(self, *fields):
         """ Get only setted fields
 

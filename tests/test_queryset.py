@@ -40,7 +40,36 @@ class QuerySetTest(BaseDatabaseTest):
     def test_find(self):
         qs = self.qs.find({'i': {'$gte': 6}})
         self.assertEqual(len([d for d in qs]), 4)
-        self.assertEqual(set([d.i for d in qs]), {6, 7, 8, 9})
+        self.assertEqual({d.i for d in qs}, {6, 7, 8, 9})
+
+    def test_update(self):
+        self.qs.find({'i': {'$gte': 6}}).update({'$set': {'s': 'test'}})
+
+        self.assertEqual(self.db.db.testdocs.count(), 10)
+        self.assertEqual({d['i'] for d in self.db.db.testdocs.find()}, set(range(10)))
+        self.assertEqual(self.db.db.testdocs.find({'s': 'test'}).count(), 4)
+
+        for doc in self.db.db.testdocs.find({'i': {'$lt': 6}}):
+            self.assertNotEqual(doc['s'], 'test')
+            self.assertTrue(doc['s'].startswith('str('))
+
+        for doc in self.db.db.testdocs.find({'i': {'$gte': 6}}):
+            self.assertEqual(doc['s'], 'test')
+
+    def test_update_not_multi(self):
+        self.qs.find({'i': {'$gte': 6}}).update({'$set': {'s': 'test'}}, multi=False)
+
+        self.assertEqual(self.db.db.testdocs.count(), 10)
+        self.assertEqual({d['i'] for d in self.db.db.testdocs.find()}, set(range(10)))
+        self.assertEqual(self.db.db.testdocs.find({'s': 'test'}).count(), 1)
+
+    def test_remove(self):
+        self.qs.find({'i': {'$gte': 6}}).remove()
+        self.assertEqual(len([d for d in self.qs]), 6)
+        self.assertEqual({d.i for d in self.qs}, set(range(6)))
+
+        self.assertEqual(self.db.db.testdocs.count(), 6)
+        self.assertEqual({d['i'] for d in self.db.db.testdocs.find()}, set(range(6)))
 
     def test_sort(self):
         qs = self.qs.find({'i': {'$gte': 6}}).sort(('i', -1))
