@@ -16,17 +16,18 @@ class DocumentsTest(TestCase):
         td = self.TestDoc()
         self.assertIs(td.__db__, None)
 
-
     def test_fields(self):
         self.assertEqual(set(self.TestDoc.__fields__), {'_id', 'i', 'b'})
 
     def test_inheritance_fields(self):
         class InhTestDoc(self.TestDoc):
-            s = fields.IntegerField
+            d = fields.DecimalField
 
-        self.assertEqual(set(InhTestDoc.__fields__), {'_id', 'i', 'b', 's'})
+        self.assertEqual(set(InhTestDoc.__fields__), {'_id', 'i', 'b', 'd'})
         self.assertEqual(set(self.TestDoc.__fields__), {'_id', 'i', 'b'})
-
+        self.assertIsNot(self.TestDoc.__fields__['i'], InhTestDoc.__fields__['i'])
+        self.assertIs(self.TestDoc.__fields__['i'].document_class, self.TestDoc)
+        self.assertIs(InhTestDoc.__fields__['i'].document_class, InhTestDoc)
 
     def test_fields_changed(self):
         td = self.TestDoc()

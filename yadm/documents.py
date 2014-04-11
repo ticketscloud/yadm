@@ -23,9 +23,11 @@ class MetaDocument(type):
     def __init__(cls, name, bases, cls_dict):
         cls.__fields__ = {}
 
-        for base in reversed(bases):
-            if hasattr(base, '__fields__'):
-                cls.__fields__.update(base.__fields__.copy())
+        for base in bases:
+            if isinstance(base, MetaDocument):
+                for name, field in base.__fields__.items():
+                    if name not in cls_dict:
+                        cls_dict[name] = field.copy()
 
         for attr, field in cls_dict.items():
             if isinstance(field, type) and issubclass(field, Field):

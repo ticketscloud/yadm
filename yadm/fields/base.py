@@ -89,6 +89,11 @@ class Field(object):
         self.document_class.__fields__[name] = self
         setattr(document_class, name, self.descriptor_class(name, self))
 
+    def copy(self):
+        """ Return copy of field
+        """
+        return self.__class__(default=self.default)
+
     def prepare_value(self, value):
         """ The method is called when value is assigned for the attribute
 
