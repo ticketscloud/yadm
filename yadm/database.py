@@ -98,3 +98,10 @@ class Database:
             return document
         else:
             return self.insert(document)
+
+    def remove(self, document):
+        """ Remove document from database
+
+        :param Document document: document instance for remove from database
+        """
+        return self._get_collection(document.__class__).remove(document._id)

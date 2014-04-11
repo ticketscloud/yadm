@@ -98,3 +98,24 @@ class DatabaseSaveTest(BaseDatabaseTest):
         self.assertEqual(self.db.db.testdocs.find()[0]['i'], 26)
         self.assertFalse(td.__fields_changed__)
         self.assertIs(td.__db__, self.db)
+
+
+class DatabaseRemoveTest(BaseDatabaseTest):
+    def setUp(self):
+        super().setUp()
+
+        class TestDoc(Document):
+            __collection__ = 'testdocs'
+            i = fields.IntegerField
+
+        self.TestDoc = TestDoc
+
+    def test_remove(self):
+        col = self.db.db.testdocs
+        col.insert({'i': 13})
+
+        td = from_mongo(self.TestDoc, col.find_one({'i': 13}))
+
+        self.assertEqual(col.count(), 1)
+        self.db.remove(td)
+        self.assertEqual(col.count(), 0)
