@@ -52,3 +52,23 @@ class ListEmbeddedFieldTest(BaseDatabaseTest):
 
         self.assertEqual(doc.li[0].i, 13)
         self.assertEqual(doc.li[1].i, 42)
+
+    def test_push(self):
+        td = self.TestDoc()
+        self.db.insert(td)
+
+        ted = self.TestEDoc()
+        ted.i = 13
+        td.li.push(ted)
+
+        ted = self.TestEDoc()
+        ted.i = 42
+        td.li.push(ted)
+
+        data = self.db.db.testdocs.find_one()
+
+        self.assertIn('li', data)
+        self.assertEqual(len(data['li']), 2)
+        self.assertIn('i', data['li'][0])
+        self.assertEqual(data['li'][0]['i'], 13)
+        self.assertEqual(data['li'][1]['i'], 42)

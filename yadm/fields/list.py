@@ -86,8 +86,14 @@ class List(Container):
         See `$push` in MongoDB's `update`.
         """
         item = self._prepare_value(item)
+
+        if hasattr(self._field.item_field, 'to_mongo'):
+            data = self._field.item_field.to_mongo(self._document, item)
+        else:
+            data = item
+
         qs = self._get_queryset()
-        qs.update({'$push': {self._field_name: item}}, multi=False)
+        qs.update({'$push': {self._field_name: data}}, multi=False)
         self._data.append(item)
 
     def pull(self, query, reload=True):

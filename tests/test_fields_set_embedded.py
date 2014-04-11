@@ -65,3 +65,23 @@ class SetEmbeddedFieldTest(BaseDatabaseTest):
             res.add(item.i)
 
         self.assertEquals(res, {13, 42})
+
+    def test_add_to_set(self):
+        td = self.TestDoc()
+        self.db.insert(td)
+
+        ted = self.TestEDoc()
+        ted.i = 13
+        td.li.add_to_set(ted)
+
+        ted = self.TestEDoc()
+        ted.i = 42
+        td.li.add_to_set(ted)
+
+        data = self.db.db.testdocs.find_one()
+
+        self.assertIn('li', data)
+        self.assertEqual(len(data['li']), 2)
+        self.assertIn('i', data['li'][0])
+        self.assertEqual(data['li'][0]['i'], 13)
+        self.assertEqual(data['li'][1]['i'], 42)

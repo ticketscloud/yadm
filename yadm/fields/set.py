@@ -53,8 +53,14 @@ class Set(Container):
         See `$addToSet` in MongoDB's `update`.
         """
         item = self._prepare_value(item)
+
+        if hasattr(self._field.item_field, 'to_mongo'):
+            data = self._field.item_field.to_mongo(self._document, item)
+        else:
+            data = item
+
         qs = self._get_queryset()
-        qs.update({'$addToSet': {self._field_name: item}}, multi=False)
+        qs.update({'$addToSet': {self._field_name: data}}, multi=False)
         self._data.add(item)
 
     def pull(self, query, reload=True):
