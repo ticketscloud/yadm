@@ -63,6 +63,24 @@ class BaseDocument(metaclass=MetaDocument):
 
 class Document(BaseDocument):
     """ Class for build first level documents
+
+    .. py:attribute:: __collection__
+
+        Name of MongoDB collection
+
+    .. py:attribute:: _id
+
+        Mongo object id (:py:class:`bson.ObjectId`)
+
+    .. py:attribute:: id
+
+        Alias for :py:attr:`_id` for simply use
+
+    .. py:attribute:: __db__
+
+        Internal attribute contain instance of :py:class:`yadm.database.Database`
+        for realize :py:class:`yadm.fields.references.ReferenceField`.
+        It bind in :py:class:`yadm.database.Database` or :py:class:`yadm.queryset.QuerySet`.
     """
     __collection__ = None
     __db__ = None
@@ -89,6 +107,26 @@ class Document(BaseDocument):
 
 
 class DocumentItemMixin:
+    """ Mixin for custom all fields values,
+    such as :py:class:`EmbeddedDocument`, :py:class:`yadm.fields.containers.Container`
+
+    .. py:attribute:: __parent__
+
+        Parent object.
+
+        .. code-block:: python
+
+            assert doc.embedded_doc.__parent__ is doc
+            assert doc.list[13].__parent__ is doc.list
+
+    .. py:attribute:: __name__
+
+        .. code-block:: python
+
+            assert doc.list.__name__ == 'list'
+            assert doc.list[13].__name__ == 13
+
+    """
     __parent__ = None
     __name__ = None
 
@@ -96,7 +134,9 @@ class DocumentItemMixin:
     def __document__(self):
         """ Root document
 
-            assert doc.f.l[0].__document__ is doc
+        .. code-block:: python
+
+                assert doc.f.l[0].__document__ is doc
         """
         obj = self
 
@@ -109,6 +149,8 @@ class DocumentItemMixin:
     def __db__(self):
         """ Database object
 
+        .. code-block:: python
+
             assert doc.f.l[0].__db__ is doc.__db__
         """
         return self.__document__.__db__
@@ -116,6 +158,8 @@ class DocumentItemMixin:
     @property
     def __path__(self):
         """ Path to root generator
+
+        .. code-block:: python
 
             assert list(doc.f.l[0].__path__) == [doc.f.l[0], doc.f.l, doc.f]
         """
@@ -129,6 +173,8 @@ class DocumentItemMixin:
     def __path_names__(self):
         """ Path to root generator
 
+        .. code-block:: python
+
             assert list(doc.f.l[0].__path__) == [0, 'l', 'f']
         """
         for item in self.__path__:
@@ -139,7 +185,9 @@ class DocumentItemMixin:
         """ Dotted field name for MongoDB opperations,
         like as $set, $push and other...
 
-            assert list(doc.f.l[0].__field_name__) == 'f.l.0'
+        .. code-block:: python
+
+            assert doc.f.l[0].__field_name__ == 'f.l.0'
         """
         return '.'.join(reversed([str(i) for i in self.__path_names__]))
 
