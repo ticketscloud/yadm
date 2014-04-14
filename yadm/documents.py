@@ -88,6 +88,75 @@ class Document(BaseDocument):
         del self._id
 
 
-class EmbeddedDocument(BaseDocument):
+class DocumentItemMixin:
+    __parent__ = None
+    __name__ = None
+
+    @property
+    def __document__(self):
+        """ Root document
+
+            assert doc.f.l[0].__document__ is doc
+        """
+        obj = self
+
+        while getattr(obj, '__parent__', None):
+            obj = obj.__parent__
+
+        return obj
+
+    @property
+    def __db__(self):
+        """ Database object
+
+            assert doc.f.l[0].__db__ is doc.__db__
+        """
+        return self.__document__.__db__
+
+    @property
+    def __path__(self):
+        """ Path to root generator
+
+            assert list(doc.f.l[0].__path__) == [doc.f.l[0], doc.f.l, doc.f]
+        """
+        obj = self
+
+        while getattr(obj, '__parent__', None):
+            yield obj
+            obj = obj.__parent__
+
+    @property
+    def __path_names__(self):
+        """ Path to root generator
+
+            assert list(doc.f.l[0].__path__) == [0, 'l', 'f']
+        """
+        for item in self.__path__:
+            yield item.__name__
+
+    @property
+    def __field_name__(self):
+        """ Dotted field name for MongoDB opperations,
+        like as $set, $push and other...
+
+            assert list(doc.f.l[0].__field_name__) == 'f.l.0'
+        """
+        return '.'.join(reversed([str(i) for i in self.__path_names__]))
+
+    def __get_value__(self, document):
+        """ Get value from document with path to self
+        """
+        obj = document
+
+        for name in reversed(list(self.__path_names__)):
+            if isinstance(name, int):
+                obj = obj[name]
+            else:
+                obj = getattr(obj, name)
+
+        return obj
+
+
+class EmbeddedDocument(DocumentItemMixin, BaseDocument):
     """ Class for build embedded documents
     """

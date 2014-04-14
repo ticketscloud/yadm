@@ -14,7 +14,10 @@ class FieldDescriptor(object):
         self.default = field.default
 
     def __get__(self, instance, owner):
-        if instance is not None:
+        if instance is None:
+            return self
+
+        else:
             if self.name not in instance.__data__:
                 instance.__data__[self.name] = self.field.default
 
@@ -26,16 +29,17 @@ class FieldDescriptor(object):
             elif value is NotLoaded:
                 value = self.load_deferred(instance)
                 instance.__data__[self.name] = value
-                return value
 
             elif hasattr(self.field, 'from_mongo'):
-                return self.field.from_mongo(instance, value)
+                value = self.field.from_mongo(instance, value)
 
-            else:
-                return value
+            from yadm.documents import DocumentItemMixin
 
-        else:
-            return self
+            if isinstance(value, DocumentItemMixin):
+                value.__name__ = self.field.name
+                value.__parent__ = instance
+
+            return value
 
     def __set__(self, instance, value):
         if not isinstance(instance, type):
@@ -74,6 +78,8 @@ class Field(object):
 
     descriptor_class = FieldDescriptor
     default = NoDefault
+    name = None
+    document_class = None
 
     def __init__(self, default=NoDefault):
         if default is not NoDefault:

@@ -21,9 +21,11 @@ class Set(Container):
 
         for item in data:
             if hasattr(self._field.item_field, 'from_mongo'):
-                self._data.add(self._field.item_field.from_mongo(self._document, item))
+                value = self._field.item_field.from_mongo(self.__document__, item)
             else:
-                self._data.add(self._prepare_value(item))
+                value = self._prepare_value(item)
+
+            self._data.add(value)
 
     def add(self, item):
         """ Append item to set
@@ -55,12 +57,12 @@ class Set(Container):
         item = self._prepare_value(item)
 
         if hasattr(self._field.item_field, 'to_mongo'):
-            data = self._field.item_field.to_mongo(self._document, item)
+            data = self._field.item_field.to_mongo(self.__document__, item)
         else:
             data = item
 
         qs = self._get_queryset()
-        qs.update({'$addToSet': {self._field_name: data}}, multi=False)
+        qs.update({'$addToSet': {self.__field_name__: data}}, multi=False)
         self._data.add(item)
 
     def pull(self, query, reload=True):
@@ -72,11 +74,11 @@ class Set(Container):
         See `$pull` in MongoDB's `update`.
         """
         qs = self._get_queryset()
-        qs.update({'$pull': {self._field_name: query}}, multi=False)
+        qs.update({'$pull': {self.__field_name__: query}}, multi=False)
 
         if reload:
             doc = qs.find_one()
-            self._load_from_mongo(getattr(doc, self._field_name))
+            self._load_from_mongo(self.__get_value__(doc))
 
 
 class SetField(ArrayField):

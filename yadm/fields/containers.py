@@ -3,6 +3,7 @@ Base classes for containers.
 """
 
 from yadm.fields import FieldDescriptor, Field
+from yadm.documents import DocumentItemMixin
 
 
 class ContainerDescriptor(FieldDescriptor):
@@ -19,11 +20,11 @@ class ContainerDescriptor(FieldDescriptor):
         return value
 
 
-class Container:
+class Container(DocumentItemMixin):
     """ Base class for containers
     """
-    def __init__(self, document, field, data):
-        self._document = document
+    def __init__(self, parent, field, data):
+        self.__parent__ = parent
         self._field = field
         self._field_name = field.name
         self._load_from_mongo(data)
@@ -44,20 +45,41 @@ class Container:
     def _get_queryset(self):
         """ Return queryset for got data for this field
         """
-        qs = self._document.__db__.get_queryset(self._document.__class__)
-        qs = qs.find({'_id': self._document.id})
-        return qs.fields(self._field_name)
+        qs = self.__db__.get_queryset(self.__document__.__class__)
+        qs = qs.find({'_id': self.__document__.id})
+        return qs.fields(self.__field_name__)
 
     def _set_changed(self):
         """ Add field to __fields_changed__
         """
-        self._document.__fields_changed__.add(self._field_name)  # set!
+        self.__parent__.__fields_changed__.add(self._field_name)
 
     def __iter__(self):
         return (i for i in self._data)
 
     def __getitem__(self, item):
-        return self._data[item]
+        if isinstance(item, slice):
+            res = []
+            start = item.start
+            step = item.step
+
+            for n, value in enumerate(self._data[item]):
+                if isinstance(value, DocumentItemMixin):
+                    value.__parent__ = self
+                    value.__name__ = start + (step * n)
+
+                res.append(value)
+
+            return res
+
+        else:
+            value = self._data[item]
+
+            if isinstance(value, DocumentItemMixin):
+                value.__parent__ = self
+                value.__name__ = item
+
+            return value
 
     def __len__(self):
         return len(self._data)

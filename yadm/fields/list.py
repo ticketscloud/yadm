@@ -37,6 +37,7 @@ List of objects
 
 """
 
+from yadm.documents import DocumentItemMixin
 from yadm.fields.containers import (
     Container,
     ArrayField,
@@ -54,9 +55,11 @@ class List(Container):
 
         for item in data:
             if hasattr(self._field.item_field, 'from_mongo'):
-                self._data.append(self._field.item_field.from_mongo(self._document, item))
+                value = self._field.item_field.from_mongo(self.__parent__, item)
             else:
-                self._data.append(self._prepare_value(item))
+                value = self._prepare_value(item)
+
+            self._data.append(value)
 
     def append(self, item):
         """ Append item to list
@@ -88,12 +91,12 @@ class List(Container):
         item = self._prepare_value(item)
 
         if hasattr(self._field.item_field, 'to_mongo'):
-            data = self._field.item_field.to_mongo(self._document, item)
+            data = self._field.item_field.to_mongo(self.__document__, item)
         else:
             data = item
 
         qs = self._get_queryset()
-        qs.update({'$push': {self._field_name: data}}, multi=False)
+        qs.update({'$push': {self.__field_name__: data}}, multi=False)
         self._data.append(item)
 
     def pull(self, query, reload=True):
@@ -105,11 +108,11 @@ class List(Container):
         See `$pull` in MongoDB's `update`.
         """
         qs = self._get_queryset()
-        qs.update({'$pull': {self._field_name: query}}, multi=False)
+        qs.update({'$pull': {self.__field_name__: query}}, multi=False)
 
         if reload:
             doc = qs.find_one()
-            self._load_from_mongo(getattr(doc, self._field_name))
+            self._load_from_mongo(self.__get_value__(doc))
 
 
 class ListField(ArrayField):
