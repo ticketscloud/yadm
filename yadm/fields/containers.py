@@ -55,7 +55,12 @@ class Container(DocumentItemMixin):
         self.__parent__.__fields_changed__.add(self._field_name)
 
     def __iter__(self):
-        return (i for i in self._data)
+        for n, item in enumerate(self._data):
+            if isinstance(item, DocumentItemMixin):
+                item.__parent__ = self
+                item.__name__ = n
+
+            yield item
 
     def __getitem__(self, item):
         if isinstance(item, slice):
