@@ -37,7 +37,6 @@ List of objects
 
 """
 
-from yadm.documents import DocumentItemMixin
 from yadm.fields.containers import (
     Container,
     ArrayField,
