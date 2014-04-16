@@ -31,14 +31,14 @@ Quick start
     post.body = 'Bla-bla-bla...'
 
     # Connect to database
-    self.client = pymongo.MongoClient("localhost", 27017)
+    self.client = pymongo.MongoClient('localhost', 27017)
     db = Database(self.client, 'test')
 
     # Insert post to database
     db.insert(post)
 
     # Query posts
-    qs = db.get_queryset(BlogPost).find({'title': {'$regex': '^s.*'})
+    qs = db.get_queryset(BlogPost).find({'title': {'$regex': '^s'}})
     assert qs.count() > 0
 
     for post in qs:
