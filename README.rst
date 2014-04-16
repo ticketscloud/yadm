@@ -4,6 +4,8 @@ Yet Another Document Mapper
 
 It's small and simple ODM for use with MongoDB.
 
+Full documentation: http://yadm.readthedocs.org
+
 
 -----------
 Quick start
