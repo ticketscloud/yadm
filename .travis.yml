@@ -1,0 +1,12 @@
+language: python
+python:
+    - "3.3"
+    # - "3.4"
+
+services:
+    - mongodb
+
+install:
+    - python3 setup.py install
+
+script: py.test -v
