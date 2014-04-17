@@ -5,6 +5,10 @@ Yet Another Document Mapper
 .. image:: https://travis-ci.org/zzzsochi/yadm.svg?branch=master
     :target: https://travis-ci.org/zzzsochi/yadm
 
+.. image:: https://coveralls.io/repos/zzzsochi/yadm/badge.png
+    :target: https://coveralls.io/r/zzzsochi/yadm
+
+
 It's small and simple ODM for use with MongoDB.
 
 Full documentation: http://yadm.readthedocs.org
