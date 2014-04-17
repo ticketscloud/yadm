@@ -2,6 +2,9 @@
 Yet Another Document Mapper
 ===========================
 
+.. image:: https://travis-ci.org/zzzsochi/yadm.svg?branch=master
+    :target: https://travis-ci.org/zzzsochi/yadm
+
 It's small and simple ODM for use with MongoDB.
 
 .. toctree::
