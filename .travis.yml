@@ -8,5 +8,10 @@ services:
 
 install:
     - python3 setup.py install
+    - pip install python-coveralls pytest-cov
 
-script: py.test -v
+script:
+    - py.test -v --cov yadm --cov-report term-missing 
+
+after_success:
+    - coveralls
