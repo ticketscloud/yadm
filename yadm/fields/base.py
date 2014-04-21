@@ -28,7 +28,6 @@ class FieldDescriptor(object):
 
             elif value is NotLoaded:
                 value = self.load_deferred(instance)
-                instance.__data__[self.name] = value
 
             elif hasattr(self.field, 'from_mongo'):
                 value = self.field.from_mongo(instance, value)
@@ -61,7 +60,11 @@ class FieldDescriptor(object):
         qs = instance.__db__.get_queryset(instance.__class__)
         qs = qs.fields(self.name)
         doc = qs.with_id(instance.id)
-        return getattr(doc, self.name)
+        value = doc.__data__[self.name]
+
+        value = value if value is not NotLoaded else None
+        instance.__data__[self.name] = value
+        return value
 
 
 class Field(object):
