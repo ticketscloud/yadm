@@ -72,28 +72,40 @@ class Database:
         document.__fields_changed__.clear()
         return document
 
-    def save(self, document, upsert=False):
+    def save(self, document, full=False, upsert=False):
         """ Save document to database
 
         :param Document document: document instance for save
+        :param bool full: fully resave document
+            (default: `False`)
         :param bool upsert: see documentation for MongoDB's `update`
+            (default: `False`)
 
         If document has not `id` this :meth:`insert` new document.
         """
         if hasattr(document, '_id'):
             document.__db__ = self
 
-            self._get_collection(document).update(
-                {'_id': document.id},
-                {'$set': to_mongo(
-                    document,
-                    exclude=['_id'],
-                    include=document.__fields__.keys()),
-                    # include=document.__fields_changed__),  # must be!
-                },
-                upsert=upsert,
-                multi=False,
-            )
+            if full:
+                self._get_collection(document).update(
+                    {'_id': document.id},
+                    to_mongo(document),
+                    upsert=upsert,
+                    multi=False,
+                )
+            else:
+                self._get_collection(document).update(
+                    {'_id': document.id},
+                    {'$set': to_mongo(
+                        document,
+                        exclude=['_id'],
+                        include=document.__fields__.keys()),
+                        # include=document.__fields_changed__),  # must be!
+                    },
+                    upsert=upsert,
+                    multi=False,
+                )
+
             document.__fields_changed__.clear()
             return document
         else:
