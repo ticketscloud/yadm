@@ -35,9 +35,12 @@ class QuerySet:
     def _from_mongo_one(self, data):
         """ Create document from raw data
         """
-        doc = from_mongo(self._document_class, data)
-        doc.__db__ = self._db
-        return doc
+        if data is not None:
+            doc = from_mongo(self._document_class, data)
+            doc.__db__ = self._db
+            return doc
+        else:
+            return None
 
     def _from_mongo_list(self, data):
         """ Generator for got documents from raw data list (cursor)
