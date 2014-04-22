@@ -1,5 +1,7 @@
 from unittest import TestCase
 
+from bson import ObjectId
+
 from yadm.documents import Document
 from yadm import fields
 
@@ -42,3 +44,16 @@ class DocumentsTest(TestCase):
         td.b = True
         self.assertIn('i', td.__fields_changed__)
         self.assertIn('b', td.__fields_changed__)
+
+    def test_eq(self):
+        doc_a = self.TestDoc()
+        doc_a.id = ObjectId()
+
+        doc_b = self.TestDoc()
+        doc_b.id = ObjectId()
+
+        doc_c = self.TestDoc()
+        doc_c.id = doc_a.id
+
+        self.assertNotEqual(doc_a, doc_b)
+        self.assertEqual(doc_a, doc_c)

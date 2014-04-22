@@ -14,6 +14,8 @@ Basic documents classes for build models.
 All fields placed in :py:mod:`yadm.fields` package.
 """
 
+from bson import ObjectId
+
 from yadm.fields.base import Field
 from yadm.fields.simple import ObjectIdField
 
@@ -92,6 +94,17 @@ class Document(BaseDocument):
             return '{!s}:{!s}'.format(self.__collection__, self._id)
         else:
             return '{!s}:<empty>'.format(self.__collection__)
+
+    def __eq__(self, other):
+        if isinstance(other, Document):
+            return self.id == other.id
+        elif isinstance(other, ObjectId):
+            return self.id == other
+        else:
+            return False
+
+    def __hash__(self):
+        return hash(self.id)
 
     @property
     def id(self):

@@ -19,6 +19,9 @@ class QuerySet:
     def __iter__(self):
         return self._from_mongo_list(self._cursor)
 
+    def __contains__(self, document):
+        return self.with_id(document.id) is not None
+
     def __getitem__(self, item):
         if isinstance(item, slice):
             return self._from_mongo_list(self._cursor[slice])

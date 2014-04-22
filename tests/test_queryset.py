@@ -93,3 +93,8 @@ class QuerySetTest(BaseDatabaseTest):
         doc = self.qs.with_id(id)
         self.assertEqual(doc.s, 'str(4)')
         self.assertEqual(doc.i, 4)
+
+    def test_contains(self):
+        doc = self.qs.find_one({'i': 0})
+        self.assertIn(doc, self.qs)
+        self.assertNotIn(doc, self.qs.find({'i': {'$ne': 0}}))
