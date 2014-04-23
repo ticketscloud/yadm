@@ -59,7 +59,7 @@ class ReferenceField(Field):
     def from_mongo(self, document, value):
         from yadm.documents import Document  # recursive imports
 
-        if isinstance(value, ObjectId):
+        if isinstance(value, (ObjectId, str)):
             if document.__db__ is not None:
                 qs = document.__db__.get_queryset(self.reference_document_class)
                 return qs.with_id(value)
