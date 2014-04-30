@@ -62,7 +62,9 @@ class ReferenceField(Field):
         if isinstance(value, (ObjectId, str)):
             if document.__db__ is not None:
                 qs = document.__db__.get_queryset(self.reference_document_class)
-                return qs.with_id(value)
+                doc = qs.with_id(value)
+                return doc if doc else ObjectId(value)
+
             else:
                 return value
 
