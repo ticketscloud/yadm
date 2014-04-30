@@ -82,6 +82,8 @@ class DecimalField(Field):
     def from_mongo(self, instance, data):
         if isinstance(data, Decimal):
             return data
+        elif isinstance(data, (str, int, float)):
+            return Decimal(data)
         else:
             sing = 0 if data['i'] >= 0 else 1
 
