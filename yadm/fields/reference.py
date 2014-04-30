@@ -41,7 +41,7 @@ class ReferenceFieldDescriptor(FieldDescriptor):
         value = super().__get__(instance, owner)
 
         if instance is not None and isinstance(value, Document):
-            instance.__fields__[self.name] = value
+            instance.__data__[self.name] = value
 
         return value
 
@@ -88,4 +88,5 @@ class ReferenceField(Field):
             return value.id
 
         else:
-            raise TypeError('value must be ObjectId, Document or dict')
+            raise TypeError('value must be ObjectId, Document or dict,'
+                            ' but {!r}'.format(type(value)))
