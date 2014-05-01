@@ -47,12 +47,16 @@ class MetaDocument(type):
 class BaseDocument(metaclass=MetaDocument):
     """ Base class for all documents
     """
+    __initialized__ = False
+
     def __init__(self, **kwargs):
         self.__data__ = {}
         self.__fields_changed__ = set()
 
         for key, value in kwargs.items():
             setattr(self, key, value)
+
+        self.__initialized__ = kwargs.get('__initialized__', True)
 
     def __str__(self):
         """ Implement it for pretty str and repr documents

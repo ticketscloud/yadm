@@ -53,7 +53,7 @@ def from_mongo(document_class, data, clear_fields_changed=True):
     :param bool clear_fields_changed: clear changed flags
         for new document (default True)
     """
-    document = document_class()
+    document = document_class(__initialized__=False)
 
     for name, field in document.__fields__.items():
         if name in data:
@@ -71,4 +71,5 @@ def from_mongo(document_class, data, clear_fields_changed=True):
     if clear_fields_changed:
         document.__fields_changed__.clear()
 
+    document.__initialized__ = True
     return document
