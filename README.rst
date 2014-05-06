@@ -38,8 +38,8 @@ Quick start
     post.body = 'Bla-bla-bla...'
 
     # Connect to database
-    self.client = pymongo.MongoClient('localhost', 27017)
-    db = Database(self.client, 'test')
+    client = pymongo.MongoClient('localhost', 27017)
+    db = Database(client, 'test')
 
     # Insert post to database
     db.insert(post)
