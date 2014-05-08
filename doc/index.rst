@@ -40,7 +40,7 @@ Quick start
 
     # Connect to database
     client = pymongo.MongoClient("localhost", 27017)
-    db = Database(self.client, 'test')
+    db = Database(client, 'test')
 
     # Insert post to database
     db.insert(post)
