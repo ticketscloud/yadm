@@ -101,7 +101,7 @@ class Field(object):
     def copy(self):
         """ Return copy of field
         """
-        return self.__class__(default=self.default)
+        return self.__class__({'default': self.default})
 
     def prepare_value(self, value):
         """ The method is called when value is assigned for the attribute

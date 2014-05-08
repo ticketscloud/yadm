@@ -21,8 +21,11 @@ from yadm.fields.simple import ObjectIdField
 
 
 class MetaDocument(type):
+
     '''Metaclass for documents'''
     def __init__(cls, name, bases, cls_dict):
+        cls.__data__ = {}
+        cls.__fields_changed__ = set()
         cls.__fields__ = {}
 
         for base in bases:
@@ -45,13 +48,12 @@ class MetaDocument(type):
 
 
 class BaseDocument(metaclass=MetaDocument):
+
     """ Base class for all documents
     """
     __initialized__ = False
 
     def __init__(self, **kwargs):
-        self.__data__ = {}
-        self.__fields_changed__ = set()
 
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -68,6 +70,7 @@ class BaseDocument(metaclass=MetaDocument):
 
 
 class Document(BaseDocument):
+
     """ Class for build first level documents
 
     .. py:attribute:: __collection__
@@ -124,6 +127,7 @@ class Document(BaseDocument):
 
 
 class DocumentItemMixin:
+
     """ Mixin for custom all fields values,
     such as :py:class:`EmbeddedDocument`, :py:class:`yadm.fields.containers.Container`
 
@@ -223,5 +227,6 @@ class DocumentItemMixin:
 
 
 class EmbeddedDocument(DocumentItemMixin, BaseDocument):
+
     """ Class for build embedded documents
     """
