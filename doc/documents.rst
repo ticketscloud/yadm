@@ -5,7 +5,7 @@ Documents
 .. automodule:: yadm.documents
 
 
-.. autoclass:: MetaDocument(**kwargs)
+.. autoclass:: MetaDocument(cls, name, bases, cls_dict)
 
 
 .. autoclass:: BaseDocument(**kwargs)

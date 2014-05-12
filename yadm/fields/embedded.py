@@ -16,6 +16,7 @@ Work with embedded documents.
     db.insert(doc)
 """
 
+from yadm.common import EnclosedDocDescriptor
 from yadm.fields.base import Field
 from yadm.serialize import to_mongo
 
@@ -25,6 +26,9 @@ class EmbeddedDocumentField(Field):
 
     :param EmbeddedDocument embedded_document_class: class for embedded document
     """
+
+    embedded_document_class = EnclosedDocDescriptor('embedded')
+
     def __init__(self, embedded_document_class):
         self.embedded_document_class = embedded_document_class
 

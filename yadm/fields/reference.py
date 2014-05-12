@@ -27,6 +27,7 @@ TODO: many2many collections
 
 from bson import ObjectId
 
+from yadm.common import EnclosedDocDescriptor
 from yadm.documents import Document
 from yadm.fields.base import Field, FieldDescriptor
 from yadm.serialize import from_mongo
@@ -51,7 +52,9 @@ class ReferenceField(Field):
 
     :param reference_document_class: class for refered documents
     """
+
     descriptor_class = ReferenceFieldDescriptor
+    reference_document_class = EnclosedDocDescriptor('reference')
 
     def __init__(self, reference_document_class):
         self.reference_document_class = reference_document_class

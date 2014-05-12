@@ -15,7 +15,7 @@ class FieldDescriptor(object):
 
     def __get__(self, instance, owner):
         if instance is None:
-            return self
+            return self.field
 
         else:
             if self.name not in instance.__data__:
