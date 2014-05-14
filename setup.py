@@ -17,7 +17,7 @@ setup(
     url='https://github.com/zzzsochi/yadm',
     license='BSD',
     platforms='any',
-    install_requires=['pymongo'],
+    install_requires=['pymongo', 'zope.dottedname'],
 
     classifiers=[
             'Development Status :: 4 - Beta',
