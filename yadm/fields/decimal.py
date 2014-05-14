@@ -69,7 +69,21 @@ class DecimalField(Field):
     def prepare_value(self, value):
         """ Cast value to :class:`decimal.Decimal`
         """
-        return Decimal(value, context=self.context)
+        if isinstance(value, Decimal):
+            return value
+        elif isinstance(value, (str, int, float)):
+            return Decimal(value, context=self.context)
+        else:
+            sing = 0 if value['i'] >= 0 else 1
+
+            digits = []
+            i = value['i']
+
+            while i:
+                i, d = divmod(i, 10)
+                digits.insert(0, d)
+
+            return Decimal((sing, digits, value['e']), context=self.context)
 
     def to_mongo(self, instance, value):
         sign, digits, exp = value.as_tuple()
@@ -80,18 +94,4 @@ class DecimalField(Field):
         }
 
     def from_mongo(self, instance, data):
-        if isinstance(data, Decimal):
-            return data
-        elif isinstance(data, (str, int, float)):
-            return Decimal(data)
-        else:
-            sing = 0 if data['i'] >= 0 else 1
-
-            digits = []
-            i = data['i']
-
-            while i:
-                i, d = divmod(i, 10)
-                digits.insert(0, d)
-
-            return Decimal((sing, digits, data['e']), context=self.context)
+        return self.prepare_value(data)
