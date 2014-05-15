@@ -86,6 +86,12 @@ class Container(DocumentItemMixin):
 
             return value
 
+    def __setitem__(self, item, value):
+        self._data[item] = value
+
+    def __delitem__(self, item):
+        del self._data[item]
+
     def __len__(self):
         return len(self._data)
 
