@@ -113,6 +113,53 @@ class List(Container):
             doc = qs.find_one()
             self._load_from_mongo(self.__get_value__(doc))
 
+    def replace(self, query, item, reload=True):
+        """ Replace list elements
+
+        :param query: query for `update`.
+            Keys of this query is relative.
+        :param item: embedded document or dict
+        """
+        if hasattr(self._field.item_field, 'to_mongo'):
+            data = self._field.item_field.to_mongo(self.__document__, item)
+        else:
+            data = item
+
+        processed_query = {}
+        for key, value in query.items():
+            processed_query['.'.join([self.__field_name__, key])] = value
+
+        qs = self._get_queryset()
+        qs = qs.find(processed_query)
+        qs.update({'$set': {'.'.join([self.__field_name__, '$']): data}})
+
+        if reload:
+            doc = self._get_queryset().find_one()
+            self._load_from_mongo(self.__get_value__(doc))
+
+    def update(self, query, values, reload=True):
+        """ Update fields in embedded documents
+
+        :param query: query for `update`.
+            Keys of this query is relative.
+        :param values: dict of new values
+        """
+        processed_query = {}
+        for key, value in query.items():
+            processed_query['.'.join([self.__field_name__, key])] = value
+
+        data = {}
+        for key, value in values.items():
+            data['.'.join([self.__field_name__, '$', key])] = value
+
+        qs = self._get_queryset()
+        qs = qs.find(processed_query)
+        qs.update({'$set': data})
+
+        if reload:
+            doc = self._get_queryset().find_one()
+            self._load_from_mongo(self.__get_value__(doc))
+
 
 class ListField(ArrayField):
     """ Field for list values
