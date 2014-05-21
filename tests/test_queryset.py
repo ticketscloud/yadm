@@ -129,6 +129,10 @@ class QuerySetTest(BaseDatabaseTest):
         self.assertEqual(doc.i, 6)
         self.assertEqual(doc.s, 'str(6)')
 
+    def test_find_and_modify_not_found(self):
+        ret = self.qs({'i': 13}).find_and_modify({'$set': {'s': 'test'}})
+        self.assertIsNone(ret)
+
     def test_remove(self):
         self.qs.find({'i': {'$gte': 6}}).remove()
         self.assertEqual(len([d for d in self.qs]), 6)
