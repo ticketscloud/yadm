@@ -63,6 +63,72 @@ class QuerySetTest(BaseDatabaseTest):
         self.assertEqual({d['i'] for d in self.db.db.testdocs.find()}, set(range(10)))
         self.assertEqual(self.db.db.testdocs.find({'s': 'test'}).count(), 1)
 
+    def test_find_and_modify(self):
+        doc = self.qs({'i': 6}).find_and_modify({'$set': {'s': 'test'}})
+
+        self.assertEqual(self.db.db.testdocs.count(), 10)
+        self.assertEqual({d['i'] for d in self.db.db.testdocs.find()}, set(range(10)))
+        self.assertEqual(self.db.db.testdocs.find({'s': 'test'}).count(), 1)
+        self.assertEqual(self.db.db.testdocs.find_one({'i': 6})['s'], 'test')
+
+        self.assertIsInstance(doc, Document)
+        self.assertEqual(doc.i, 6)
+        self.assertEqual(doc.s, 'str(6)')
+
+    def test_find_and_modify_new(self):
+        doc = self.qs({'i': 6}).find_and_modify(
+            {'$set': {'s': 'test'}}, new=True)
+
+        self.assertEqual(self.db.db.testdocs.count(), 10)
+        self.assertEqual({d['i'] for d in self.db.db.testdocs.find()}, set(range(10)))
+        self.assertEqual(self.db.db.testdocs.find({'s': 'test'}).count(), 1)
+        self.assertEqual(self.db.db.testdocs.find_one({'i': 6})['s'], 'test')
+
+        self.assertIsInstance(doc, Document)
+        self.assertEqual(doc.i, 6)
+        self.assertEqual(doc.s, 'test')
+
+    def test_find_and_modify_full_response(self):
+        result = self.qs({'i': 6}).find_and_modify(
+            {'$set': {'s': 'test'}}, full_response=True)
+
+        self.assertEqual(self.db.db.testdocs.count(), 10)
+        self.assertEqual({d['i'] for d in self.db.db.testdocs.find()}, set(range(10)))
+        self.assertEqual(self.db.db.testdocs.find({'s': 'test'}).count(), 1)
+        self.assertEqual(self.db.db.testdocs.find_one({'i': 6})['s'], 'test')
+
+        self.assertIn('value', result)
+        self.assertIsInstance(result['value'], Document)
+        self.assertEqual(result['value'].i, 6)
+        self.assertEqual(result['value'].s, 'str(6)')
+
+    def test_find_and_modify_full_response_new(self):
+        result = self.qs({'i': 6}).find_and_modify(
+            {'$set': {'s': 'test'}}, full_response=True, new=True)
+
+        self.assertEqual(self.db.db.testdocs.count(), 10)
+        self.assertEqual({d['i'] for d in self.db.db.testdocs.find()}, set(range(10)))
+        self.assertEqual(self.db.db.testdocs.find({'s': 'test'}).count(), 1)
+        self.assertEqual(self.db.db.testdocs.find_one({'i': 6})['s'], 'test')
+
+        self.assertIn('value', result)
+        self.assertIsInstance(result['value'], Document)
+        self.assertEqual(result['value'].i, 6)
+        self.assertEqual(result['value'].s, 'test')
+
+    def test_find_and_modify_sort(self):
+        qs = self.qs({'i': {'$lte': 6, '$gte': 4}}).sort(('s', -1))
+        doc = qs.find_and_modify({'$set': {'s': 'test'}})
+
+        self.assertEqual(self.db.db.testdocs.count(), 10)
+        self.assertEqual({d['i'] for d in self.db.db.testdocs.find()}, set(range(10)))
+        self.assertEqual(self.db.db.testdocs.find({'s': 'test'}).count(), 1)
+        self.assertEqual(self.db.db.testdocs.find_one({'i': 6})['s'], 'test')
+
+        self.assertIsInstance(doc, Document)
+        self.assertEqual(doc.i, 6)
+        self.assertEqual(doc.s, 'str(6)')
+
     def test_remove(self):
         self.qs.find({'i': {'$gte': 6}}).remove()
         self.assertEqual(len([d for d in self.qs]), 6)

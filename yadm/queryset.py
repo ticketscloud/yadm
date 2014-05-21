@@ -146,6 +146,37 @@ class QuerySet:
             upsert=False,
         )
 
+    def find_and_modify(
+            self, update=None, upsert=False,
+            full_response=False, new=False,
+            **kwargs):
+        """ Execute findAndModify query
+
+        :param dict update: see second argument to update()
+        :param bool upsert: insert if object doesn’t exist
+            (default False)
+        :param bool full_response: return the entire response
+            object from the server (default False)
+        :param new: return updated rather than original object
+            (default False)
+        :param **kwargs: any other options the findAndModify
+            command supports can be passed here
+        """
+        result = self._collection.find_and_modify(
+            query=self._criteria,
+            update=update,
+            upsert=upsert,
+            sort=self._sort or None,
+            full_response=full_response,
+            new=new,
+            **kwargs
+        )
+        if not full_response:
+            return self._from_mongo_one(result)
+        else:
+            result['value'] = self._from_mongo_one(result['value'])
+            return result
+
     def remove(self):
         """ Remove documents from queryset
         """
