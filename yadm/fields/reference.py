@@ -62,7 +62,10 @@ class ReferenceField(Field):
     def from_mongo(self, document, value):
         from yadm.documents import Document  # recursive imports
 
-        if isinstance(value, (ObjectId, str)):
+        if value is None:
+            return None
+
+        elif isinstance(value, (ObjectId, str)):
             if document.__db__ is not None:
                 qs = document.__db__.get_queryset(self.reference_document_class)
                 doc = qs.with_id(value)
@@ -78,10 +81,14 @@ class ReferenceField(Field):
             return value
 
         else:
-            raise TypeError('value must be ObjectId, Document or dict')
+            raise TypeError('value must be ObjectId, Document, dict, or None'
+                            ' but {!r} given'.format(type(value)))
 
     def to_mongo(self, document, value):
         from yadm.documents import Document  # recursive imports
+
+        if value is None:
+            return None
 
         if isinstance(value, ObjectId):
             return value
@@ -93,5 +100,5 @@ class ReferenceField(Field):
             return value.id
 
         else:
-            raise TypeError('value must be ObjectId, Document or dict,'
+            raise TypeError('value must be ObjectId, Document, dict, or None,'
                             ' but {!r}'.format(type(value)))
