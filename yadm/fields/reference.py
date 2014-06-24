@@ -60,8 +60,6 @@ class ReferenceField(Field):
         self.reference_document_class = reference_document_class
 
     def from_mongo(self, document, value):
-        from yadm.documents import Document  # recursive imports
-
         if value is None:
             return None
 
@@ -85,8 +83,6 @@ class ReferenceField(Field):
                             ' but {!r} given'.format(type(value)))
 
     def to_mongo(self, document, value):
-        from yadm.documents import Document  # recursive imports
-
         if value is None:
             return None
 
