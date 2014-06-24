@@ -52,7 +52,7 @@ class List(Container):
     def _load_from_mongo(self, data):
         self._data = []
 
-        for item in data:
+        for item in data or ():
             if hasattr(self._field.item_field, 'from_mongo'):
                 value = self._field.item_field.from_mongo(self.__parent__, item)
             else:

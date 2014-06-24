@@ -19,7 +19,7 @@ class Set(Container):
     def _load_from_mongo(self, data):
         self._data = set()
 
-        for item in data:
+        for item in data or ():
             if hasattr(self._field.item_field, 'from_mongo'):
                 value = self._field.item_field.from_mongo(self.__document__, item)
             else:
