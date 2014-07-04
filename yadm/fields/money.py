@@ -56,15 +56,21 @@ class MoneyField(Field):
         elif isinstance(value, Money):
             return value
 
-        elif isinstance(value, str):
+        elif isinstance(value, (str, Decimal)):
             return Money(value)
 
+        elif isinstance(value, int):
+            return Money(value / Decimal(100))
+
         else:
-            raise TypeError(value)
+            raise TypeError(repr(value))
 
     def to_mongo(self, instance, value):
         if value is None:
             return None
+
+        elif isinstance(value, (str, Decimal)):
+            return Money(value).to_mongo()
 
         elif isinstance(value, Money):
             return value.to_mongo()
@@ -73,7 +79,7 @@ class MoneyField(Field):
             return value
 
         else:
-            raise TypeError(value)
+            raise TypeError(repr(value))
 
     def from_mongo(self, instance, data):
         if isinstance(data, int):
