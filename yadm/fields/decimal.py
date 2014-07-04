@@ -69,7 +69,9 @@ class DecimalField(Field):
     def prepare_value(self, value):
         """ Cast value to :class:`decimal.Decimal`
         """
-        if isinstance(value, Decimal):
+        if value is None:
+            return None
+        elif isinstance(value, Decimal):
             return value
         elif isinstance(value, (str, int, float)):
             return Decimal(value, context=self.context)
