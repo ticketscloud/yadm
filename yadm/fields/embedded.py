@@ -18,7 +18,7 @@ Work with embedded documents.
 
 from yadm.common import EnclosedDocDescriptor
 from yadm.fields.base import Field
-from yadm.serialize import to_mongo
+from yadm.serialize import to_mongo, from_mongo
 
 
 class EmbeddedDocumentField(Field):
@@ -52,7 +52,7 @@ class EmbeddedDocumentField(Field):
             return None
 
         elif not isinstance(value, self.embedded_document_class):
-            value = self.embedded_document_class(**value)
+            value = from_mongo(self.embedded_document_class, value, clear_fields_changed=True)
 
         value.__name__ = self.name
         return value
