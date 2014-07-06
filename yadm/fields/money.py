@@ -59,9 +59,6 @@ class MoneyField(Field):
         elif isinstance(value, (str, Decimal)):
             return Money(value)
 
-        elif isinstance(value, int):
-            return Money(value / Decimal(100))
-
         else:
             raise TypeError(repr(value))
 
