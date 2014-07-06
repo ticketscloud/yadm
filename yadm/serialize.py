@@ -60,8 +60,7 @@ def from_mongo(document_class, data, clear_fields_changed=True):
             value = data[name]
 
             if hasattr(field, 'from_mongo'):
-                field_data = field.from_mongo(document, value)
-                setattr(document, name, field_data)
+                document.__data__[name] = field.from_mongo(document, value)
             else:
                 setattr(document, name, value)
 
