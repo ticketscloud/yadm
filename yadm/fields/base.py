@@ -57,13 +57,25 @@ class FieldDescriptor(object):
             setattr(instance, self.name, AttributeNotSet)
 
     def load_deferred(self, instance):
-        qs = instance.__db__.get_queryset(instance.__class__)
-        qs = qs.fields(self.name)
-        doc = qs.with_id(instance.id)
-        value = doc.__data__[self.name]
+        root = getattr(instance, '__document__', None)
 
-        value = value if value is not NotLoaded else None
-        instance.__data__[self.name] = value
+        if root is None:
+            qs = instance.__db__.get_queryset(instance.__class__)
+            qs = qs.fields(self.name)
+            doc = qs.with_id(instance.id)
+            value = doc.__data__[self.name]
+            value = value if value is not NotLoaded else None
+            instance.__data__[self.name] = value
+
+        else:
+            qs = instance.__db__.get_queryset(root.__class__)
+            proj = [i for i in instance.__path_names__ if isinstance(i, str)]
+            qs = qs.fields('.'.join(proj + [self.name]))
+            doc = qs.with_id(root.id)
+            value = instance.__get_value__(doc).__data__[self.name]
+            value = value if value is not NotLoaded else None
+            instance.__data__[self.name] = value
+
         return value
 
 
