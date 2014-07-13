@@ -36,14 +36,15 @@ List of objects
     assert doc.integers == [1, 3]
 
 """
+from collections import abc
 
 from yadm.fields.containers import (
-    Container,
+    ArrayContainer,
     ArrayField,
 )
 
 
-class List(Container):
+class List(ArrayContainer, abc.MutableSequence):
     """ Container for list
     """
     def __repr__(self):
@@ -59,6 +60,16 @@ class List(Container):
                 value = self._prepare_value(item)
 
             self._data.append(value)
+
+    def insert(self, index, item):
+        """ Append item to list
+
+        :param item: item for append
+
+        This method does not save object!
+        """
+        self._data.insert(index, self._prepare_value(item))
+        self._set_changed()
 
     def append(self, item):
         """ Append item to list

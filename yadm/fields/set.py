@@ -3,14 +3,15 @@ Field with sets.
 
 Similar as :py:mod:`yadm.fields.list`.
 """
+from collections import abc
 
 from yadm.fields.containers import (
-    Container,
+    ArrayContainer,
     ArrayField,
 )
 
 
-class Set(Container):
+class Set(ArrayContainer, abc.MutableSet):
     """ Container for set
     """
     def __repr__(self):
@@ -35,6 +36,16 @@ class Set(Container):
         This method does not save object!
         """
         self._data.add(self._prepare_value(item))
+        self._set_changed()
+
+    def discard(self, item):
+        """ Remove item from the set if it is present
+
+        :param item: item for discard
+
+        This method does not save object!
+        """
+        self._data.discard(item)
         self._set_changed()
 
     def remove(self, item):

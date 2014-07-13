@@ -29,6 +29,15 @@ class Container(DocumentItemMixin):
         self._field_name = field.name
         self._load_from_mongo(data)
 
+    def __getitem__(self, item):
+        value = self._data[item]
+
+        if isinstance(value, DocumentItemMixin):
+            value.__parent__ = self
+            value.__name__ = item
+
+        return value
+
     def _prepare_value(self, item):
         """ `prepare_value` function for `item_field`
         """
@@ -40,7 +49,6 @@ class Container(DocumentItemMixin):
         Simply, here create self._data with deserialized data from mongo.
         """
         self._data = data
-        return NotImplemented
 
     def _get_queryset(self):
         """ Return queryset for got data for this field
@@ -51,9 +59,13 @@ class Container(DocumentItemMixin):
 
     def _set_changed(self):
         """ Add field to __fields_changed__
+
+        TODO: work with deep objects
         """
         self.__parent__.__fields_changed__.add(self._field_name)
 
+
+class ArrayContainer(Container):
     def __iter__(self):
         for n, item in enumerate(self._data):
             if isinstance(item, DocumentItemMixin):
@@ -78,19 +90,18 @@ class Container(DocumentItemMixin):
             return res
 
         else:
-            value = self._data[item]
-
-            if isinstance(value, DocumentItemMixin):
-                value.__parent__ = self
-                value.__name__ = item
-
-            return value
+            return super().__getitem__(item)
 
     def __setitem__(self, item, value):
         self._data[item] = value
+        self._set_changed()
 
     def __delitem__(self, item):
         del self._data[item]
+        self._set_changed()
+
+    def __contains__(self, item):
+        return item in self._data
 
     def __len__(self):
         return len(self._data)
@@ -99,19 +110,16 @@ class Container(DocumentItemMixin):
         return bool(self._data)
 
     def __eq__(self, other):
-        return self._data == other
+        if isinstance(other, self.__class__):
+            return self._data == other._data
+        else:
+            return self._data == other
 
 
 class ContainerField(Field):
     """ Base class for container fields
     """
     descriptor_class = ContainerDescriptor
-
-    def __init__(self, item_field):
-        if isinstance(item_field, type):
-            item_field = item_field()
-
-        self.item_field = item_field
 
     @property
     def default(self):
@@ -147,7 +155,13 @@ class ContainerField(Field):
 class ArrayField(ContainerField):
     """ Base class for array containers like as lists or set
     """
-    container = Container
+    container = ArrayContainer
+
+    def __init__(self, item_field):
+        if isinstance(item_field, type):
+            item_field = item_field()
+
+        self.item_field = item_field
 
     def to_mongo(self, document, value):
         """ See :py:meth:`ContainerField.to_mongo`
