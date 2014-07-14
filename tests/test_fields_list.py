@@ -4,13 +4,13 @@ from yadm.documents import Document
 from .test_database import BaseDatabaseTest
 
 
-class SimpleListFieldTest(BaseDatabaseTest):
+class ListFieldTest(BaseDatabaseTest):
     def setUp(self):
         super().setUp()
 
         class TestDoc(Document):
             __collection__ = 'testdoc'
-            li = fields.ListField(fields.IntegerField)
+            li = fields.ListField(fields.IntegerField())
 
         self.TestDoc = TestDoc
 
@@ -20,6 +20,7 @@ class SimpleListFieldTest(BaseDatabaseTest):
         self.assertFalse(td.li)
         self.assertEqual(len(td.li), 0)
         self.assertEqual(td.li._data, [])
+        self.assertEqual(td.li, [])
 
     def test_get(self):
         _id = self.db.db.testdoc.insert({'li': [1, 2, 3]})
@@ -38,7 +39,7 @@ class SimpleListFieldTest(BaseDatabaseTest):
 
         self.assertEqual(td.li, [1, 2, 3, 4])
 
-    def test_append_typeerror(self):
+    def test_append_valueerror(self):
         td = self.TestDoc()
         self.assertRaises(ValueError, td.li.append, 'not a number')
 
@@ -77,7 +78,7 @@ class SimpleListFieldTest(BaseDatabaseTest):
         data = self.db.db.testdoc.find_one({'_id': _id})
         self.assertEqual(data['li'], [1, 2, 3, 4])
 
-    def test_push_typeerror(self):
+    def test_push_valueerror(self):
         td = self.TestDoc()
         self.assertRaises(ValueError, td.li.push, 'not a number')
 

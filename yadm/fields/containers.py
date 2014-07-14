@@ -29,6 +29,14 @@ class Container(DocumentItemMixin):
         self._field_name = field.name
         self._load_from_mongo(data)
 
+    def __iter__(self):
+        for n, item in enumerate(self._data):
+            if isinstance(item, DocumentItemMixin):
+                item.__parent__ = self
+                item.__name__ = n
+
+            yield item
+
     def __getitem__(self, item):
         value = self._data[item]
 
@@ -38,10 +46,33 @@ class Container(DocumentItemMixin):
 
         return value
 
+    def __setitem__(self, item, value):
+        self._data[item] = self._prepare_value(value)
+        self._set_changed()
+
+    def __delitem__(self, item):
+        del self._data[item]
+        self._set_changed()
+
+    def __contains__(self, item):
+        return item in self._data
+
+    def __len__(self):
+        return len(self._data)
+
+    def __bool__(self):
+        return bool(self._data)
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self._data == other._data
+        else:
+            return self._data == other
+
     def _prepare_value(self, item):
         """ `prepare_value` function for `item_field`
         """
-        return self._field.item_field.prepare_value(item)
+        raise NotImplementedError
 
     def _load_from_mongo(self, data):
         """ Load data from pymongo
@@ -66,14 +97,6 @@ class Container(DocumentItemMixin):
 
 
 class ArrayContainer(Container):
-    def __iter__(self):
-        for n, item in enumerate(self._data):
-            if isinstance(item, DocumentItemMixin):
-                item.__parent__ = self
-                item.__name__ = n
-
-            yield item
-
     def __getitem__(self, item):
         if isinstance(item, slice):
             res = []
@@ -92,28 +115,10 @@ class ArrayContainer(Container):
         else:
             return super().__getitem__(item)
 
-    def __setitem__(self, item, value):
-        self._data[item] = value
-        self._set_changed()
-
-    def __delitem__(self, item):
-        del self._data[item]
-        self._set_changed()
-
-    def __contains__(self, item):
-        return item in self._data
-
-    def __len__(self):
-        return len(self._data)
-
-    def __bool__(self):
-        return bool(self._data)
-
-    def __eq__(self, other):
-        if isinstance(other, self.__class__):
-            return self._data == other._data
-        else:
-            return self._data == other
+    def _prepare_value(self, item):
+        """ `prepare_value` function for `item_field`
+        """
+        return self._field.item_field.prepare_value(item)
 
 
 class ContainerField(Field):
@@ -127,7 +132,7 @@ class ContainerField(Field):
 
         Must be implemented in field class.
         """
-        return NotImplemented
+        raise NotImplementedError
 
     def to_mongo(self, document, value):
         """ Serialize field value to data for MongoDB
@@ -149,7 +154,7 @@ class ContainerField(Field):
         :param value: MongoDB data
         :return: python value
         """
-        return NotImplemented
+        raise NotImplementedError
 
 
 class ArrayField(ContainerField):
