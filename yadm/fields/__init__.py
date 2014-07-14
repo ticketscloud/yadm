@@ -20,5 +20,6 @@ from yadm.fields.embedded import EmbeddedDocumentField
 
 from yadm.fields.list import ListField
 from yadm.fields.set import SetField
+from yadm.fields.map import MapField
 
 from yadm.fields.reference import ReferenceField
