@@ -43,6 +43,24 @@ class Money(Decimal):
         s = str(self.to_mongo()).rjust(3, '0')
         return '.'.join((s[:-2], s[-2:]))
 
+    def __xor__(self, other):
+        return NotImplemented
+
+    def __rxor__(self, other):
+        return NotImplemented
+
+    def __mod__(self, other):
+        return NotImplemented
+
+    def __rmod__(self, other):
+        return NotImplemented
+
+    def __divmod__(self, other):
+        return NotImplemented
+
+    def __rdivmod__(self, other):
+        return NotImplemented
+
 
 class MoneyField(Field):
     """ Field for work with money
