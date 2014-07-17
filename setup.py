@@ -17,14 +17,18 @@ setup(
     url='https://github.com/zzzsochi/yadm',
     license='BSD',
     platforms='any',
-    install_requires=['pymongo', 'zope.dottedname'],
+    install_requires=[
+        'pymongo',
+        'zope.dottedname',
+        'python-dateutil',
+    ],
 
     classifiers=[
-            'Development Status :: 4 - Beta',
-            'Topic :: Database',
-            'Intended Audience :: Developers',
-            'Operating System :: OS Independent',
-            'Programming Language :: Python :: 3',
+        'Development Status :: 4 - Beta',
+        'Topic :: Database',
+        'Intended Audience :: Developers',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python :: 3',
     ],
 
     packages=['yadm', 'yadm.fields'],

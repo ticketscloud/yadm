@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime, timezone
 
 from yadm import fields
 from yadm.documents import Document
@@ -19,8 +19,8 @@ class DatetimeFieldTest(BaseDatabaseTest):
 
     def test_cast(self):
         doc = self.TestDoc()
-        doc.dt = datetime.datetime(1970, 1, 1).isoformat()
-        self.assertIsInstance(doc.dt, datetime.datetime)
+        doc.dt = datetime(1970, 1, 1, tzinfo=timezone.utc).isoformat()
+        self.assertIsInstance(doc.dt, datetime)
 
     def test_default_none(self):
         doc = self.TestDoc()
@@ -28,28 +28,28 @@ class DatetimeFieldTest(BaseDatabaseTest):
 
     def test_save(self):
         doc = self.TestDoc()
-        doc.dt = datetime.datetime(1970, 1, 1)
+        doc.dt = datetime(1970, 1, 1, tzinfo=timezone.utc)
         self.db.insert(doc)
 
         doc = self.db.get_queryset(self.TestDoc).with_id(doc.id)
         data = self.db.db.testdocs.find_one()
 
-        self.assertIsInstance(data['dt'], datetime.datetime)
+        self.assertIsInstance(data['dt'], datetime)
         self.assertEqual(data['dt'], doc.dt)
 
     def test_load(self):
-        epoch = datetime.datetime(1970, 1, 1)
+        epoch = datetime(1970, 1, 1, tzinfo=timezone.utc)
         _id = self.db.db.testdocs.insert({'dt': epoch})
 
         doc = self.db.get_queryset(self.TestDoc).with_id(_id)
 
-        self.assertIsInstance(doc.dt, datetime.datetime)
+        self.assertIsInstance(doc.dt, datetime)
         self.assertEqual(doc.dt, epoch)
 
     def test_default_auto_now(self):
         doc = self.TestDoc()
         self.assertTrue(hasattr(doc, 'now'))
-        self.assertIsInstance(doc.now, datetime.datetime)
+        self.assertIsInstance(doc.now, datetime)
 
     def test_default_now_save(self):
         doc = self.TestDoc()
@@ -58,11 +58,11 @@ class DatetimeFieldTest(BaseDatabaseTest):
         doc = self.db.get_queryset(self.TestDoc).with_id(doc.id)
         data = self.db.db.testdocs.find_one()
 
-        self.assertIsInstance(data['now'], datetime.datetime)
+        self.assertIsInstance(data['now'], datetime)
         self.assertEqual(data['now'], doc.now)
 
     def test_now_save(self):
-        epoch = datetime.datetime(1970, 1, 1)
+        epoch = datetime(1970, 1, 1, tzinfo=timezone.utc)
 
         doc = self.TestDoc()
         doc.now = epoch
@@ -71,14 +71,14 @@ class DatetimeFieldTest(BaseDatabaseTest):
         doc = self.db.get_queryset(self.TestDoc).with_id(doc.id)
         data = self.db.db.testdocs.find_one()
 
-        self.assertIsInstance(data['now'], datetime.datetime)
+        self.assertIsInstance(data['now'], datetime)
         self.assertEqual(data['now'], epoch)
 
     def test_now_load(self):
-        epoch = datetime.datetime(1970, 1, 1)
+        epoch = datetime(1970, 1, 1, tzinfo=timezone.utc)
         _id = self.db.db.testdocs.insert({'now': epoch})
 
         doc = self.db.get_queryset(self.TestDoc).with_id(_id)
 
-        self.assertIsInstance(doc.now, datetime.datetime)
+        self.assertIsInstance(doc.now, datetime)
         self.assertEqual(doc.now, epoch)

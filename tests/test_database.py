@@ -17,9 +17,9 @@ class BaseDatabaseTest(TestCase):
             raise SkipTest
 
         try:
-            self.client = pymongo.MongoClient("localhost", 27017)
+            self.client = pymongo.MongoClient("localhost", 27017, tz_aware=True)
             self.client.drop_database('test')
-        except pymongo.errors.ConnectionFailure as exc:
+        except pymongo.errors.ConnectionFailure:
             self.__class__.skip = True
             raise SkipTest
 
