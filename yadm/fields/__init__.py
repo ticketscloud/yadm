@@ -12,6 +12,8 @@ from yadm.fields.simple import (
     StringField,
 )
 
+from yadm.fields.email import EmailField
+
 from yadm.fields.datetime import DatetimeField
 from yadm.fields.decimal import DecimalField
 from yadm.fields.money import Money, MoneyField
