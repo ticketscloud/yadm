@@ -2,7 +2,7 @@ from setuptools import setup
 
 # python setup.py sdist --formats=bztar
 
-version = 'dev'
+version = '0.6'
 description = 'Yet Another Document Mapper (ODM) for MongoDB'
 long_description = open('README.rst', 'rb').read().decode('utf8')
 
