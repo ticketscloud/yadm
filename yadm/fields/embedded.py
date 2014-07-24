@@ -32,7 +32,7 @@ class EmbeddedDocumentField(Field):
     def __init__(self, embedded_document_class):
         self.embedded_document_class = embedded_document_class
 
-    def prepare_value(self, value):
+    def prepare_value(self, document, value):
         if value is None:
             return None
 
@@ -43,7 +43,7 @@ class EmbeddedDocumentField(Field):
             raise TypeError('Only {!r}, dict or None is alowed, but {!r} given'
                             ''.format(self.embedded_document_class, type(value)))
 
-        # value.__parent__ = document
+        value.__parent__ = document
         value.__name__ = self.name
         return value
 

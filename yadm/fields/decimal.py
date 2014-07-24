@@ -66,7 +66,7 @@ class DecimalField(Field):
 
         return reduce(reduce_func, enumerate(reversed(digits)), 0)
 
-    def prepare_value(self, value):
+    def prepare_value(self, document, value):
         """ Cast value to :class:`decimal.Decimal`
         """
         if value is None:
@@ -87,7 +87,7 @@ class DecimalField(Field):
 
             return Decimal((sing, digits, value['e']), context=self.context)
 
-    def to_mongo(self, instance, value):
+    def to_mongo(self, document, value):
         sign, digits, exp = value.as_tuple()
         integer = self._integer_from_digits(digits)
         return {
@@ -95,5 +95,5 @@ class DecimalField(Field):
             'e': exp
         }
 
-    def from_mongo(self, instance, data):
-        return self.prepare_value(data)
+    def from_mongo(self, document, data):
+        return self.prepare_value(document, data)

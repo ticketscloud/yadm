@@ -42,7 +42,7 @@ class FieldDescriptor(object):
 
     def __set__(self, instance, value):
         if not isinstance(instance, type):
-            value = self.field.prepare_value(value)
+            value = self.field.prepare_value(instance, value)
 
             if value != instance.__data__.get(self.name):
                 instance.__fields_changed__.add(self.name)
@@ -88,7 +88,8 @@ class Field(object):
 
     .. py:attribute:: default (NoDefault)
 
-        Default value. It is processed by ``prepare_value`` in the creating document
+        Default value. It is not processed by ``prepare_value``
+        in the creating document
     """
 
     descriptor_class = FieldDescriptor
@@ -98,7 +99,7 @@ class Field(object):
 
     def __init__(self, default=NoDefault):
         if default is not NoDefault:
-            self.default = self.prepare_value(default)
+            self.default = self.prepare_value(None, default)
 
     def __repr__(self):
         class_name = type(self).__name__
@@ -120,9 +121,10 @@ class Field(object):
         """
         return self.__class__(default=self.default)
 
-    def prepare_value(self, value):
+    def prepare_value(self, document, value):
         """ The method is called when value is assigned for the attribute
 
+        :param BaseDocument document: document
         :param value: raw value
         :return: prepared value
 

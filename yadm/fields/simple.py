@@ -25,7 +25,7 @@ class SimpleField(Field):
 
         super().__init__(default)
 
-    def prepare_value(self, value):
+    def prepare_value(self, document, value):
         if not isinstance(value, self.type):
             value = self.type(value)
 
@@ -35,10 +35,10 @@ class SimpleField(Field):
         return value
 
     def to_mongo(self, document, value):
-        return self.prepare_value(value)
+        return self.prepare_value(document, value)
 
     def from_mongo(self, document, value):
-        return self.prepare_value(value)
+        return self.prepare_value(document, value)
 
 
 class ObjectIdField(SimpleField):

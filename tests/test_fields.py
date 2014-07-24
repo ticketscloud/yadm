@@ -32,7 +32,8 @@ class ChoicesWithDefaultTest(TestCase):
         self.assertEqual(doc.string, 0)
 
     def test_invalid(self):
-        self.assertRaises(ValueError, IntegerField, default=1, choices={0, 13, 42})
+        with self.assertRaises(ValueError):
+            IntegerField(default=1, choices={0, 13, 42})
 
 
 class ObjectIdFieldTest(TestCase):

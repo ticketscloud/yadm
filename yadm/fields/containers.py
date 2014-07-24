@@ -121,7 +121,7 @@ class ArrayContainer(Container):
     def _prepare_value(self, item):
         """ `prepare_value` function for `item_field`
         """
-        return self._field.item_field.prepare_value(item)
+        return self._field.item_field.prepare_value(None, item)
 
 
 class ContainerField(Field):

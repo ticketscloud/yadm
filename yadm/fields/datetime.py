@@ -30,7 +30,7 @@ class DatetimeField(Field):
             return super().default
 
     @classmethod
-    def prepare_value(cls, dt):
+    def prepare_value(cls, document, dt):
         if type(dt) is datetime.datetime:
             return cls._fix_timezone(dt)
 

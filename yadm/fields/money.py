@@ -65,7 +65,7 @@ class Money(Decimal):
 class MoneyField(Field):
     """ Field for work with money
     """
-    def prepare_value(self, value):
+    def prepare_value(self, document, value):
         """ Cast value to :class:`decimal.Decimal`
         """
         if value is None:
@@ -80,7 +80,7 @@ class MoneyField(Field):
         else:
             raise TypeError(repr(value))
 
-    def to_mongo(self, instance, value):
+    def to_mongo(self, document, value):
         if value is None:
             return None
 
@@ -96,8 +96,8 @@ class MoneyField(Field):
         else:
             raise TypeError(repr(value))
 
-    def from_mongo(self, instance, data):
+    def from_mongo(self, document, data):
         if isinstance(data, int):
             return Money(data / Decimal(100))
         else:
-            return self.prepare_value(data)
+            return self.prepare_value(document, data)
