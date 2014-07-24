@@ -26,7 +26,7 @@ class SimpleField(Field):
         super().__init__(default)
 
     def prepare_value(self, document, value):
-        if not isinstance(value, self.type):
+        if not isinstance(value, self.type) and value is not None:
             value = self.type(value)
 
         if self.choices is not None and value not in self.choices:
