@@ -1,11 +1,11 @@
-"""Common part for working with imports, documents and so on.
+""" Common part for working with imports, documents and so on
 """
 
 from zope.dottedname.resolve import resolve
 
 
 class EnclosedDocDescriptor:
-    """Descriptor for accessing an enclosed documens within an embedded
+    """ Descriptor for accessing an enclosed documens within an embedded
     (:py:class:`yadm.fields.embedded.EmbeddedDocumentField`) and a reference
     (:py:class:`yadm.fields.reference.ReferenceField`) fields.
 

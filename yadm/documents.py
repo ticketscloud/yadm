@@ -91,7 +91,7 @@ class Document(BaseDocument):
     __collection__ = None
     __db__ = None
 
-    _id = ObjectIdField
+    _id = ObjectIdField()
 
     def __str__(self):
         if hasattr(self, '_id'):
