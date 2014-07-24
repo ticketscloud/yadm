@@ -34,6 +34,12 @@ class SimpleField(Field):
 
         return value
 
+    def to_mongo(self, document, value):
+        return self.prepare_value(value)
+
+    def from_mongo(self, document, value):
+        return self.prepare_value(value)
+
 
 class ObjectIdField(SimpleField):
     """ Field for ObjectId
