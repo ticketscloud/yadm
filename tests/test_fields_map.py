@@ -86,8 +86,14 @@ class MapFieldTest(BaseDatabaseTest):
         data = self.db.db.testdoc.find_one({'_id': _id})
         self.assertEqual(data['map'], {'a': 1, 'b': 2, 'c': 3, 'd': 4})
 
+    def test_set_runtimeerror(self):
+        td = self.TestDoc()
+        with self.assertRaises(RuntimeError):
+            td.map.set('key', 1)
+
     def test_set_valueerror(self):
         td = self.TestDoc()
+        self.db.save(td)
         with self.assertRaises(ValueError):
             td.map.set('key', 'not a number')
 
