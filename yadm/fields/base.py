@@ -11,26 +11,26 @@ class FieldDescriptor(object):
     def __init__(self, name, field):
         self.name = name
         self.field = field
-        self.default = field.default
+
+    def __repr__(self):
+        class_name = type(self).__name__
+        document_class_name = type(self.field.document_class).__name__
+        return '<{} "{}.{}">'.format(class_name, document_class_name, self.name)
 
     def __get__(self, instance, owner):
         if instance is None:
             return self.field
 
         else:
-            if self.name not in instance.__data__:
-                instance.__data__[self.name] = self.field.default
+            value = instance.__data__.get(self.name, AttributeNotSet)
 
-            value = instance.__data__[self.name]
-
-            if value is AttributeNotSet or value is NoDefault:
+            if value is AttributeNotSet:
                 raise AttributeError(self.name)
 
             elif value is NotLoaded:
                 value = self.load_deferred(instance)
 
-            elif hasattr(self.field, 'from_mongo'):
-                value = self.field.from_mongo(instance, value)
+            value = self.field.from_mongo(instance, value)
 
             from yadm.documents import DocumentItemMixin
 
@@ -100,6 +100,11 @@ class Field(object):
         if default is not NoDefault:
             self.default = self.prepare_value(default)
 
+    def __repr__(self):
+        class_name = type(self).__name__
+        document_class_name = type(self.document_class).__name__
+        return '<{} "{}.{}">'.format(class_name, document_class_name, self.name)
+
     def contribute_to_class(self, document_class, name):
         """ Add field for document_class
 
@@ -125,4 +130,10 @@ class Field(object):
         Also it is called for the default value in the creating (not instance!)
         document.
         """
+        return value
+
+    def to_mongo(self, document, value):
+        return value
+
+    def from_mongo(self, document, value):
         return value

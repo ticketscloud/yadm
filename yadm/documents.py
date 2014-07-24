@@ -16,6 +16,7 @@ All fields placed in :py:mod:`yadm.fields` package.
 
 from bson import ObjectId
 
+from yadm.markers import AttributeNotSet, NoDefault
 from yadm.fields.base import Field
 from yadm.fields.simple import ObjectIdField
 
@@ -49,14 +50,38 @@ class BaseDocument(metaclass=MetaDocument):
     """
     __initialized__ = False
 
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
+        if args:
+            if len(args) != 1:
+                raise TypeError("only one positional argument accepted!")
+
+            elif not isinstance(args[0], dict):
+                name = type(args[0]).__name__
+                raise TypeError("argument must be a dict, not {}".format(name))
+
+            data = args[0]
+
+        elif kwargs:
+            data = kwargs
+
+        else:
+            data = {}
+
         self.__data__ = {}
         self.__fields_changed__ = set()
 
-        for key, value in kwargs.items():
-            setattr(self, key, value)
+        for key, field in self.__fields__.items():
+            if key in data:
+                setattr(self, key, data[key])
+            else:
+                default = field.default
 
-        self.__initialized__ = kwargs.get('__initialized__', True)
+                if default is NoDefault:
+                    self.__data__[key] = AttributeNotSet
+                else:
+                    setattr(self, key, default)
+
+        self.__initialized__ = data.get('__initialized__', True)
 
     def __str__(self):
         """ Implement it for pretty str and repr documents

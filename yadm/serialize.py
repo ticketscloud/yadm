@@ -25,11 +25,7 @@ def to_mongo(document, exclude=(), include=None):
             continue
 
         value = getattr(document, name)
-
-        if hasattr(field, 'to_mongo'):
-            result[name] = field.to_mongo(document, value)
-        else:
-            result[name] = value
+        result[name] = field.to_mongo(document, value)
 
     if include:
         include_groups = {}
@@ -58,11 +54,7 @@ def from_mongo(document_class, data, clear_fields_changed=True):
     for name, field in document.__fields__.items():
         if name in data:
             value = data[name]
-
-            if hasattr(field, 'from_mongo'):
-                document.__data__[name] = field.from_mongo(document, value)
-            else:
-                setattr(document, name, value)
+            document.__data__[name] = field.from_mongo(document, value)
 
         else:
             document.__data__[name] = NotLoaded

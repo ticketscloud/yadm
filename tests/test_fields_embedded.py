@@ -1,5 +1,8 @@
+from bson import ObjectId
+
 from yadm import fields
 from yadm.documents import Document, EmbeddedDocument
+from yadm.serialize import from_mongo
 
 from .test_database import BaseDatabaseTest
 
@@ -9,7 +12,7 @@ class EmbeddedDocumentFieldTest(BaseDatabaseTest):
         super().setUp()
 
         class ETestDoc(EmbeddedDocument):
-            i = fields.IntegerField
+            i = fields.IntegerField()
 
         class TestDoc(Document):
             __collection__ = 'testdoc'
@@ -71,3 +74,27 @@ class EmbeddedDocumentFieldTest(BaseDatabaseTest):
 
         data = self.db.db.testdoc.find_one({'_id': _id})
         self.assertEqual(data, {'_id': _id, 'e': {'i': 26}})
+
+
+class EmbeddedDocumentWithIdFieldTest(BaseDatabaseTest):
+    def setUp(self):
+        super().setUp()
+
+        class ETestDoc(EmbeddedDocument):
+            id = fields.ObjectIdField(default_gen=True)
+            i = fields.IntegerField()
+
+        class TestDoc(Document):
+            __collection__ = 'testdoc'
+            e = fields.EmbeddedDocumentField(ETestDoc)
+
+        self.ETestDoc = ETestDoc
+        self.TestDoc = TestDoc
+
+    def test_load_default(self):
+        td = self.TestDoc({'e': {'i': 13}})
+        self.assertTrue(hasattr(td, 'e'))
+        self.assertTrue(hasattr(td.e, 'i'))
+        self.assertTrue(hasattr(td.e, 'id'))
+        self.assertEqual(td.e.i, 13)
+        self.assertIsInstance(td.e.id, ObjectId)

@@ -84,6 +84,9 @@ class Container(DocumentItemMixin):
     def _get_queryset(self):
         """ Return queryset for got data for this field
         """
+        if self.__db__ is None:
+            raise RuntimeError('object not binded to database')
+
         qs = self.__db__.get_queryset(self.__document__.__class__)
         qs = qs.find({'_id': self.__document__.id})
         return qs.fields(self.__field_name__)
