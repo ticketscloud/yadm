@@ -25,3 +25,6 @@ from yadm.fields.set import SetField
 from yadm.fields.map import MapField
 
 from yadm.fields.reference import ReferenceField
+
+from yadm.fields.geo import Point, PointField
+from yadm.fields.geo import MultiPoint, MultiPointField
