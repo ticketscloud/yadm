@@ -45,11 +45,11 @@ Quick start
     db.insert(post)
 
     # Query posts
-    qs = db.get_queryset(BlogPost).find({'title': {'$regex': '^s'}})
+    qs = db.get_queryset(BlogPost).find({'title': {'$regex': '^S'}})
     assert qs.count() > 0
 
     for post in qs:
-        assert post.title.startswith('s')
+        assert post.title.startswith('S')
 
     # Query one post
     post = db.get_queryset(BlogPost).find_one({'title': 'Small post'})
