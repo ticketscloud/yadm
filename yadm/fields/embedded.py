@@ -59,3 +59,8 @@ class EmbeddedDocumentField(Field):
 
         value.__name__ = self.name
         return value
+
+    def copy(self):
+        """ Return copy of field
+        """
+        return self.__class__(self.embedded_document_class)
