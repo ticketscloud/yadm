@@ -24,7 +24,7 @@ class QuerySet:
 
     def __getitem__(self, item):
         if isinstance(item, slice):
-            return self._from_mongo_list(self._cursor[slice])
+            return self._from_mongo_list(self._cursor[item])
 
         elif isinstance(item, int):
             return self._from_mongo_one(self._cursor[item])
