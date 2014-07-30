@@ -63,7 +63,13 @@ class ReferenceField(Field):
         if value is None:
             return None
 
-        elif isinstance(value, (ObjectId, str)):
+        elif isinstance(value, dict):
+            return from_mongo(self.reference_document_class, value)
+
+        elif isinstance(value, Document):
+            return value
+
+        else:
             if document.__db__ is not None:
                 qs = document.__db__.get_queryset(self.reference_document_class)
                 doc = qs.with_id(value)
@@ -72,29 +78,13 @@ class ReferenceField(Field):
             else:
                 return value
 
-        elif isinstance(value, dict):
-            return from_mongo(self.reference_document_class, value)
-
-        elif isinstance(value, Document):
-            return value
-
-        else:
-            raise TypeError('value must be ObjectId, Document, dict, or None'
-                            ' but {!r} given'.format(type(value)))
 
     def to_mongo(self, document, value):
-        if value is None:
-            return None
-
-        if isinstance(value, ObjectId):
-            return value
-
-        elif isinstance(value, dict):
+        if isinstance(value, dict):
             return value['_id']
 
         elif isinstance(value, Document):
             return value.id
 
         else:
-            raise TypeError('value must be ObjectId, Document, dict, or None,'
-                            ' but {!r}'.format(type(value)))
+            return value

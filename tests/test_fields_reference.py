@@ -58,3 +58,29 @@ class ReferenceTest(BaseDatabaseTest):
         self.assertIsInstance(id_ref, ObjectId)
         self.assertIsInstance(doc.ref, Document)
         self.assertEqual(id_ref, doc.ref.id)
+
+
+class ReferenceNotObjectIdTest(BaseDatabaseTest):
+    def setUp(self):
+        super().setUp()
+
+        class TestDocRef(Document):
+            __collection__ = 'testdocs_ref'
+            _id = fields.IntegerField()
+
+        class TestDoc(Document):
+            __collection__ = 'testdocs'
+            ref = fields.ReferenceField(TestDocRef)
+
+        self.TestDocRef = TestDocRef
+        self.TestDoc = TestDoc
+
+    def test_get(self):
+        id_ref = self.db.db.testdocs_ref.insert({'_id': 13})
+        id = self.db.db.testdocs.insert({'ref': id_ref})
+
+        doc = self.db.get_queryset(self.TestDoc).with_id(id)
+
+        self.assertEqual(doc._id, id)
+        self.assertIsInstance(doc.ref, Document)
+        self.assertEqual(doc.ref._id, id_ref)
