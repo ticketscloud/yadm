@@ -1,3 +1,5 @@
+from bson import ObjectId
+
 from yadm.documents import Document
 from yadm import fields
 from yadm.markers import NotLoaded
@@ -168,3 +170,13 @@ class QuerySetTest(BaseDatabaseTest):
         doc = self.qs.find_one({'i': 0})
         self.assertIn(doc, self.qs)
         self.assertNotIn(doc, self.qs.find({'i': {'$ne': 0}}))
+
+    def test_bulk(self):
+        bulk = self.qs.find({'i': {'$gte': 6}}).bulk()
+        self.assertIsInstance(bulk, dict)
+        self.assertEqual(len(bulk), 4)
+        self.assertIsInstance(list(bulk)[0], ObjectId)
+        self.assertIsInstance(list(bulk.values())[0], self.TestDoc)
+        _id = list(bulk)[0]
+        self.assertEqual(bulk[_id].id, _id)
+        self.assertEqual({d.i for d in bulk.values()}, {6, 7, 8, 9})

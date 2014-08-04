@@ -208,3 +208,10 @@ class QuerySet:
         """ Count documents in queryset
         """
         return self._cursor.count()
+
+    def bulk(self):
+        """ Return map {id: object}
+        """
+        qs = self.copy()
+        qs._sort = []
+        return {obj.id: obj for obj in qs}
