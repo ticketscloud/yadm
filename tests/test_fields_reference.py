@@ -1,6 +1,6 @@
 from bson import ObjectId
 
-from yadm.documents import Document
+from yadm.documents import Document, EmbeddedDocument
 from yadm import fields
 
 from .test_database import BaseDatabaseTest
@@ -84,3 +84,33 @@ class ReferenceNotObjectIdTest(BaseDatabaseTest):
         self.assertEqual(doc._id, id)
         self.assertIsInstance(doc.ref, Document)
         self.assertEqual(doc.ref._id, id_ref)
+
+
+class ReferenceInEmbeddedTest(BaseDatabaseTest):
+    def setUp(self):
+        super().setUp()
+
+        class TestDocRef(Document):
+            __collection__ = 'testdocs_ref'
+
+        class TestDocEmb(EmbeddedDocument):
+            ref = fields.ReferenceField(TestDocRef)
+
+        class TestDoc(Document):
+            __collection__ = 'testdocs'
+            emb = fields.EmbeddedDocumentField(TestDocEmb)
+
+        self.TestDocRef = TestDocRef
+        self.TestDocEmb = TestDocEmb
+        self.TestDoc = TestDoc
+
+    def test_get(self):
+        id_ref = self.db.db.testdocs_ref.insert({})
+        id = self.db.db.testdocs.insert({'emb': {'ref': id_ref}})
+
+        doc = self.db.get_queryset(self.TestDoc).with_id(id)
+
+        self.assertEqual(doc._id, id)
+        self.assertIsInstance(doc.emb, self.TestDocEmb)
+        self.assertIsInstance(doc.emb.ref, self.TestDocRef)
+        self.assertEqual(doc.emb.ref._id, id_ref)

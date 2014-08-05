@@ -54,7 +54,7 @@ def from_mongo(document_class, data, clear_fields_changed=True):
     for name, field in document.__fields__.items():
         if name in data:
             value = data[name]
-            document.__data__[name] = field.from_mongo(document, value)
+            document.__data__[name] = value
 
         else:
             document.__data__[name] = NotLoaded

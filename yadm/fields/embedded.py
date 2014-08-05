@@ -37,14 +37,15 @@ class EmbeddedDocumentField(Field):
             return None
 
         elif isinstance(value, dict):
-            value = self.embedded_document_class(**value)
+            value = self.embedded_document_class(
+                __parent__=document,
+                __name__=self.name,
+                **value)
 
         elif not isinstance(value, self.embedded_document_class):
             raise TypeError('Only {!r}, dict or None is alowed, but {!r} given'
                             ''.format(self.embedded_document_class, type(value)))
 
-        value.__parent__ = document
-        value.__name__ = self.name
         return value
 
     def to_mongo(self, document, value):
@@ -57,6 +58,7 @@ class EmbeddedDocumentField(Field):
         elif not isinstance(value, self.embedded_document_class):
             value = from_mongo(self.embedded_document_class, value, clear_fields_changed=True)
 
+        value.__parent__ = document
         value.__name__ = self.name
         return value
 

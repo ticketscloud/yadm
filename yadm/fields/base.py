@@ -31,6 +31,7 @@ class FieldDescriptor(object):
                 value = self.load_deferred(instance)
 
             value = self.field.from_mongo(instance, value)
+            instance.__data__[self.name] = value
 
             from yadm.documents import DocumentItemMixin
 

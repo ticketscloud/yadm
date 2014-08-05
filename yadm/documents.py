@@ -250,3 +250,11 @@ class DocumentItemMixin:
 class EmbeddedDocument(DocumentItemMixin, BaseDocument):
     """ Class for build embedded documents
     """
+    def __init__(self, *args, **kwargs):
+        if '__parent__' in kwargs:
+            self.__parent__ = kwargs.pop('__parent__')
+
+        if '__name__' in kwargs:
+            self.__name__ = kwargs.pop('__name__')
+
+        super().__init__(*args, **kwargs)
