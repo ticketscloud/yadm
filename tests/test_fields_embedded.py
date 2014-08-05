@@ -2,7 +2,6 @@ from bson import ObjectId
 
 from yadm import fields
 from yadm.documents import Document, EmbeddedDocument
-from yadm.serialize import from_mongo
 
 from .test_database import BaseDatabaseTest
 
