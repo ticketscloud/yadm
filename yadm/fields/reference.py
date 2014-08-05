@@ -24,9 +24,6 @@ Work with references.
 
 TODO: many2many collections
 """
-
-from bson import ObjectId
-
 from yadm.common import EnclosedDocDescriptor
 from yadm.documents import Document
 from yadm.fields.base import Field, FieldDescriptor
@@ -73,11 +70,15 @@ class ReferenceField(Field):
             if document.__db__ is not None:
                 qs = document.__db__.get_queryset(self.reference_document_class)
                 doc = qs.with_id(value)
-                return doc if doc else ObjectId(value)
+
+                if doc:
+                    return doc
+                else:
+                    field = self.reference_document_class.__fields__['_id']
+                    return field.prepare_value(None, value)
 
             else:
                 return value
-
 
     def to_mongo(self, document, value):
         if isinstance(value, dict):
