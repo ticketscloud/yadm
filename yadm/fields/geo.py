@@ -141,6 +141,12 @@ class GeoOneTypeField(GeoField):
         self.types = [self.type]
         self.types_dict = {self.type.type: self.type}
 
+    def prepare_value(self, document, value):
+        if isinstance(value, self.type) or value is None:
+            return value
+        elif isinstance(value, dict):
+            return self.type.from_mongo(value)
+
 
 class PointField(GeoOneTypeField):
     """ Field for Point
