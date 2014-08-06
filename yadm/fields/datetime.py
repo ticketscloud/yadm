@@ -16,11 +16,11 @@ class DatetimeField(Field):
         super().__init__(**kwargs)
 
     @staticmethod
-    def _fix_timezone(dt):
-        if dt.tzinfo is None:
-            return dt.replace(tzinfo=datetime.timezone.utc)
+    def _fix_timezone(value):
+        if value.tzinfo is None:
+            return value.replace(tzinfo=datetime.timezone.utc)
         else:
-            return dt
+            return value
 
     @property
     def default(self):
@@ -30,18 +30,33 @@ class DatetimeField(Field):
             return super().default
 
     @classmethod
-    def prepare_value(cls, document, dt):
-        if type(dt) is datetime.datetime:
-            return cls._fix_timezone(dt)
+    def prepare_value(cls, document, value):
+        if value is None:
+            return None
 
-        elif type(dt) is datetime.date:
-            dt = datetime.datetime(*dt.timetuple()[:3])
-            return cls._fix_timezone(dt)
+        if type(value) is datetime.datetime:
+            return cls._fix_timezone(value)
 
-        elif isinstance(dt, str):
-            dt = dateutil.parser.parse(dt)
-            return cls._fix_timezone(dt)
+        elif type(value) is datetime.date:
+            return datetime.datetime(
+                *value.timetuple()[:3],
+                tz=datetime.timezone.utc
+            )
+
+        elif isinstance(value, str):
+            value = dateutil.parser.parse(value)
+            return cls._fix_timezone(value)
 
         else:
             raise TypeError('First value must be datetime,'
-                            ' date or string, but {!r}'.format(type(dt)))
+                            ' date or string, but {!r}'.format(type(value)))
+
+    @classmethod
+    def from_mongo(cls, document, value):
+        if value is not None:
+            return cls._fix_timezone(value)
+
+    @classmethod
+    def to_mongo(cls, document, value):
+        if value is not None:
+            return cls._fix_timezone(value)
