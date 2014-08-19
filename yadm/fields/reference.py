@@ -56,6 +56,9 @@ class ReferenceField(Field):
     def __init__(self, reference_document_class):
         self.reference_document_class = reference_document_class
 
+    def copy(self):
+        return self.__class__(self.reference_document_class)
+
     def from_mongo(self, document, value):
         if value is None:
             return None
