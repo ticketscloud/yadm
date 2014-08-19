@@ -2,10 +2,10 @@ import datetime
 
 import dateutil.parser
 
-from yadm.fields.base import Field
+from yadm.fields.base import Field, DefaultMixin
 
 
-class DatetimeField(Field):
+class DatetimeField(DefaultMixin, Field):
     """ Field for time stamp
 
     :param bool auto_now: datetime.now as default

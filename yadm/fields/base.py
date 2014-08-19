@@ -5,7 +5,7 @@ Base classes for build database fields.
 from yadm.markers import AttributeNotSet, NoDefault, NotLoaded
 
 
-class FieldDescriptor(object):
+class FieldDescriptor:
     """ Base desctiptor for fields
     """
     def __init__(self, name, field):
@@ -80,7 +80,7 @@ class FieldDescriptor(object):
         return value
 
 
-class Field(object):
+class Field:
     """ Base field for all batabase fields
 
     .. py:attribute:: descriptor_class
@@ -98,9 +98,8 @@ class Field(object):
     name = None
     document_class = None
 
-    def __init__(self, default=NoDefault):
-        if default is not NoDefault:
-            self.default = self.prepare_value(None, default)
+    def __init__(self):
+        pass
 
     def __repr__(self):
         class_name = type(self).__name__
@@ -120,7 +119,7 @@ class Field(object):
     def copy(self):
         """ Return copy of field
         """
-        return self.__class__(default=self.default)
+        return self.__class__()
 
     def prepare_value(self, document, value):
         """ The method is called when value is assigned for the attribute
@@ -140,3 +139,14 @@ class Field(object):
 
     def from_mongo(self, document, value):
         return value
+
+
+class DefaultMixin:
+    def __init__(self, default=NoDefault):
+        if default is not NoDefault:
+            self.default = self.prepare_value(None, default)
+
+    def copy(self):
+        """ Return copy of field
+        """
+        return self.__class__(default=self.default)

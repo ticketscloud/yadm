@@ -129,14 +129,6 @@ class ContainerField(Field):
     """
     descriptor_class = ContainerDescriptor
 
-    @property
-    def default(self):
-        """ Return default value
-
-        Must be implemented in field class.
-        """
-        raise NotImplementedError
-
     def to_mongo(self, document, value):
         """ Serialize field value to data for MongoDB
 

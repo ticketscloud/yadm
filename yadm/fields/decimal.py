@@ -24,11 +24,11 @@ This code save to MongoDB document:
 from decimal import Decimal, getcontext
 from functools import reduce
 
-from yadm.fields.base import Field
+from yadm.fields.base import Field, DefaultMixin
 from yadm.markers import NoDefault
 
 
-class DecimalField(Field):
+class DecimalField(DefaultMixin, Field):
     """ Field for work with :class:`decimal.Decimal`
 
     :param decimal.Context context: context for decimal operations

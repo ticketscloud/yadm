@@ -4,11 +4,11 @@ Fields for basic data types.
 
 from bson import ObjectId
 
-from yadm.fields.base import Field
+from yadm.fields.base import Field, DefaultMixin
 from yadm.markers import NoDefault
 
 
-class SimpleField(Field):
+class SimpleField(DefaultMixin, Field):
     """ Base field for simple types
 
     :param default: default value

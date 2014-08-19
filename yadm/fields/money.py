@@ -27,7 +27,7 @@ This code save to MongoDB document:
 """
 from decimal import Decimal, Context, ROUND_UP
 
-from yadm.fields.base import Field
+from yadm.fields.base import Field, DefaultMixin
 
 
 class Money(Decimal):
@@ -62,7 +62,7 @@ class Money(Decimal):
         return NotImplemented
 
 
-class MoneyField(Field):
+class MoneyField(DefaultMixin, Field):
     """ Field for work with money
     """
     def prepare_value(self, document, value):
