@@ -83,25 +83,28 @@ class QuerySet:
 
         return qs
 
-    def _update_qs(self, **kwargs):
+    def _update_qs(self, criteria=None, projection=None, sort=None):
         """ Update queryset parameters in place
         """
-        if 'criteria' in kwargs:
+        if criteria:
             if self._criteria is None:
-                self._criteria = kwargs['criteria']
-            else:
-                self._criteria.update(kwargs['criteria'] or {})
+                self._criteria = criteria
 
-        if 'projection' in kwargs:
+            elif set(self._criteria) & set(criteria):
+                self._criteria = {'$and': [self._criteria, criteria]}
+            else:
+                self._criteria.update(criteria)
+
+        if projection:
             if self._projection is None:
-                self._projection = kwargs['projection']
+                self._projection = projection
             else:
-                self._projection.update(kwargs['projection'] or {})
+                self._projection.update(projection)
 
-        if 'sort' in kwargs and kwargs['sort'] is not None:
-            self._sort.extend(kwargs['sort'])
+        if sort:
+            self._sort.extend(sort)
 
-    def copy(self, **kwargs):
+    def copy(self, *args, **kwargs):
         """ Copy queryset and update it
 
             :criteria:
@@ -109,7 +112,7 @@ class QuerySet:
             :sort:
         """
         qs = self._copy_qs()
-        qs._update_qs(**kwargs)
+        qs._update_qs(*args, **kwargs)
         return qs
 
     def find(self, criteria=None, projection=None):

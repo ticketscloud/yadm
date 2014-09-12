@@ -44,6 +44,12 @@ class QuerySetTest(BaseDatabaseTest):
         self.assertEqual(len([d for d in qs]), 4)
         self.assertEqual({d.i for d in qs}, {6, 7, 8, 9})
 
+    def test_find_with_collisium(self):
+        qs = self.qs.find({'i': {'$gt': 4}})
+        qs = qs.find({'i': {'$lt': 6}})
+        self.assertEqual(qs.count(), 1)
+        self.assertEqual(qs[0].i, 5)
+
     def test_update(self):
         self.qs.find({'i': {'$gte': 6}}).update({'$set': {'s': 'test'}})
 
