@@ -1,3 +1,4 @@
+from yadm.join import Join
 from yadm.serialize import from_mongo
 
 
@@ -218,3 +219,10 @@ class QuerySet:
         qs = self.copy()
         qs._sort = []
         return {obj.id: obj for obj in qs}
+
+    def join(self, field_name):
+        """ Create `yadm.Join` object, join `field_name` and return it
+        """
+        join = Join(self)
+        join.join(field_name)
+        return join
