@@ -220,9 +220,9 @@ class QuerySet:
         qs._sort = []
         return {obj.id: obj for obj in qs}
 
-    def join(self, field_name):
+    def join(self, *field_names):
         """ Create `yadm.Join` object, join `field_name` and return it
         """
         join = Join(self)
-        join.join(field_name)
+        join.join(*field_names)
         return join
