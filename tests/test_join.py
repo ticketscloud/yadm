@@ -45,6 +45,15 @@ class JoinTest(BaseDatabaseTest):
             self.assertIsInstance(ref, Document)
             self.assertEqual(doc.ref.id, self.id_ref_1 if doc.i % 2 else self.id_ref_2)
 
+    def test_get_queryset(self):
+        self.db.db.testdocs_ref.insert({'i': 3})
+        qs = self.qs.join().get_queryset('ref')
+        self.assertEqual(qs.count(), 2)
+        self.assertEqual(
+            {d.id for d in qs},
+            {self.id_ref_1, self.id_ref_2},
+        )
+
 
 class ManyJoinTest(BaseDatabaseTest):
     def setUp(self):

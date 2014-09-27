@@ -224,5 +224,8 @@ class QuerySet:
         """ Create `yadm.Join` object, join `field_name` and return it
         """
         join = Join(self)
-        join.join(*field_names)
+
+        if field_names:
+            join.join(*field_names)
+
         return join

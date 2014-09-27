@@ -1,6 +1,8 @@
 from collections import abc
 from collections import defaultdict
 
+from bson import ObjectId
+
 from yadm.documents import Document
 from yadm.fields.reference import ReferenceField
 
@@ -42,6 +44,14 @@ class Join(abc.Sequence):
 
     # end abc.Sequence
 
+    def get_queryset(self, field_name):
+        """ Return queryset for joined objects
+        """
+        field = self._get_field(field_name)
+        qs = self._db(field.reference_document_class)
+        ids = self._get_joined_ids(field_name)
+        return qs.find({'_id': {'$in': list(ids)}})
+
     def join(self, *field_names):
         """ Do manual join
         """
@@ -50,17 +60,32 @@ class Join(abc.Sequence):
         self._load_objects_to_indexes(*field_names)
         self._set_objects(*field_names)
 
+    def _get_field(self, field_name):
+        document_fields = self._document_class.__fields__
+        if field_name not in document_fields:
+            raise ValueError(field_name)
+
+        field = document_fields[field_name]
+
+        if not isinstance(field, ReferenceField):
+            raise RuntimeError('bad field type: {!r}'.format(field_name))
+
+        return field
+
+    def _get_joined_ids(self, field_name):
+        ids = set()
+        for doc in self:
+            value = doc.__data__[field_name]
+
+            _id = self._prepare_id(value)
+            if _id:
+                ids.add(_id)
+
+        return ids
+
     def _load_names_types_maps(self, *field_names):
         for field_name in field_names:
-            document_fields = self._document_class.__fields__
-            if field_name not in document_fields:
-                raise ValueError(field_name)
-
-            field = document_fields[field_name]
-
-            if not isinstance(field, ReferenceField):
-                raise RuntimeError('bad field type: {!r}'.format(field_name))
-
+            field = self._get_field(field_name)
             reference_document_class = field.reference_document_class
             self._map_name_type[field_name] = reference_document_class
             self._map_type_names[reference_document_class].add(field_name)
@@ -70,12 +95,9 @@ class Join(abc.Sequence):
             for field_name in field_names:
                 value = doc.__data__.get(field_name)
 
-                if value is None:
-                    continue
-                elif isinstance(value, Document):
-                    self._map_name_ids[field_name].add(value.id)
-                else:
-                    self._map_name_ids[field_name].add(value)
+                _id = self._prepare_id(value)
+                if _id:
+                    self._map_name_ids[field_name].add(_id)
 
     def _load_objects_to_indexes(self, *field_names):
         field_names = set(field_names)
@@ -97,13 +119,14 @@ class Join(abc.Sequence):
             for field_name in field_names:
                 value = doc.__data__.get(field_name)
 
-                if value is None:
-                    continue
-                elif isinstance(value, Document):
-                    _id = value.id
-                else:
-                    _id = value
+                _id = self._prepare_id(value)
+                if _id:
+                    joined_document_class = self._map_name_type[field_name]
+                    index = self._indexes[joined_document_class]
+                    doc.__data__[field_name] = index.get(_id, value)
 
-                joined_document_class = self._map_name_type[field_name]
-                index = self._indexes[joined_document_class]
-                doc.__data__[field_name] = index.get(_id, value)
+    def _prepare_id(self, value):
+        if isinstance(value, ObjectId):
+            return value
+        elif isinstance(value, Document):
+            return value.id
