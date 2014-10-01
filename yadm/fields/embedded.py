@@ -49,7 +49,10 @@ class EmbeddedDocumentField(Field):
         return value
 
     def to_mongo(self, document, value):
-        return to_mongo(value)
+        if value is None:
+            return None
+        else:
+            return to_mongo(value)
 
     def from_mongo(self, document, value):
         if value is None:
