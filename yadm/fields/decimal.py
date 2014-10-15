@@ -76,16 +76,16 @@ class DecimalField(DefaultMixin, Field):
         elif isinstance(value, (str, int, float)):
             return Decimal(value, context=self.context)
         else:
-            sing = 0 if value['i'] >= 0 else 1
+            sign = 0 if value['i'] >= 0 else 1
 
             digits = []
-            i = value['i']
+            i = abs(value['i'])
 
             while i:
                 i, d = divmod(i, 10)
                 digits.insert(0, d)
 
-            return Decimal((sing, digits, value['e']), context=self.context)
+            return Decimal((sign, digits, value['e']), context=self.context)
 
     def to_mongo(self, document, value):
         sign, digits, exp = value.as_tuple()
