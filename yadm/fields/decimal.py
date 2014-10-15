@@ -60,11 +60,7 @@ class DecimalField(DefaultMixin, Field):
 
         [2, 4, 6, 7] => 2467
         """
-        def reduce_func(curent, new_tuple):
-            exp, digit = new_tuple
-            return curent + digit * (10 ** exp)
-
-        return reduce(reduce_func, enumerate(reversed(digits)), 0)
+        return reduce(lambda cur, acc: cur * 10 + acc, digits, 0)
 
     def prepare_value(self, document, value):
         """ Cast value to :class:`decimal.Decimal`
@@ -76,14 +72,15 @@ class DecimalField(DefaultMixin, Field):
         elif isinstance(value, (str, int, float)):
             return Decimal(value, context=self.context)
         else:
-            sign = 0 if value['i'] >= 0 else 1
+            sign = value['i'] < 0  # False - positive, True - negative
 
             digits = []
             i = abs(value['i'])
 
             while i:
                 i, d = divmod(i, 10)
-                digits.insert(0, d)
+                digits.append(d)
+            digits.reverse()
 
             return Decimal((sign, digits, value['e']), context=self.context)
 
