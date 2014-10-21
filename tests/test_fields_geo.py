@@ -9,13 +9,13 @@ from .test_database import BaseDatabaseTest
 class PointTest(TestCase):
     def test_init(self):
         point = fields.Point(1, 2)
-        self.assertEqual(point.latitude, 1)
-        self.assertEqual(point.longitude, 2)
+        self.assertEqual(point.longitude, 1)
+        self.assertEqual(point.latitude, 2)
 
     def test_get(self):
-        latitude, longitude = fields.Point(1, 2)
-        self.assertEqual(latitude, 1)
-        self.assertEqual(longitude, 2)
+        longitude, latitude = fields.Point(1, 2)
+        self.assertEqual(longitude, 1)
+        self.assertEqual(latitude, 2)
 
     def test_to_mongo(self):
         point = fields.Point(1, 2)
@@ -27,8 +27,8 @@ class PointTest(TestCase):
     def test_from_mongo(self):
         point = fields.Point.from_mongo({'type': 'Point', 'coordinates': [1, 2]})
         self.assertIsInstance(point, fields.Point)
-        self.assertEqual(point.latitude, 1)
-        self.assertEqual(point.longitude, 2)
+        self.assertEqual(point.longitude, 1)
+        self.assertEqual(point.latitude, 2)
 
 
 class MultyPointTest(TestCase):
@@ -39,10 +39,10 @@ class MultyPointTest(TestCase):
         self.assertEqual(len(mpoint), 2)
         self.assertIsInstance(mpoint[0], fields.Point)
 
-        self.assertEqual(mpoint[0].latitude, 1)
-        self.assertEqual(mpoint[0].longitude, 2)
-        self.assertEqual(mpoint[1].latitude, 3)
-        self.assertEqual(mpoint[1].longitude, 4)
+        self.assertEqual(mpoint[0].longitude, 1)
+        self.assertEqual(mpoint[0].latitude, 2)
+        self.assertEqual(mpoint[1].longitude, 3)
+        self.assertEqual(mpoint[1].latitude, 4)
 
     def test_to_mongo(self):
         mpoint = fields.MultiPoint([fields.Point(1, 2), fields.Point(3, 4)])
@@ -59,10 +59,10 @@ class MultyPointTest(TestCase):
         self.assertEqual(len(mpoint), 2)
         self.assertIsInstance(mpoint[0], fields.Point)
 
-        self.assertEqual(mpoint[0].latitude, 1)
-        self.assertEqual(mpoint[0].longitude, 2)
-        self.assertEqual(mpoint[1].latitude, 3)
-        self.assertEqual(mpoint[1].longitude, 4)
+        self.assertEqual(mpoint[0].longitude, 1)
+        self.assertEqual(mpoint[0].latitude, 2)
+        self.assertEqual(mpoint[1].longitude, 3)
+        self.assertEqual(mpoint[1].latitude, 4)
 
 
 class ComplexPointTest(BaseDatabaseTest):
@@ -92,5 +92,5 @@ class ComplexPointTest(BaseDatabaseTest):
 
         self.assertTrue(hasattr(td, 'point'))
         self.assertIsInstance(td.point, fields.Point)
-        self.assertEqual(td.point.latitude, 1)
-        self.assertEqual(td.point.longitude, 2)
+        self.assertEqual(td.point.longitude, 1)
+        self.assertEqual(td.point.latitude, 2)

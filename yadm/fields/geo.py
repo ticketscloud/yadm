@@ -48,15 +48,15 @@ class Point(GeoCoordinates):
     """
     type = 'Point'
 
-    def __init__(self, latitude, longitude):
-        self.latitude = latitude
+    def __init__(self, longitude, latitude):
         self.longitude = longitude
+        self.latitude = latitude
 
     def __getitem__(self, idx):
-        return (self.latitude, self.longitude)[idx]
+        return (self.longitude, self.latitude)[idx]
 
     def get_coordinates(self):
-        return [self.latitude, self.longitude]
+        return [self.longitude, self.latitude]
 
     @classmethod
     def from_mongo(cls, data):
@@ -66,11 +66,11 @@ class Point(GeoCoordinates):
             raise ValueError('coordinates not found in data: "{!r}"'.format(data))
 
         try:
-            latitude, longitude = coordinates
+            longitude, latitude = coordinates
         except IndexError:
             raise ValueError('wrong coordinates in data: "{!r}"'.format(data))
 
-        return cls(latitude, longitude)
+        return cls(longitude, latitude)
 
 
 @_geo_type
