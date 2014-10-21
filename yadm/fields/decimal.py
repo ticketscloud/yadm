@@ -85,12 +85,15 @@ class DecimalField(DefaultMixin, Field):
             return Decimal((sign, digits, value['e']), context=self.context)
 
     def to_mongo(self, document, value):
-        sign, digits, exp = value.as_tuple()
-        integer = self._integer_from_digits(digits)
-        return {
-            'i': -integer if sign else integer,
-            'e': exp
-        }
+        if value is None:
+            return None
+        else:
+            sign, digits, exp = value.as_tuple()
+            integer = self._integer_from_digits(digits)
+            return {
+                'i': -integer if sign else integer,
+                'e': exp
+            }
 
     def from_mongo(self, document, data):
         return self.prepare_value(document, data)
