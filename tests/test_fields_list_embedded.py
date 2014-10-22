@@ -1,3 +1,5 @@
+from unittest import SkipTest
+
 from yadm import fields
 from yadm.documents import Document, EmbeddedDocument
 
@@ -196,6 +198,9 @@ class DeeperListEmbeddedFieldTest(BaseDatabaseTest):
         self.assertEqual(data['li'][0]['lie'][0]['i'], 13)
 
     def test_replace(self):
+        if not self.db.db.connection.server_info()['version'].startswith('2.4'):
+            raise SkipTest('Work only with MongoDB 2.4')
+
         td = self.Doc()
         td.li.append(self.EDoc())
         td.li[0].lie.append(self.EEDoc(i=13, s='13'))
@@ -217,6 +222,9 @@ class DeeperListEmbeddedFieldTest(BaseDatabaseTest):
         self.assertEqual(data['li'][0]['lie'][1]['s'], '42')
 
     def test_update(self):
+        if not self.db.db.connection.server_info()['version'].startswith('2.4'):
+            raise SkipTest('Work only with MongoDB 2.4')
+
         td = self.Doc()
         td.li.append(self.EDoc())
         td.li[0].lie.append(self.EEDoc(i=13, s='13'))
