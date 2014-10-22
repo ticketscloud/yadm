@@ -21,7 +21,7 @@ class BaseDatabaseTest(TestCase):
             self.client.drop_database('test')
         except pymongo.errors.ConnectionFailure:
             self.__class__.skip = True
-            raise SkipTest
+            raise SkipTest("Can't connect to database (localhost:27017/test)")
 
         self.db = Database(self.client, 'test')
 

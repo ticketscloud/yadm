@@ -20,14 +20,18 @@ from yadm.fields import (
 class Foo(Document):
     f = BooleanField(True)
 
+
 class Bar(EmbeddedDocument):
     f = IntegerField(42)
+
 
 class Baz(Document):
     f = FloatField(3.14)
 
+
 class Qux(EmbeddedDocument):
     f = StringField('quux')
+
 
 class Corge(Document):
     grault = EmbeddedDocumentField(Foo)
@@ -37,11 +41,14 @@ class Corge(Document):
     plugh = EmbeddedDocumentField('self')
     xyzzy = ReferenceField('self')
 
+
 class Thud(Document):
     rf = ReferenceField('dumb.path')
 
+
 class Thud2(EmbeddedDocument):
     ef = EmbeddedDocumentField('another.dumb.path')
+
 
 class FooDocField(Field):
     reference_document_class = EnclosedDocDescriptor('reference')
@@ -91,13 +98,13 @@ class EnclosedDocDescriptorTest(TestCase):
     def test_lowlevel(self):
         # wrong enclosed_cls_type value
         try:
-            reference_document_class = EnclosedDocDescriptor('reference')
-            embedded_document_class = EnclosedDocDescriptor('embedded')
+            EnclosedDocDescriptor('reference')
+            EnclosedDocDescriptor('embedded')
         except Exception as e:
             self.assertTrue(False, 'Unexpected exception: {!r}'.format(e))
         for cls_type in ('waldo', 'fred'):
             with self.assertRaises(ValueError):
-                doc_cls = EnclosedDocDescriptor(cls_type)
+                EnclosedDocDescriptor(cls_type)
 
         # class binding
         self.assertIsInstance(FooDocField.reference_document_class,
