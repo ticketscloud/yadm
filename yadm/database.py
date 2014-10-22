@@ -24,6 +24,7 @@ This module for provide work with MongoDB database.
 """
 
 from yadm.queryset import QuerySet
+from yadm.bulk import Bulk
 from yadm.serialize import to_mongo
 
 
@@ -117,3 +118,11 @@ class Database:
         :param Document document: document instance for remove from database
         """
         return self._get_collection(document.__class__).remove(document._id)
+
+    def bulk(self, document_class, ordered=False):
+        """ Return Bulk
+
+        :param MetaDocument document_class: class of documents fo bulk
+        :param bool ordered: use ordered bulk
+        """
+        return Bulk(self, document_class, ordered)
