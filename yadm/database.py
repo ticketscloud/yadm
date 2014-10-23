@@ -22,7 +22,6 @@ This module for provide work with MongoDB database.
         print(doc)
 
 """
-
 from yadm.queryset import QuerySet
 from yadm.bulk import Bulk
 from yadm.serialize import to_mongo
@@ -119,10 +118,18 @@ class Database:
         """
         return self._get_collection(document.__class__).remove(document._id)
 
-    def bulk(self, document_class, ordered=False):
+    def bulk(self, document_class, ordered=False, raise_on_errors=True):
         """ Return Bulk
 
         :param MetaDocument document_class: class of documents fo bulk
-        :param bool ordered: use ordered bulk
+        :param bool ordered: create ordered bulk (default `False`)
+        :param bool raise_on_errors: raise BulkWriteError exception
+            if write errors (default `True`)
+
+        Context manager:
+
+            with db.bulk(Doc) as bulk:
+                bulk.insert(doc_1)
+                bulk.insert(doc_2)
         """
-        return Bulk(self, document_class, ordered)
+        return Bulk(self, document_class, ordered, raise_on_errors)
