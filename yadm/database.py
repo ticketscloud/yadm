@@ -118,6 +118,22 @@ class Database:
         """
         return self._get_collection(document.__class__).remove(document._id)
 
+    def reload(self, document, new_instance=False):
+        """ Reload document
+
+        :param Document document: document for reload
+        :param bool new_instance: if `True` return new instance of document,
+            else change data in given document (default: `False`)
+        """
+        new = self.get_queryset(document.__class__).with_id(document.id)
+
+        if new_instance:
+            return new
+        else:
+            document.__data__ = new.__data__
+            document.__fields_changed__.clear()
+            return document
+
     def bulk(self, document_class, ordered=False, raise_on_errors=True):
         """ Return Bulk
 

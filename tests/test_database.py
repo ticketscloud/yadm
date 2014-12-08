@@ -119,3 +119,38 @@ class DatabaseRemoveTest(BaseDatabaseTest):
         self.assertEqual(col.count(), 1)
         self.db.remove(td)
         self.assertEqual(col.count(), 0)
+
+
+class DatabaseReloadDocumentTest(BaseDatabaseTest):
+    def test_reload(self):
+        class TestDoc(Document):
+            __collection__ = 'testdocs'
+            i = fields.IntegerField()
+
+        doc = TestDoc()
+        doc.i = 1
+        self.db.insert(doc)
+
+        self.db.db.testdocs.update({'_id': doc.id}, {'i': 2})
+
+        self.assertEqual(doc.i, 1)
+        new = self.db.reload(doc)
+        self.assertEqual(doc.i, 2)
+        self.assertIs(doc, new)
+
+    def test_reload_new_instance(self):
+        class TestDoc(Document):
+            __collection__ = 'testdocs'
+            i = fields.IntegerField()
+
+        doc = TestDoc()
+        doc.i = 1
+        self.db.insert(doc)
+
+        self.db.db.testdocs.update({'_id': doc.id}, {'i': 2})
+
+        self.assertEqual(doc.i, 1)
+        new = self.db.reload(doc, new_instance=True)
+        self.assertEqual(doc.i, 1)
+        self.assertIsNot(doc, new)
+        self.assertEqual(new.i, 2)
