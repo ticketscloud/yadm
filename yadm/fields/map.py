@@ -38,6 +38,8 @@ Map
 """
 from collections import abc
 
+from bson import ObjectId
+
 from yadm.fields.containers import (
     Container,
     ContainerField,
@@ -47,9 +49,11 @@ from yadm.fields.containers import (
 class Map(Container, abc.MutableMapping):
     """ Map
     """
+    def __iter__(self):
+        return iter(self._data)
 
     def __repr__(self):
-        return 'Map({!r})'.format(self._data)
+        return '{}({!r})'.format(self.__class__.__name__, self._data)
 
     def _load_from_mongo(self, data):
         self._data = {}
@@ -117,7 +121,66 @@ class MapField(ContainerField):
         return {}
 
     def from_mongo(self, document, value):
-        return self.container(document, self, value)
+        if isinstance(value, self.container):
+            return value
+        else:
+            return self.container(document, self, value)
 
     def to_mongo(self, document, value):
-        return value._data
+        tm = self.value_field.to_mongo
+        return {k: tm(document, v) for k, v in value._data.items()}
+
+
+class MapCustomKeys(Map):
+    def from_str(self, value):
+        """ Cast value """
+        raise NotImplementedError
+
+    def _load_from_mongo(self, data):
+        data = {str(k): v for k, v in data.items()}
+        super()._load_from_mongo(data)
+
+    def __iter__(self):
+        from_str = self.from_str
+        return (from_str(k) for k in super().__iter__())
+
+    def __getitem__(self, key):
+        return super().__getitem__(str(key))
+
+    def __setitem__(self, key, value):
+        super().__setitem__(str(key), value)
+
+    def __delitem__(self, key):
+        super().__delitem__(str(key))
+
+    def __contains__(self, key):
+        return str(key) in self._data
+
+
+class MapCustomKeysField(MapField):
+    container = MapCustomKeys
+
+    def prepare_value(self, document, value):
+        if value is None:
+            return None
+        elif isinstance(value, self.container):
+            return value
+        else:
+            value = {str(k): v for k, v in value.items()}
+            return self.container(document, self, value)
+
+
+class MapIntKeys(MapCustomKeys):
+    from_str = int
+
+
+class MapIntKeysField(MapCustomKeysField):
+    container = MapIntKeys
+
+
+class MapObjectIdKeys(MapCustomKeys):
+    from_str = ObjectId
+
+
+class MapObjectIdKeysField(MapCustomKeysField):
+    container = MapIntKeys
