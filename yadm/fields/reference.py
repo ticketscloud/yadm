@@ -26,6 +26,7 @@ TODO: many2many collections
 """
 from yadm.common import EnclosedDocDescriptor
 from yadm.documents import Document
+from yadm.markers import NoDefault
 from yadm.fields.base import Field, FieldDescriptor
 from yadm.serialize import from_mongo
 
@@ -53,8 +54,9 @@ class ReferenceField(Field):
     descriptor_class = ReferenceFieldDescriptor
     reference_document_class = EnclosedDocDescriptor('reference')
 
-    def __init__(self, reference_document_class):
+    def __init__(self, reference_document_class, default=NoDefault):
         self.reference_document_class = reference_document_class
+        self.default = default
 
     def copy(self):
         return self.__class__(self.reference_document_class)
