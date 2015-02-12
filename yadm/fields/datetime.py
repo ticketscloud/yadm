@@ -1,5 +1,6 @@
 import datetime
 
+import pytz
 import dateutil.parser
 
 from yadm.fields.base import Field, DefaultMixin
@@ -18,14 +19,14 @@ class DatetimeField(DefaultMixin, Field):
     @staticmethod
     def _fix_timezone(value):
         if value.tzinfo is None:
-            return value.replace(tzinfo=datetime.timezone.utc)
+            return value.replace(tzinfo=pytz.utc)
         else:
             return value
 
     @property
     def default(self):
         if self.auto_now:
-            return datetime.datetime.now(datetime.timezone.utc)
+            return datetime.datetime.now(pytz.utc)
         else:
             return super().default
 
@@ -40,7 +41,7 @@ class DatetimeField(DefaultMixin, Field):
         elif type(value) is datetime.date:
             return datetime.datetime(
                 *value.timetuple()[:3],
-                tz=datetime.timezone.utc
+                tz=pytz.utc
             )
 
         elif isinstance(value, str):

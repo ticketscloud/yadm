@@ -1,4 +1,6 @@
-from datetime import datetime, timezone
+from datetime import datetime
+
+import pytz
 
 from yadm import fields
 from yadm.documents import Document
@@ -19,7 +21,7 @@ class DatetimeFieldTest(BaseDatabaseTest):
 
     def test_cast(self):
         doc = self.TestDoc()
-        doc.dt = datetime(1970, 1, 1, tzinfo=timezone.utc).isoformat()
+        doc.dt = datetime(1970, 1, 1, tzinfo=pytz.utc).isoformat()
         self.assertIsInstance(doc.dt, datetime)
 
     def test_default_none(self):
@@ -28,7 +30,7 @@ class DatetimeFieldTest(BaseDatabaseTest):
 
     def test_save(self):
         doc = self.TestDoc()
-        doc.dt = datetime(1970, 1, 1, tzinfo=timezone.utc)
+        doc.dt = datetime(1970, 1, 1, tzinfo=pytz.utc)
         self.db.insert(doc)
 
         doc = self.db.get_queryset(self.TestDoc).with_id(doc.id)
@@ -38,7 +40,7 @@ class DatetimeFieldTest(BaseDatabaseTest):
         self.assertEqual(data['dt'], doc.dt)
 
     def test_load(self):
-        epoch = datetime(1970, 1, 1, tzinfo=timezone.utc)
+        epoch = datetime(1970, 1, 1, tzinfo=pytz.utc)
         _id = self.db.db.testdocs.insert({'dt': epoch})
 
         doc = self.db.get_queryset(self.TestDoc).with_id(_id)
@@ -62,7 +64,7 @@ class DatetimeFieldTest(BaseDatabaseTest):
         self.assertEqual(data['now'], doc.now)
 
     def test_now_save(self):
-        epoch = datetime(1970, 1, 1, tzinfo=timezone.utc)
+        epoch = datetime(1970, 1, 1, tzinfo=pytz.utc)
 
         doc = self.TestDoc()
         doc.now = epoch
@@ -75,7 +77,7 @@ class DatetimeFieldTest(BaseDatabaseTest):
         self.assertEqual(data['now'], epoch)
 
     def test_now_load(self):
-        epoch = datetime(1970, 1, 1, tzinfo=timezone.utc)
+        epoch = datetime(1970, 1, 1, tzinfo=pytz.utc)
         _id = self.db.db.testdocs.insert({'now': epoch})
 
         doc = self.db.get_queryset(self.TestDoc).with_id(_id)
