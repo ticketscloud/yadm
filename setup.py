@@ -18,7 +18,7 @@ setup(
     license='BSD',
     platforms='any',
     install_requires=[
-        'pymongo',
+        'pymongo<3',
         'zope.dottedname',
         'python-dateutil',
         'pytz',
