@@ -114,11 +114,13 @@ class GeoField(Field):
         self.types_dict = {t.type: t for t in types}
 
     def to_mongo(self, document, geo):
-        return geo.to_mongo()
+        return geo.to_mongo() if geo is not None else None
 
     def from_mongo(self, document, data):
         if data is None or isinstance(data, Geo):
             return data
+        elif data is None:
+            return None
 
         geo_type = self.types_dict.get(data['type'])
 
