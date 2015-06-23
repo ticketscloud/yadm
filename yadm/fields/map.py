@@ -183,4 +183,4 @@ class MapObjectIdKeys(MapCustomKeys):
 
 
 class MapObjectIdKeysField(MapCustomKeysField):
-    container = MapIntKeys
+    container = MapObjectIdKeys
