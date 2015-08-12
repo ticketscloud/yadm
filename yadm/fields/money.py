@@ -37,7 +37,7 @@ class Money(Decimal):
         return Decimal.__new__(cls, value, cls.context)
 
     def to_mongo(self):
-        return int((self * 100).quantize(Decimal('1.00'), ROUND_UP))
+        return int(self.quantize(Decimal('1.00'), ROUND_UP) * 100)
 
     def __str__(self):
         s = str(self.to_mongo()).rjust(3, '0')
