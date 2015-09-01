@@ -6,7 +6,7 @@ class QuerySet:
     def __init__(self, db, document_class):
         self._db = db
         self._document_class = document_class
-        self._criteria = None
+        self._criteria = {}
         self._projection = None
         self._sort = []
 
@@ -73,9 +73,7 @@ class QuerySet:
         """ Copy queryset instance
         """
         qs = self.__class__(self._db, self._document_class)
-
-        if self._criteria is not None:
-            qs._criteria = self._criteria.copy()
+        qs._criteria = self._criteria.copy()
 
         if self._projection is not None:
             qs._projection = self._projection.copy()
@@ -88,7 +86,7 @@ class QuerySet:
         """ Update queryset parameters in place
         """
         if criteria:
-            if self._criteria is None:
+            if not self._criteria:
                 self._criteria = criteria
 
             elif set(self._criteria) & set(criteria):
