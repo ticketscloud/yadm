@@ -70,7 +70,7 @@ class Map(Container, abc.MutableMapping):
         """ `prepare_value` function for `value_field`
         """
         if hasattr(self._field.value_field, 'prepare_value'):
-            return self._field.value_field.prepare_value(None, value)
+            return self._field.value_field.prepare_value(self.__parent__, value)
         else:
             return value
 
