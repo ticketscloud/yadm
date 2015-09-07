@@ -50,7 +50,6 @@ class ReferenceField(Field):
 
     :param reference_document_class: class for refered documents
     """
-
     descriptor_class = ReferenceFieldDescriptor
     reference_document_class = EnclosedDocDescriptor('reference')
 
@@ -60,6 +59,12 @@ class ReferenceField(Field):
 
     def copy(self):
         return self.__class__(self.reference_document_class)
+
+    def prepare_value(self, document, value):
+        if isinstance(value, Document):
+            return value
+        else:
+            return self.from_mongo(document, value)
 
     def from_mongo(self, document, value):
         if value is None:
@@ -72,7 +77,7 @@ class ReferenceField(Field):
             return value
 
         else:
-            if document.__db__ is not None:
+            if document is not None and document.__db__ is not None:
                 qs = document.__db__.get_queryset(self.reference_document_class)
                 doc = qs.with_id(value)
 
