@@ -55,7 +55,6 @@ class Map(Container, abc.MutableMapping):
 
         See `$set` in MongoDB's `set`.
         """
-        key = str(key)
         value = self._prepare_item(key, value)
         qs = self._get_queryset()
         fn = '.'.join([self.__field_name__, key])
@@ -72,7 +71,6 @@ class Map(Container, abc.MutableMapping):
 
         See `$unset` in MongoDB's `unset`.
         """
-        key = str(key)
         qs = self._get_queryset()
         fn = '.'.join([self.__field_name__, key])
         qs.update({'$unset': {fn: True}}, multi=False)
@@ -120,35 +118,50 @@ class MapCustomKeys(Map):
     def __init__(self, field, parent, value):
         super().__init__(field, parent, value)
         self.key_factory = field.key_factory
+        self.key_to_str = field.key_to_str
 
     def __iter__(self):
         key_factory = self.key_factory
         return (key_factory(k) for k in super().__iter__())
 
     def __getitem__(self, item):
-        return super().__getitem__(str(item))
+        return super().__getitem__(self.key_to_str(item))
 
     def __setitem__(self, item, value):
-        super().__setitem__(str(item), value)
+        super().__setitem__(self.key_to_str(item), value)
 
     def __delitem__(self, item):
-        super().__delitem__(str(item))
+        super().__delitem__(self.key_to_str(item))
 
     def __contains__(self, item):
-        return str(item) in self._data
+        return self.key_to_str(item) in self._data
 
     def __eq__(self, other):
-        return self._data == {str(k): v for k, v in super().items()}
+        return self._data == {self.key_to_str(k): v for k, v in super().items()}
+
+    def set(self, key, value, reload=True):
+        return super().set(self.key_to_str(key), value, reload)
+
+    def unset(self, key, value, reload=True):
+        return super().unset(self.key_to_str(key), value, reload)
 
 
 class MapCustomKeysField(MapField):
     """ Field for maps with custom key type
 
-    Argument key_factory must be function, who called with
-    one string argument and return true key. E.g. int, ObjectId...
+    :param field item_field:
+    :param func key_factory: function, who return thue key
+        from raw string key
+    :param func key_to_str:
+    :param bool auto_create:
     """
     container = MapCustomKeys
 
-    def __init__(self, item_field, key_factory, auto_create=True):
+    def __init__(self,
+                 item_field,
+                 key_factory,
+                 key_to_str=str,
+                 auto_create=True):
         super().__init__(item_field, auto_create=auto_create)
         self.key_factory = key_factory
+        self.key_to_str = key_to_str
