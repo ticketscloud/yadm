@@ -1,246 +1,296 @@
 from unittest import SkipTest
 
+import pytest
+
 from yadm import fields
 from yadm.documents import Document, EmbeddedDocument
 
-from .test_database import BaseDatabaseTest
+
+class EDoc(EmbeddedDocument):
+    i = fields.IntegerField()
+    s = fields.StringField()
 
 
-class ListEmbeddedFieldTest(BaseDatabaseTest):
-    def setUp(self):
-        super().setUp()
-
-        class EDoc(EmbeddedDocument):
-            i = fields.IntegerField()
-            s = fields.StringField()
-
-        class Doc(Document):
-            __collection__ = 'docs'
-            li = fields.ListField(fields.EmbeddedDocumentField(EDoc))
-
-        self.EDoc = EDoc
-        self.Doc = Doc
-
-    def test_save(self):
-        td = self.Doc()
-
-        ted = self.EDoc()
-        ted.i = 13
-        td.li.append(ted)
-
-        ted = self.EDoc()
-        ted.i = 42
-        td.li.append(ted)
-
-        self.db.insert(td)
-
-        data = self.db.db.docs.find_one()
-
-        self.assertIn('li', data)
-        self.assertEqual(len(data['li']), 2)
-        self.assertIn('i', data['li'][0])
-        self.assertEqual(data['li'][0]['i'], 13)
-        self.assertEqual(data['li'][1]['i'], 42)
-
-    def test_load(self):
-        self.db.db.docs.insert({'li': [{'i': 13}, {'i': 42}]})
-
-        doc = self.db.get_queryset(self.Doc).find_one()
-
-        self.assertTrue(hasattr(doc, 'li'))
-        self.assertEqual(len(doc.li), 2)
-
-        for item in doc.li:
-            self.assertIsInstance(item, self.EDoc)
-
-        self.assertEqual(doc.li[0].i, 13)
-        self.assertEqual(doc.li[1].i, 42)
-
-    def test_push(self):
-        td = self.Doc()
-        self.db.insert(td)
-
-        ted = self.EDoc()
-        ted.i = 13
-        td.li.push(ted)
-
-        ted = self.EDoc()
-        ted.i = 42
-        td.li.push(ted)
-
-        data = self.db.db.docs.find_one()
-
-        self.assertIn('li', data)
-        self.assertEqual(len(data['li']), 2)
-        self.assertIn('i', data['li'][0])
-        self.assertEqual(data['li'][0]['i'], 13)
-        self.assertEqual(data['li'][1]['i'], 42)
-
-    def test_replace(self):
-        td = self.Doc()
-        td.li.append(self.EDoc(i=13, s='13'))
-        td.li.append(self.EDoc(i=42, s='42'))
-        self.db.insert(td)
-
-        td.li.replace({'i': 13}, self.EDoc(i=26))
-
-        data = self.db.db.docs.find_one()
-
-        self.assertIn('li', data)
-        self.assertEqual(len(data['li']), 2)
-        self.assertIn('i', data['li'][0])
-        self.assertEqual(data['li'][0]['i'], 26)
-        self.assertNotIn('s', data['li'][0])
-        self.assertEqual(data['li'][1]['i'], 42)
-        self.assertEqual(data['li'][1]['s'], '42')
-
-    def test_update(self):
-        td = self.Doc()
-        td.li.append(self.EDoc(i=13, s='13'))
-        td.li.append(self.EDoc(i=42, s='42'))
-        self.db.insert(td)
-
-        td.li.update({'i': 13}, {'i': 26})
-
-        data = self.db.db.docs.find_one()
-
-        self.assertIn('li', data)
-        self.assertEqual(len(data['li']), 2)
-        self.assertIn('i', data['li'][0])
-        self.assertEqual(data['li'][0]['i'], 26)
-        self.assertEqual(data['li'][0]['s'], '13')
-        self.assertEqual(data['li'][1]['i'], 42)
-        self.assertEqual(data['li'][1]['s'], '42')
+class Doc(Document):
+    __collection__ = 'docs'
+    li = fields.ListField(fields.EmbeddedDocumentField(EDoc))
 
 
-class DeeperListEmbeddedFieldTest(BaseDatabaseTest):
-    def setUp(self):
-        super().setUp()
+def test_save(db):
+    doc = Doc()
 
-        class EEDoc(EmbeddedDocument):
-            i = fields.IntegerField()
-            s = fields.StringField()
+    edoc = EDoc()
+    edoc.i = 13
+    doc.li.append(edoc)
 
-        class EDoc(EmbeddedDocument):
-            lie = fields.ListField(fields.EmbeddedDocumentField(EEDoc))
+    assert edoc.__parent__ is doc.li
 
-        class Doc(Document):
-            __collection__ = 'docs'
-            li = fields.ListField(fields.EmbeddedDocumentField(EDoc))
+    edoc = EDoc()
+    edoc.i = 42
+    doc.li.append(edoc)
 
-        self.EEDoc = EEDoc
-        self.EDoc = EDoc
-        self.Doc = Doc
+    db.insert(doc)
 
-    def test_save(self):
-        td = self.Doc()
-        td.li.append(self.EDoc())
+    data = db.db.docs.find_one()
 
-        teed = self.EEDoc()
-        teed.i = 13
-        td.li[0].lie.append(teed)
+    assert 'li' in data
+    assert len(data['li']) == 2
+    assert 'i' in data['li'][0]
+    assert data['li'][0]['i'] == 13
+    assert data['li'][1]['i'] == 42
 
-        self.db.save(td)
 
-        data = self.db.db.docs.find_one()
+def test_load(db):
+    db.db.docs.insert({'li': [{'i': 13}, {'i': 42}]})
 
-        self.assertIn('li', data)
-        self.assertEqual(len(data['li']), 1)
-        self.assertIn('lie', data['li'][0])
-        self.assertEqual(len(data['li'][0]['lie']), 1)
-        self.assertIn('i', data['li'][0]['lie'][0])
-        self.assertEqual(data['li'][0]['lie'][0]['i'], 13)
+    doc = db.get_queryset(Doc).find_one()
 
-    def test_load(self):
-        self.db.db.docs.insert({'li': [{'lie': [{'i': 13}]}]})
+    assert hasattr(doc, 'li')
+    assert len(doc.li) == 2
+    assert doc.li[0].__parent__ is doc.li
+    assert doc.li[1].__parent__ is doc.li
 
-        doc = self.db.get_queryset(self.Doc).find_one()
+    for item in doc.li:
+        assert isinstance(item, EDoc)
 
-        self.assertTrue(hasattr(doc, 'li'))
-        self.assertEqual(len(doc.li), 1)
-        self.assertTrue(hasattr(doc.li[0], 'lie'))
-        self.assertEqual(len(doc.li[0].lie), 1)
-        self.assertTrue(hasattr(doc.li[0].lie[0], 'i'))
-        self.assertEqual(doc.li[0].lie[0].i, 13)
+    assert doc.li[0].i == 13
+    assert doc.li[1].i == 42
 
-    def test_push(self):
-        td = self.Doc()
-        self.db.insert(td)
 
-        td.li.push(self.EDoc())
+def test_push_reload(db):
+    doc = Doc()
+    db.insert(doc)
 
-        teed = self.EEDoc()
-        teed.i = 13
-        td.li[0].lie.push(teed)
+    edoc = EDoc()
+    edoc.i = 13
+    doc.li.push(edoc)
 
-        data = self.db.db.docs.find_one()
+    db.db.docs.update({}, {'$push': {'li': {'i': 32}}})
+    assert len(doc.li) == 1
 
-        self.assertIn('li', data)
-        self.assertEqual(len(data['li']), 1)
-        self.assertIn('lie', data['li'][0])
-        self.assertEqual(len(data['li'][0]['lie']), 1)
-        self.assertIn('i', data['li'][0]['lie'][0])
-        self.assertEqual(data['li'][0]['lie'][0]['i'], 13)
+    edoc = EDoc()
+    edoc.i = 42
+    doc.li.push(edoc)
 
-    def test_pull(self):
-        _id = self.db.db.docs.insert({'li': [{'lie': [{'i': 13}, {'i': 42}]}]})
-        doc = self.db.get_queryset(self.Doc).find_one({'_id': _id})
+    assert len(doc.li) == 3
+    assert doc.li[0].i == 13
+    assert doc.li[1].i == 32
+    assert doc.li[2].i == 42
 
-        doc.li[0].lie.pull({'i': 42})
+    data = db.db.docs.find_one()
 
-        data = self.db.db.docs.find_one({'_id': _id})
+    assert data['li'][0]['i'] == 13
+    assert data['li'][1]['i'] == 32
+    assert data['li'][2]['i'] == 42
 
-        self.assertIn('li', data)
-        self.assertEqual(len(data['li']), 1)
-        self.assertIn('lie', data['li'][0])
-        self.assertEqual(len(data['li'][0]['lie']), 1)
-        self.assertIn('i', data['li'][0]['lie'][0])
-        self.assertEqual(data['li'][0]['lie'][0]['i'], 13)
 
-    def test_replace(self):
-        if not self.db.db.connection.server_info()['version'].startswith('2.4'):
-            raise SkipTest('Work only with MongoDB 2.4')
+def test_push_no_reload(db):
+    doc = Doc()
+    db.insert(doc)
 
-        td = self.Doc()
-        td.li.append(self.EDoc())
-        td.li[0].lie.append(self.EEDoc(i=13, s='13'))
-        td.li[0].lie.append(self.EEDoc(i=42, s='42'))
-        self.db.insert(td)
+    edoc = EDoc()
+    edoc.i = 13
+    doc.li.push(edoc)
 
-        td.li[0].lie.replace({'i': 13}, self.EEDoc(i=26))
+    db.db.docs.update({}, {'$push': {'li': {'i': 32}}})
+    assert len(doc.li) == 1
 
-        data = self.db.db.docs.find_one()
+    edoc = EDoc()
+    edoc.i = 42
+    doc.li.push(edoc, reload=False)
 
-        self.assertIn('li', data)
-        self.assertEqual(len(data['li']), 1)
-        self.assertIn('lie', data['li'][0])
-        self.assertEqual(len(data['li'][0]['lie']), 2)
-        self.assertIn('i', data['li'][0]['lie'][0])
-        self.assertEqual(data['li'][0]['lie'][0]['i'], 26)
-        self.assertNotIn('s', data['li'][0]['lie'][0])
-        self.assertEqual(data['li'][0]['lie'][1]['i'], 42)
-        self.assertEqual(data['li'][0]['lie'][1]['s'], '42')
+    assert len(doc.li) == 2
+    assert doc.li[0].i == 13
+    assert doc.li[1].i == 42
 
-    def test_update(self):
-        if not self.db.db.connection.server_info()['version'].startswith('2.4'):
-            raise SkipTest('Work only with MongoDB 2.4')
+    data = db.db.docs.find_one()
 
-        td = self.Doc()
-        td.li.append(self.EDoc())
-        td.li[0].lie.append(self.EEDoc(i=13, s='13'))
-        td.li[0].lie.append(self.EEDoc(i=42, s='42'))
-        self.db.insert(td)
+    assert data['li'][0]['i'] == 13
+    assert data['li'][1]['i'] == 32
+    assert data['li'][2]['i'] == 42
 
-        td.li[0].lie.update({'i': 13}, {'i': 26})
 
-        data = self.db.db.docs.find_one()
+def test_replace(db):
+    doc = Doc()
+    doc.li.append(EDoc(i=13, s='13'))
+    doc.li.append(EDoc(i=42, s='42'))
+    db.insert(doc)
 
-        self.assertIn('li', data)
-        self.assertEqual(len(data['li']), 1)
-        self.assertIn('lie', data['li'][0])
-        self.assertEqual(len(data['li'][0]['lie']), 2)
-        self.assertIn('i', data['li'][0]['lie'][0])
-        self.assertEqual(data['li'][0]['lie'][0]['i'], 26)
-        self.assertEqual(data['li'][0]['lie'][0]['s'], '13')
-        self.assertEqual(data['li'][0]['lie'][1]['i'], 42)
-        self.assertEqual(data['li'][0]['lie'][1]['s'], '42')
+    doc.li.replace({'i': 13}, EDoc(i=26))
+
+    data = db.db.docs.find_one()
+
+    assert 'li' in data
+    assert len(data['li']) == 2
+    assert 'i' in data['li'][0]
+    assert data['li'][0]['i'] == 26
+    assert 's' not in data['li'][0]
+    assert data['li'][1]['i'] == 42
+    assert data['li'][1]['s'] == '42'
+
+
+def test_update(db):
+    doc = Doc()
+    doc.li.append(EDoc(i=13, s='13'))
+    doc.li.append(EDoc(i=42, s='42'))
+    db.insert(doc)
+
+    doc.li.update({'i': 13}, {'i': 26})
+
+    data = db.db.docs.find_one()
+
+    assert 'li' in data
+    assert len(data['li']) == 2
+    assert 'i' in data['li'][0]
+    assert data['li'][0]['i'] == 26
+    assert data['li'][0]['s'] == '13'
+    assert data['li'][1]['i'] == 42
+    assert data['li'][1]['s'] == '42'
+
+
+class DeepEEDoc(EmbeddedDocument):
+    i = fields.IntegerField()
+    s = fields.StringField()
+
+
+class DeepEDoc(EmbeddedDocument):
+    lie = fields.ListField(fields.EmbeddedDocumentField(DeepEEDoc))
+
+
+class DeepDoc(Document):
+    __collection__ = 'docs'
+    li = fields.ListField(fields.EmbeddedDocumentField(DeepEDoc))
+
+
+def test_deep_save(db):
+    doc = DeepDoc()
+    doc.li.append(DeepEDoc())
+
+    eedoc = DeepEEDoc()
+    eedoc.i = 13
+    doc.li[0].lie.append(eedoc)
+
+    db.save(doc)
+
+    data = db.db.docs.find_one()
+
+    assert 'li' in data
+    assert len(data['li']) == 1
+    assert 'lie' in data['li'][0]
+    assert len(data['li'][0]['lie']) == 1
+    assert 'i' in data['li'][0]['lie'][0]
+    assert data['li'][0]['lie'][0]['i'] == 13
+
+
+def test_deep_load(db):
+    db.db.docs.insert({'li': [{'lie': [{'i': 13}]}]})
+
+    doc = db.get_queryset(DeepDoc).find_one()
+
+    assert hasattr(doc, 'li')
+    assert len(doc.li) == 1
+    assert hasattr(doc.li[0], 'lie')
+    assert len(doc.li[0].lie) == 1
+    assert hasattr(doc.li[0].lie[0], 'i')
+    assert doc.li[0].lie[0].i == 13
+
+
+def test_deep_push(db):
+    doc = DeepDoc()
+    db.insert(doc)
+
+    doc.li.push(DeepEDoc())
+
+    eedoc = DeepEEDoc()
+    eedoc.i = 13
+    doc.li[0].lie.push(eedoc, reload=False)
+    db.reload(doc)
+
+    data = db.db.docs.find_one()
+
+    assert 'li' in data
+    assert len(data['li']) == 1
+    assert 'lie' in data['li'][0]
+    assert len(data['li'][0]['lie']) == 1
+    assert 'i' in data['li'][0]['lie'][0]
+    assert data['li'][0]['lie'][0]['i'] == 13
+
+
+def test_deep_push_valueerror(db):
+    doc = DeepDoc()
+    db.insert(doc)
+
+    doc.li.push(DeepEDoc())
+
+    eedoc = DeepEEDoc()
+    eedoc.i = 13
+
+    with pytest.raises(ValueError):
+        doc.li[0].lie.push(eedoc)
+
+
+def test_deep_pull(db):
+    _id = db.db.docs.insert({'li': [{'lie': [{'i': 13}, {'i': 42}]}]})
+    doc = db.get_queryset(DeepDoc).find_one({'_id': _id})
+
+    doc.li[0].lie.pull({'i': 42}, reload=False)
+    db.reload(doc)
+
+    data = db.db.docs.find_one({'_id': _id})
+
+    assert 'li' in data
+    assert len(data['li']) == 1
+    assert 'lie' in data['li'][0]
+    assert len(data['li'][0]['lie']) == 1
+    assert 'i' in data['li'][0]['lie'][0]
+    assert data['li'][0]['lie'][0]['i'] == 13
+
+
+def test_deep_replace(db):
+    if not db.db.connection.server_info()['version'].startswith('2.4'):
+        raise SkipTest('Work only with MongoDB 2.4')
+
+    doc = DeepDoc()
+    doc.li.append(DeepEDoc())
+    doc.li[0].lie.append(DeepEEDoc(i=13, s='13'))
+    doc.li[0].lie.append(DeepEEDoc(i=42, s='42'))
+    db.insert(doc)
+
+    doc.li[0].lie.replace({'i': 13}, DeepEEDoc(i=26), reload=False)
+
+    data = db.db.docs.find_one()
+
+    assert 'li' in data
+    assert len(data['li']) == 1
+    assert 'lie' in data['li'][0]
+    assert len(data['li'][0]['lie']) == 2
+    assert 'i' in data['li'][0]['lie'][0]
+    assert data['li'][0]['lie'][0]['i'] == 26
+    assert 's' not in data['li'][0]['lie'][0]
+    assert data['li'][0]['lie'][1]['i'] == 42
+    assert data['li'][0]['lie'][1]['s'] == '42'
+
+
+def test_deep_update(db):
+    if not db.db.connection.server_info()['version'].startswith('2.4'):
+        raise SkipTest('Work only with MongoDB 2.4')
+
+    doc = DeepDoc()
+    doc.li.append(DeepEDoc())
+    doc.li[0].lie.append(DeepEEDoc(i=13, s='13'))
+    doc.li[0].lie.append(DeepEEDoc(i=42, s='42'))
+    db.insert(doc)
+
+    doc.li[0].lie.update({'i': 13}, {'i': 26}, reload=False)
+
+    data = db.db.docs.find_one()
+
+    assert 'li' in data
+    assert len(data['li']) == 1
+    assert 'lie' in data['li'][0]
+    assert len(data['li'][0]['lie']) == 2
+    assert 'i' in data['li'][0]['lie'][0]
+    assert data['li'][0]['lie'][0]['i'] == 26
+    assert data['li'][0]['lie'][0]['s'] == '13'
+    assert data['li'][0]['lie'][1]['i'] == 42
+    assert data['li'][0]['lie'][1]['s'] == '42'

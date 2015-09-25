@@ -3,63 +3,56 @@ from bson import ObjectId
 from yadm import fields
 from yadm.documents import Document
 
-from .test_database import BaseDatabaseTest
+
+class TestRDoc(Document):
+    __collection__ = 'testrdocs'
+    i = fields.IntegerField()
 
 
-class ListReferenceFieldTest(BaseDatabaseTest):
-    def setUp(self):
-        super().setUp()
+class TestDoc(Document):
+    __collection__ = 'testdocs'
+    li = fields.ListField(fields.ReferenceField(TestRDoc))
 
-        class TestRDoc(Document):
-            __collection__ = 'testrdocs'
-            i = fields.IntegerField()
 
-        class TestDoc(Document):
-            __collection__ = 'testdocs'
-            li = fields.ListField(fields.ReferenceField(TestRDoc))
+def test_save(db):
+    doc = TestDoc()
 
-        self.TestRDoc = TestRDoc
-        self.TestDoc = TestDoc
+    ref_one = TestRDoc()
+    ref_one.i = 13
+    db.insert(ref_one)
+    doc.li.append(ref_one)
 
-    def test_save(self):
-        td = self.TestDoc()
+    ref_two = TestRDoc()
+    ref_two.i = 42
+    db.insert(ref_two)
+    doc.li.append(ref_two)
 
-        trd_one = self.TestRDoc()
-        trd_one.i = 13
-        self.db.insert(trd_one)
-        td.li.append(trd_one)
+    db.insert(doc)
 
-        trd_two = self.TestRDoc()
-        trd_two.i = 42
-        self.db.insert(trd_two)
-        td.li.append(trd_two)
+    data = db.db.testdocs.find_one()
 
-        self.db.insert(td)
+    assert len(data['li']) == 2
+    assert isinstance(data['li'][0], ObjectId)
+    assert isinstance(data['li'][1], ObjectId)
+    assert data['li'][0] == ref_one.id
+    assert data['li'][1] == ref_two.id
 
-        data = self.db.db.testdocs.find_one()
 
-        self.assertIn('li', data)
-        self.assertEqual(len(data['li']), 2)
-        self.assertIsInstance(data['li'][0], ObjectId)
-        self.assertIsInstance(data['li'][1], ObjectId)
-        self.assertEqual(data['li'][0], trd_one.id)
-        self.assertEqual(data['li'][1], trd_two.id)
+def test_load(db):
+    db.db.testdocs.insert(
+        {'li': [
+            db.db.testrdocs.insert({'i': 13}),
+            db.db.testrdocs.insert({'i': 42}),
+        ]}
+    )
 
-    def test_load(self):
-        self.db.db.testdocs.insert(
-            {'li': [
-                self.db.db.testrdocs.insert({'i': 13}),
-                self.db.db.testrdocs.insert({'i': 42}),
-            ]}
-        )
+    doc = db.get_queryset(TestDoc).find_one()
 
-        doc = self.db.get_queryset(self.TestDoc).find_one()
+    assert hasattr(doc, 'li')
+    assert len(doc.li) == 2
 
-        self.assertTrue(hasattr(doc, 'li'))
-        self.assertEqual(len(doc.li), 2)
+    for item in doc.li:
+        assert isinstance(item, TestRDoc)
 
-        for item in doc.li:
-            self.assertIsInstance(item, self.TestRDoc)
-
-        self.assertEqual(doc.li[0].i, 13)
-        self.assertEqual(doc.li[1].i, 42)
+    assert doc.li[0].i == 13
+    assert doc.li[1].i == 42

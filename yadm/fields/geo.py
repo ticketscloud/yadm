@@ -117,9 +117,7 @@ class GeoField(Field):
         return geo.to_mongo() if geo is not None else None
 
     def from_mongo(self, document, data):
-        if data is None or isinstance(data, Geo):
-            return data
-        elif data is None:
+        if data is None:
             return None
 
         geo_type = self.types_dict.get(data['type'])
@@ -144,10 +142,10 @@ class GeoOneTypeField(GeoField):
         self.types_dict = {self.type.type: self.type}
 
     def prepare_value(self, document, value):
-        if isinstance(value, self.type) or value is None:
+        if isinstance(value, (self.type, type(None))):
             return value
-        elif isinstance(value, dict):
-            return self.type.from_mongo(value)
+        else:
+            raise TypeError(value)
 
 
 class PointField(GeoOneTypeField):

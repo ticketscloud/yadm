@@ -2,7 +2,14 @@
 Base classes for build database fields.
 """
 
-from yadm.markers import AttributeNotSet, NoDefault, NotLoaded
+from yadm.markers import (
+    AttributeNotSet,
+    NotLoaded,
+)
+
+
+class NotLoadedError(Exception):
+    pass
 
 
 class FieldDescriptor:
@@ -18,66 +25,62 @@ class FieldDescriptor:
         return '<{} "{}.{}">'.format(class_name, document_class_name, self.name)
 
     def __get__(self, instance, owner):
+        name = self.name
+
         if instance is None:
             return self.field
 
-        else:
-            value = instance.__data__.get(self.name, AttributeNotSet)
+        elif name in instance.__changed__:
+            value = instance.__changed__[name]
 
-            if value is AttributeNotSet:
-                raise AttributeError(self.name)
+        elif name in instance.__cache__:
+            value = instance.__cache__[name]
 
-            elif value is NotLoaded:
-                value = self.load_deferred(instance)
-
-            value = self.field.from_mongo(instance, value)
-            instance.__data__[self.name] = value
+        elif name in instance.__raw__:
+            raw = instance.__raw__[name]
+            value = self.field.from_mongo(instance, raw)
 
             from yadm.documents import DocumentItemMixin
-
             if isinstance(value, DocumentItemMixin):
                 value.__name__ = self.field.name
                 value.__parent__ = instance
 
-            return value
+            instance.__cache__[name] = value
+
+        else:
+            value = self.field.get_default(instance)
+            instance.__changed__[name] = value
+
+        if value is AttributeNotSet:
+            raise AttributeError(name)
+
+        return value
 
     def __set__(self, instance, value):
         if not isinstance(instance, type):
             value = self.field.prepare_value(instance, value)
 
-            if value != instance.__data__.get(self.name):
-                instance.__fields_changed__.add(self.name)
+            name = self.name
 
-            instance.__data__[self.name] = value
+            if name in instance.__changed__:
+                value_old = instance.__changed__[name]
+            elif name in instance.__cache__:
+                value_old = instance.__cache__[name]
+            elif name in instance.__raw__:
+                value_old = getattr(instance, name, AttributeNotSet)
+            else:
+                value_old = AttributeNotSet
+
+            if value != value_old:
+                instance.__changed__[name] = value
+                self.field.set_parent_changed(instance)
 
         else:
-            setattr(instance, self.name, value)
+            raise TypeError("can't set field directly")
 
     def __delete__(self, instance):
         if not isinstance(instance, type):
             setattr(instance, self.name, AttributeNotSet)
-
-    def load_deferred(self, instance):
-        root = getattr(instance, '__document__', None)
-
-        if root is None:
-            qs = instance.__db__.get_queryset(instance.__class__)
-            qs = qs.fields(self.name)
-            doc = qs.with_id(instance.id)
-            value = doc.__data__[self.name]
-            value = value if value is not NotLoaded else None
-            instance.__data__[self.name] = value
-
-        else:
-            qs = instance.__db__.get_queryset(root.__class__)
-            proj = [i for i in instance.__path_names__ if isinstance(i, str)]
-            qs = qs.fields('.'.join(proj + [self.name]))
-            doc = qs.with_id(root.id)
-            value = instance.__get_value__(doc).__data__[self.name]
-            value = value if value is not NotLoaded else None
-            instance.__data__[self.name] = value
-
-        return value
 
 
 class Field:
@@ -86,15 +89,8 @@ class Field:
     .. py:attribute:: descriptor_class
 
         Class of desctiptor for work with field
-
-    .. py:attribute:: default (NoDefault)
-
-        Default value. It is not processed by ``prepare_value``
-        in the creating document
     """
-
     descriptor_class = FieldDescriptor
-    default = NoDefault
     name = None
     document_class = None
 
@@ -103,8 +99,8 @@ class Field:
 
     def __repr__(self):
         class_name = type(self).__name__
-        document_class_name = type(self.document_class).__name__
-        return '<{} "{}.{}">'.format(class_name, document_class_name, self.name)
+        doc_class_name = self.document_class and self.document_class.__name__
+        return '<{} "{}.{}">'.format(class_name, doc_class_name, self.name)
 
     def contribute_to_class(self, document_class, name):
         """ Add field for document_class
@@ -116,21 +112,37 @@ class Field:
         self.document_class.__fields__[name] = self
         setattr(document_class, name, self.descriptor_class(name, self))
 
+    def set_parent_changed(self, instance):
+        from yadm.documents import DocumentItemMixin
+        if (isinstance(instance, DocumentItemMixin) and
+                instance.__parent__ is not None):
+
+            first = list(instance.__path__)[-1]
+            first_name = first.__name__
+            instance.__document__.__changed__[first_name] = first
+            # TODO: update __changed__ for full path
+
     def copy(self):
         """ Return copy of field
         """
         return self.__class__()
 
+    def get_default(self, document):
+        """ Return default value
+        """
+        return AttributeNotSet
+
     def prepare_value(self, document, value):
-        """ The method is called when value is assigned for the attribute
+        """ The method is called when value is assigned
+            for the attribute
 
         :param BaseDocument document: document
         :param value: raw value
         :return: prepared value
 
-        It must be accept one argument and return processed (e.g. casted) analog.
-        Also it is called for the default value in the creating (not instance!)
-        document.
+        It must be accept `value` argument and return
+        processed (e.g. casted) analog. Also it is called
+        once for the default value.
         """
         return value
 
@@ -138,13 +150,23 @@ class Field:
         return value
 
     def from_mongo(self, document, value):
+        if value is AttributeNotSet:
+            raise AttributeError(self.name)
+        elif value is NotLoaded:
+            raise NotLoadedError(self.name)
+
         return value
 
 
 class DefaultMixin:
-    def __init__(self, default=NoDefault):
-        if default is not NoDefault:
-            self.default = self.prepare_value(None, default)
+    default = AttributeNotSet
+
+    def __init__(self, default=AttributeNotSet):
+        self.default = default
+        super().__init__()
+
+    def get_default(self, document):
+        return self.default
 
     def copy(self):
         """ Return copy of field

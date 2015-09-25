@@ -38,8 +38,6 @@ Map
 """
 from collections import abc
 
-from bson import ObjectId
-
 from yadm.fields.containers import (
     Container,
     ContainerField,
@@ -49,32 +47,7 @@ from yadm.fields.containers import (
 class Map(Container, abc.MutableMapping):
     """ Map
     """
-    def __iter__(self):
-        return iter(self._data)
-
-    def __repr__(self):
-        return '{}({!r})'.format(self.__class__.__name__, self._data)
-
-    def _load_from_mongo(self, data):
-        self._data = {}
-
-        for key, value in (data or {}).items():
-            if hasattr(self._field.value_field, 'from_mongo'):
-                value = self._field.value_field.from_mongo(self.__parent__, value)
-            else:
-                value = self._prepare_value(value)
-
-            self._data[key] = value
-
-    def _prepare_value(self, value):
-        """ `prepare_value` function for `value_field`
-        """
-        if hasattr(self._field.value_field, 'prepare_value'):
-            return self._field.value_field.prepare_value(self.__parent__, value)
-        else:
-            return value
-
-    def set(self, key, value):
+    def set(self, key, value, reload=True):
         """ Set key directly in database
 
         :param key: key
@@ -83,18 +56,16 @@ class Map(Container, abc.MutableMapping):
         See `$set` in MongoDB's `set`.
         """
         key = str(key)
-
-        if hasattr(self._field.value_field, 'to_mongo'):
-            value = self._field.value_field.to_mongo(self.__document__, value)
-        else:
-            value = self._prepare_value(value)
-
+        value = self._prepare_item(key, value)
         qs = self._get_queryset()
         fn = '.'.join([self.__field_name__, key])
         qs.update({'$set': {fn: value}}, multi=False)
         self._data[key] = value
 
-    def unset(self, key):
+        if reload:
+            self.reload()
+
+    def unset(self, key, reload=True):
         """ Unset key directly in database
 
         :param key: key
@@ -107,80 +78,77 @@ class Map(Container, abc.MutableMapping):
         qs.update({'$unset': {fn: True}}, multi=False)
         del self._data[key]
 
+        if reload:
+            self.reload()
+
 
 class MapField(ContainerField):
     """ Field for maps
     """
     container = Map
 
-    def __init__(self, value_field):
-        self.value_field = value_field
-
-    @property
-    def default(self):
+    def get_default_value(self):
         return {}
 
-    def from_mongo(self, document, value):
-        if isinstance(value, self.container):
-            return value
+    def prepare_value(self, document, value):
+        pi = self.prepare_item
+        container = self.container(self, document, {})
+
+        if isinstance(value, dict):
+            items = value.items()
         else:
-            return self.container(document, self, value)
+            items = value
+
+        container._data.update((k, pi(container, k, i)) for k, i in items)
+        return container
 
     def to_mongo(self, document, value):
-        tm = self.value_field.to_mongo
-        return {k: tm(document, v) for k, v in value._data.items()}
+        tm = self.item_field.to_mongo
+        return {k: tm(value, i) for k, i in value.items()}
+
+    def from_mongo(self, document, value):
+        fm = self.item_field.from_mongo
+        sp = self._set_parent
+
+        container = self.container(self, document, {})
+        g = ((k, sp(container, k, fm(container, i))) for k, i in value.items())
+        container._data.update(g)
+        return container
 
 
 class MapCustomKeys(Map):
-    def from_str(self, value):
-        """ Cast value """
-        raise NotImplementedError
-
-    def _load_from_mongo(self, data):
-        data = {str(k): v for k, v in data.items()}
-        super()._load_from_mongo(data)
+    def __init__(self, field, parent, value):
+        super().__init__(field, parent, value)
+        self.key_factory = field.key_factory
 
     def __iter__(self):
-        from_str = self.from_str
-        return (from_str(k) for k in super().__iter__())
+        key_factory = self.key_factory
+        return (key_factory(k) for k in super().__iter__())
 
-    def __getitem__(self, key):
-        return super().__getitem__(str(key))
+    def __getitem__(self, item):
+        return super().__getitem__(str(item))
 
-    def __setitem__(self, key, value):
-        super().__setitem__(str(key), value)
+    def __setitem__(self, item, value):
+        super().__setitem__(str(item), value)
 
-    def __delitem__(self, key):
-        super().__delitem__(str(key))
+    def __delitem__(self, item):
+        super().__delitem__(str(item))
 
-    def __contains__(self, key):
-        return str(key) in self._data
+    def __contains__(self, item):
+        return str(item) in self._data
+
+    def __eq__(self, other):
+        return self._data == {str(k): v for k, v in super().items()}
 
 
 class MapCustomKeysField(MapField):
+    """ Field for maps with custom key type
+
+    Argument key_factory must be function, who called with
+    one string argument and return true key. E.g. int, ObjectId...
+    """
     container = MapCustomKeys
 
-    def prepare_value(self, document, value):
-        if value is None:
-            return None
-        elif isinstance(value, self.container):
-            return value
-        else:
-            value = {str(k): v for k, v in value.items()}
-            return self.container(document, self, value)
-
-
-class MapIntKeys(MapCustomKeys):
-    from_str = int
-
-
-class MapIntKeysField(MapCustomKeysField):
-    container = MapIntKeys
-
-
-class MapObjectIdKeys(MapCustomKeys):
-    from_str = ObjectId
-
-
-class MapObjectIdKeysField(MapCustomKeysField):
-    container = MapObjectIdKeys
+    def __init__(self, item_field, key_factory, auto_create=True):
+        super().__init__(item_field, auto_create=auto_create)
+        self.key_factory = key_factory

@@ -20,15 +20,18 @@ Work with references.
     doc = db.get_queryset(Doc).with_id(doc.id)  # reload doc
     assert doc.rdoc.id == rdoc.id
     assert doc.rdoc.i == 13
-
-
-TODO: many2many collections
 """
 from yadm.common import EnclosedDocDescriptor
 from yadm.documents import Document
-from yadm.markers import NoDefault
 from yadm.fields.base import Field, FieldDescriptor
-from yadm.serialize import from_mongo
+
+
+class BrokenReference(Exception):
+    pass
+
+
+class NotBindingToDatabase(Exception):
+    pass
 
 
 class ReferenceFieldDescriptor(FieldDescriptor):
@@ -53,9 +56,8 @@ class ReferenceField(Field):
     descriptor_class = ReferenceFieldDescriptor
     reference_document_class = EnclosedDocDescriptor('reference')
 
-    def __init__(self, reference_document_class, default=NoDefault):
+    def __init__(self, reference_document_class):
         self.reference_document_class = reference_document_class
-        self.default = default
 
     def copy(self):
         return self.__class__(self.reference_document_class)
@@ -70,32 +72,17 @@ class ReferenceField(Field):
         if value is None:
             return None
 
-        elif isinstance(value, dict):
-            return from_mongo(self.reference_document_class, value)
+        elif document is not None and document.__db__ is not None:
+            qs = document.__db__.get_queryset(self.reference_document_class)
+            doc = qs.with_id(value)
 
-        elif isinstance(value, Document):
-            return value
+            if doc is not None:
+                return doc
+            else:
+                raise BrokenReference(value)
 
         else:
-            if document is not None and document.__db__ is not None:
-                qs = document.__db__.get_queryset(self.reference_document_class)
-                doc = qs.with_id(value)
-
-                if doc:
-                    return doc
-                else:
-                    field = self.reference_document_class.__fields__['_id']
-                    return field.prepare_value(None, value)
-
-            else:
-                return value
+            raise NotBindingToDatabase(document)
 
     def to_mongo(self, document, value):
-        if isinstance(value, dict):
-            return value['_id']
-
-        elif isinstance(value, Document):
-            return value.id
-
-        else:
-            return value
+        return value.id

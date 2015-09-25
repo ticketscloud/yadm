@@ -2,7 +2,8 @@ from collections.abc import Sequence
 
 from pymongo.errors import BulkWriteError
 
-from yadm.serialize import to_mongo
+from yadm.common import BaseResult
+from yadm.serialize import to_mongo, from_mongo
 
 
 class Bulk:
@@ -82,67 +83,92 @@ class Bulk:
         self._bulk_mongo.insert(to_mongo(document))
 
 
-class BulkResult:
+class BulkResult(BaseResult):
     """ Object who provide result of `Bulk.execute()`
     """
-    def __init__(self, bulk, raw_data):
+    def __init__(self, bulk, raw):
+        super().__init__(raw)
         self._bulk = bulk
-        self._raw_data = raw_data
-
-        self.n_inserted = self._raw_data['nInserted']
-        self.n_upserted = self._raw_data['nUpserted']
-        self.n_modified = self._raw_data['nModified']
-        self.n_removed = self._raw_data['nRemoved']
 
     def __bool__(self):
         return not self._bulk.error
 
+    def __repr__(self):
+        return "<{} {!r}>".format(self.__class__.__name__, self._raw)
+
+    @property
+    def n_inserted(self):
+        return self['nInserted']
+
+    @property
+    def n_upserted(self):
+        return self['nUpserted']
+
+    @property
+    def n_modified(self):
+        return self['nModified']
+
+    @property
+    def n_removed(self):
+        return self['nRemoved']
+
     @property
     def write_errors(self):
-        return _BulkResultWriteErrors(
-            self._bulk, self._raw_data['writeErrors'])
+        return _BulkResultWriteErrors(self._bulk, self._raw['writeErrors'])
 
     @property
     def write_concern_errors(self):
         # TODO
-        return self._raw_data['writeConcernErrors']
+        return self._raw['writeConcernErrors']
 
     @property
     def upserted(self):
         # TODO
-        return self._raw_data['upserted']
+        return self._raw['upserted']
 
 
 class _BulkResultWriteErrors(Sequence):
     def __init__(self, bulk, raw_data):
         self._bulk = bulk
-        self._raw_data = raw_data
+        self._raw = raw_data
 
     def __getitem__(self, idx):
         if isinstance(idx, slice):
             raise TypeError("Slicing not supported")
         else:
-            return _BulkResultWriteErrorsItem(self._bulk, self._raw_data[idx])
+            return _BulkResultWriteErrorsItem(self._bulk, self._raw[idx])
 
     def __len__(self):
-        return len(self._raw_data)
+        return len(self._raw)
 
 
-class _BulkResultWriteErrorsItem:
+class _BulkResultWriteErrorsItem(BaseResult):
     _document_cache = None
 
-    def __init__(self, bulk, raw_data):
+    def __init__(self, bulk, raw):
+        super().__init__(raw)
         self._bulk = bulk
-        self._raw_data = raw_data
 
-        self.index = self._raw_data['index']
-        self.code = self._raw_data['code']
-        self.errmsg = self._raw_data['errmsg']
-        self.op = self._raw_data['op']
+    @property
+    def index(self):
+        return self['index']
+
+    @property
+    def code(self):
+        return self['code']
+
+    @property
+    def errmsg(self):
+        return self['errmsg']
+
+    @property
+    def op(self):
+        return self['op']
 
     @property
     def document(self):
         if self._document_cache is None:
-            self._document_cache = self._bulk._document_class(**self.op)
+            document_class = self._bulk._document_class
+            self._document_cache = from_mongo(document_class, self.op)
 
         return self._document_cache

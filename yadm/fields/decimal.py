@@ -25,7 +25,7 @@ from decimal import Decimal, getcontext
 from functools import reduce
 
 from yadm.fields.base import Field, DefaultMixin
-from yadm.markers import NoDefault
+from yadm.markers import AttributeNotSet
 
 
 class DecimalField(DefaultMixin, Field):
@@ -35,7 +35,7 @@ class DecimalField(DefaultMixin, Field):
         (default: run :func:`decimal.getcontext` when need)
     :param decimal.Decimal default:
     """
-    def __init__(self, context=None, default=NoDefault):
+    def __init__(self, context=None, default=AttributeNotSet):
         self.context = context
         super().__init__(default=default)
 
@@ -69,20 +69,10 @@ class DecimalField(DefaultMixin, Field):
             return None
         elif isinstance(value, Decimal):
             return value
-        elif isinstance(value, (str, int, float)):
+        elif isinstance(value, (str, int)):
             return Decimal(value, context=self.context)
         else:
-            sign = value['i'] < 0  # False - positive, True - negative
-
-            digits = []
-            i = abs(value['i'])
-
-            while i:
-                i, d = divmod(i, 10)
-                digits.append(d)
-            digits.reverse()
-
-            return Decimal((sign, digits, value['e']), context=self.context)
+            raise TypeError(value)
 
     def to_mongo(self, document, value):
         if value is None:
@@ -95,5 +85,16 @@ class DecimalField(DefaultMixin, Field):
                 'e': exp
             }
 
-    def from_mongo(self, document, data):
-        return self.prepare_value(document, data)
+    def from_mongo(self, document, value):
+        sign = value['i'] < 0  # False - positive, True - negative
+
+        digits = []
+        i = abs(value['i'])
+
+        while i:
+            i, d = divmod(i, 10)
+            digits.append(d)
+
+        digits.reverse()
+
+        return Decimal((sign, digits, value['e']), context=self.context)

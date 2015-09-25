@@ -16,14 +16,14 @@ All fields placed in :py:mod:`yadm.fields` package.
 
 from bson import ObjectId
 
-from yadm.markers import AttributeNotSet, NoDefault
 from yadm.fields.base import Field
 from yadm.fields.simple import ObjectIdField
 
 
 class MetaDocument(type):
-    '''Metaclass for documents'''
-    def __init__(cls, name, bases, cls_dict):
+    """ Metaclass for documents
+    """
+    def __init__(cls, name, bases, cls_dict):  # noqa
         cls.__fields__ = {}
 
         for base in bases:
@@ -48,7 +48,9 @@ class MetaDocument(type):
 class BaseDocument(metaclass=MetaDocument):
     """ Base class for all documents
     """
-    __initialized__ = False
+    __raw__ = None
+    __cache__ = None
+    __changed__ = None
 
     def __init__(self, *args, **kwargs):
         if args:
@@ -67,29 +69,40 @@ class BaseDocument(metaclass=MetaDocument):
         else:
             data = {}
 
-        self.__data__ = {}
-        self.__fields_changed__ = set()
+        self.__raw__ = {}
+        self.__cache__ = {}
+        self.__changed__ = {}
 
         for key, field in self.__fields__.items():
             if key in data:
                 setattr(self, key, data[key])
-            else:
-                default = field.default
 
-                if default is NoDefault:
-                    self.__data__[key] = AttributeNotSet
-                else:
-                    setattr(self, key, default)
+        self.__changed_clear__()
 
-        self.__initialized__ = data.get('__initialized__', True)
+    def __changed_clear__(self):
+        self.__cache__.update(self.__changed__)
+        self.__changed__.clear()
 
     def __str__(self):
         """ Implement it for pretty str and repr documents
         """
-        return str(id(self))
+        return str(hex(id(self)))
 
     def __repr__(self):
-        return '{}({})'.format(self.__class__.__name__, str(self))
+        return '{}({})'.format(self.__class__.__name__, str(hex(id(self))))
+
+    @property
+    def __data__(self):  # b/c
+        return self.__raw__
+
+    def __debug_print__(self):
+        from pprint import pprint
+        pprint((
+            self,
+            self.__raw__,
+            self.__cache__,
+            self.__changed__,
+        ))
 
 
 class Document(BaseDocument):
@@ -120,9 +133,9 @@ class Document(BaseDocument):
 
     def __str__(self):
         if hasattr(self, '_id'):
-            return '{!s}:{!s}'.format(self.__collection__, self._id)
+            return str(self._id)
         else:
-            return '{!s}:<empty>'.format(self.__collection__)
+            return '<new>'
 
     def __eq__(self, other):
         if isinstance(other, Document):
@@ -250,11 +263,7 @@ class DocumentItemMixin:
 class EmbeddedDocument(DocumentItemMixin, BaseDocument):
     """ Class for build embedded documents
     """
-    def __init__(self, *args, **kwargs):
-        if '__parent__' in kwargs:
-            self.__parent__ = kwargs.pop('__parent__')
-
-        if '__name__' in kwargs:
-            self.__name__ = kwargs.pop('__name__')
-
+    def __init__(self, *args, __parent__=None, __name__=None, **kwargs):
+        self.__parent__ = __parent__
+        self.__name__ = __name__
         super().__init__(*args, **kwargs)

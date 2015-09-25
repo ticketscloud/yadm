@@ -8,6 +8,7 @@ class QuerySet:
         self._document_class = document_class
         self._criteria = {}
         self._projection = None
+        self._slice = None
         self._sort = []
 
     def __str__(self):
@@ -25,7 +26,9 @@ class QuerySet:
 
     def __getitem__(self, item):
         if isinstance(item, slice):
-            return self._from_mongo_list(self._cursor[item])
+            qs = self.copy()
+            qs._slice = item
+            return qs
 
         elif isinstance(item, int):
             return self._from_mongo_one(self._cursor[item])
@@ -36,15 +39,33 @@ class QuerySet:
     def __call__(self, criteria=None, projection=None):
         return self.find(criteria, projection)
 
-    def _from_mongo_one(self, data):
+    def _from_mongo_one(self, data, projection=None):
         """ Create document from raw data
         """
-        if data is not None:
-            doc = from_mongo(self._document_class, data)
-            doc.__db__ = self._db
-            return doc
-        else:
+        projection = projection or self._projection
+
+        if data is None:
             return None
+        elif not projection:
+            not_loaded = ()
+        else:
+            include = [f for f, v in projection.items() if v]
+            exclude = {f for f, v in projection.items() if not v}
+
+            if include:
+                if exclude and exclude != {'_id'}:
+                    raise ValueError("projection cannot have a mix"
+                                     " of inclusion and exclusion")
+
+                for field_name in self._document_class.__fields__:
+                    if field_name not in include:
+                        exclude.add(field_name)
+
+            not_loaded = exclude
+
+        doc = from_mongo(self._document_class, data, not_loaded)
+        doc.__db__ = self._db
+        return doc
 
     def _from_mongo_list(self, data):
         """ Generator for got documents from raw data list (cursor)
@@ -66,6 +87,9 @@ class QuerySet:
 
         if self._sort:
             cursor = cursor.sort(self._sort)
+
+        if self._slice is not None:
+            cursor = cursor[self._slice]
 
         return cursor
 
@@ -129,7 +153,7 @@ class QuerySet:
         qs = self.copy(criteria=criteria, projection=projection)
         collection = qs._db._get_collection(qs._document_class)
         data = collection.find_one(qs._criteria, qs._projection)
-        return self._from_mongo_one(data)
+        return self._from_mongo_one(data, qs._projection)
 
     def with_id(self, _id):
         """ Find document with id

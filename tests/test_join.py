@@ -1,105 +1,68 @@
+import pytest
+
+from bson import ObjectId
+
 from yadm.documents import Document
 from yadm import fields
 
-from .test_database import BaseDatabaseTest
+
+class TestDocRef(Document):
+    __collection__ = 'testdocs_ref'
+    i = fields.IntegerField
 
 
-class JoinTest(BaseDatabaseTest):
-    def setUp(self):
-        super().setUp()
-
-        self.id_ref_1 = self.db.db.testdocs_ref.insert({'i': 1})
-        self.id_ref_2 = self.db.db.testdocs_ref.insert({'i': 2})
-
-        for n in range(10):
-            self.db.db.testdocs.insert({
-                'i': n,
-                'ref': self.id_ref_1 if n % 2 else self.id_ref_2,
-            })
-
-        class TestDocRef(Document):
-            __collection__ = 'testdocs_ref'
-            i = fields.IntegerField
-
-        class TestDoc(Document):
-            __collection__ = 'testdocs'
-            i = fields.IntegerField
-            ref = fields.ReferenceField(TestDocRef)
-
-        self.TestDocRef = TestDocRef
-        self.TestDoc = TestDoc
-
-        self.qs = self.db(self.TestDoc)
-        self.join = self.qs.join('ref')
-
-    def test_len(self):
-        self.assertEqual(len(self.join), 10)
-
-    def test_iter(self):
-        self.assertEqual(len(list(self.join)), 10)
-
-    def test_join(self):
-        for doc in self.join:
-            self.assertIn('ref', doc.__data__)
-            ref = doc.__data__['ref']
-            self.assertIsInstance(ref, Document)
-            self.assertEqual(doc.ref.id, self.id_ref_1 if doc.i % 2 else self.id_ref_2)
-
-    def test_get_queryset(self):
-        self.db.db.testdocs_ref.insert({'i': 3})
-        qs = self.qs.join().get_queryset('ref')
-        self.assertEqual(qs.count(), 2)
-        self.assertEqual(
-            {d.id for d in qs},
-            {self.id_ref_1, self.id_ref_2},
-        )
+class TestDoc(Document):
+    __collection__ = 'testdocs'
+    i = fields.IntegerField
+    ref = fields.ReferenceField(TestDocRef)
 
 
-class ManyJoinTest(BaseDatabaseTest):
-    def setUp(self):
-        super().setUp()
+@pytest.fixture
+def id_ref_1(db):
+    return db.db.testdocs_ref.insert({'i': 1})
 
-        self.id_ref_1_1 = self.db.db.testdocs_ref_1.insert({'i': 11})
-        self.id_ref_1_2 = self.db.db.testdocs_ref_1.insert({'i': 12})
 
-        self.id_ref_2_1 = self.db.db.testdocs_ref_2.insert({'i': 21})
-        self.id_ref_2_2 = self.db.db.testdocs_ref_2.insert({'i': 22})
+@pytest.fixture
+def id_ref_2(db, id_ref_1):
+    return db.db.testdocs_ref.insert({'i': 2})
 
-        for n in range(10):
-            self.db.db.testdocs.insert({
-                'i': n,
-                'ref_1': self.id_ref_1_1 if n % 2 else self.id_ref_1_2,
-                'ref_2': self.id_ref_2_1 if n % 2 else self.id_ref_2_2,
-            })
 
-        class TestDocRef(Document):
-            i = fields.IntegerField
+@pytest.fixture
+def qs(db, id_ref_1, id_ref_2):
+    for n in range(10):
+        db.db.testdocs.insert({
+            'i': n,
+            'ref': id_ref_1 if n % 2 else id_ref_2,
+        })
 
-        class TestDocRef_1(Document):
-            __collection__ = 'testdocs_ref_1'
+    return db(TestDoc)
 
-        class TestDocRef_2(Document):
-            __collection__ = 'testdocs_ref_2'
 
-        class TestDoc(Document):
-            __collection__ = 'testdocs'
-            i = fields.IntegerField
-            ref_1 = fields.ReferenceField(TestDocRef_1)
-            ref_2 = fields.ReferenceField(TestDocRef_2)
+@pytest.fixture
+def join(qs):
+    return qs.join('ref')
 
-        self.TestDoc = TestDoc
 
-        self.qs = self.db(self.TestDoc)
-        self.join = self.qs.join('ref_1', 'ref_2')
+def test_len(join):
+    assert len(join) == 10
 
-    def test_join(self):
-        for doc in self.join:
-            for n in range(1, 3):
-                fn = 'ref_{}'.format(n)
-                self.assertIn(fn, doc.__data__)
-                ref = doc.__data__[fn]
-                self.assertIsInstance(ref, Document)
-                self.assertEqual(
-                    getattr(doc, fn).id,
-                    getattr(self, ('id_{}_1'.format(fn) if doc.i % 2 else 'id_{}_2'.format(fn)))
-                )
+
+def test_iter(join):
+    assert len(list(join)) == 10
+
+
+def test_join(join, id_ref_1, id_ref_2):
+    for doc in join:
+        assert 'ref' in doc.__raw__
+        assert isinstance(doc.__raw__['ref'], ObjectId)
+        assert 'ref' in doc.__cache__
+        ref = doc.__cache__['ref']
+        assert isinstance(ref, Document)
+        assert doc.ref.id == id_ref_1 if doc.i % 2 else id_ref_2
+
+
+def test_get_queryset(db, qs, id_ref_1, id_ref_2):
+    db.db.testdocs_ref.insert({'i': 3})
+    qs = qs.join().get_queryset('ref')
+    assert qs.count() == 2
+    assert {d.id for d in qs} == {id_ref_1, id_ref_2}

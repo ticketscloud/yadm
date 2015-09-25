@@ -75,7 +75,7 @@ class Join(abc.Sequence):
     def _get_joined_ids(self, field_name):
         ids = set()
         for doc in self:
-            value = doc.__data__[field_name]
+            value = doc.__raw__[field_name]
 
             _id = self._prepare_id(value)
             if _id:
@@ -93,7 +93,7 @@ class Join(abc.Sequence):
     def _load_map_name_ids(self, *field_names):
         for doc in self:
             for field_name in field_names:
-                value = doc.__data__.get(field_name)
+                value = doc.__raw__.get(field_name)
 
                 _id = self._prepare_id(value)
                 if _id:
@@ -117,13 +117,13 @@ class Join(abc.Sequence):
     def _set_objects(self, *field_names):
         for doc in self:
             for field_name in field_names:
-                value = doc.__data__.get(field_name)
+                value = doc.__raw__.get(field_name)
 
                 _id = self._prepare_id(value)
                 if _id:
                     joined_document_class = self._map_name_type[field_name]
                     index = self._indexes[joined_document_class]
-                    doc.__data__[field_name] = index.get(_id, value)
+                    doc.__cache__[field_name] = index.get(_id, value)
 
     def _prepare_id(self, value):
         if isinstance(value, ObjectId):

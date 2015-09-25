@@ -5,7 +5,7 @@ Fields for basic data types.
 from bson import ObjectId
 
 from yadm.fields.base import Field, DefaultMixin
-from yadm.markers import NoDefault
+from yadm.markers import AttributeNotSet
 
 
 class SimpleField(DefaultMixin, Field):
@@ -17,28 +17,31 @@ class SimpleField(DefaultMixin, Field):
     type = NotImplemented
     choices = None
 
-    def __init__(self, default=NoDefault, choices=None):
+    def __init__(self, default=AttributeNotSet, choices=None):
         if self.type is NotImplemented:
-            raise ValueError('Attribute "type" not implemented!')
+            raise ValueError('Attribute "type" is not implemented!')
 
         self.choices = choices
 
-        super().__init__(default)
+        super().__init__(default=default)
+
+        if default is not AttributeNotSet:
+            self._check_choices(default)
 
     def prepare_value(self, document, value):
-        if not isinstance(value, self.type) and value is not None:
+        if value is AttributeNotSet:
+            return AttributeNotSet
+
+        elif not isinstance(value, self.type) and value is not None:
             value = self.type(value)
 
-        if self.choices is not None and value not in self.choices:
-            raise ValueError('value not in choices: {!r}'.format(value))
-
+        self._check_choices(value)
         return value
 
-    def to_mongo(self, document, value):
-        return self.prepare_value(document, value)
-
-    def from_mongo(self, document, value):
-        return self.prepare_value(document, value)
+    def _check_choices(self, value):
+        if self.choices is not None and value not in self.choices:
+            raise ValueError("{!r} not in choices: {!r}"
+                             "".format(value, self.choices))
 
 
 class ObjectIdField(SimpleField):
@@ -47,17 +50,21 @@ class ObjectIdField(SimpleField):
     :param bool default_gen: generate default value if not set
     """
     type = ObjectId
+    default_gen = False
 
-    def __init__(self, default_gen=False, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, default_gen=False):
+        super().__init__()
         self.default_gen = default_gen
 
-    @property
-    def default(self):
+    def get_default(self, document):
+        # import ipdb; ipdb.set_trace()
         if self.default_gen:
             return ObjectId()
         else:
-            return NoDefault
+            return AttributeNotSet
+
+    def copy(self):
+        return self.__class__(default_gen=self.default_gen)
 
 
 class BooleanField(SimpleField):

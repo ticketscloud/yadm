@@ -5,28 +5,27 @@ Similar as :py:mod:`yadm.fields.list`.
 """
 from collections import abc
 
-from yadm.fields.containers import (
-    ArrayContainer,
-    ArrayField,
-)
+from yadm.fields.containers import Container
+from yadm.fields.list import ListField
 
 
-class Set(ArrayContainer, abc.MutableSet):
+class Set(Container, abc.MutableSet):
     """ Container for set
     """
-    def __repr__(self):
-        return 'Set({!r})'.format(self._data)
+    def __getitem__(self, item):
+        raise TypeError("'{}' object does not support indexing"
+                        "".format(self.__class__.__name__))
 
-    def _load_from_mongo(self, data):
-        self._data = set()
+    def __setitem__(self, item, value):
+        raise TypeError("'{}' object does not support item assignment"
+                        "".format(self.__class__.__name__))
 
-        for item in data or ():
-            if hasattr(self._field.item_field, 'from_mongo'):
-                value = self._field.item_field.from_mongo(self.__document__, item)
-            else:
-                value = self._prepare_value(item)
+    def __delitem__(self, item):
+        raise TypeError("'{}' object doesn't support item deletion"
+                        "".format(self.__class__.__name__))
 
-            self._data.add(value)
+    def __eq__(self, other):
+        return set(self) == set(other)
 
     def add(self, item):
         """ Append item to set
@@ -35,7 +34,10 @@ class Set(ArrayContainer, abc.MutableSet):
 
         This method does not save object!
         """
-        self._data.add(self._prepare_value(item))
+        item = self._prepare_item(len(self), item)
+        if item not in self._data:
+            self._data.append(item)
+
         self._set_changed()
 
     def discard(self, item):
@@ -45,7 +47,11 @@ class Set(ArrayContainer, abc.MutableSet):
 
         This method does not save object!
         """
-        self._data.discard(item)
+        try:
+            self._data.remove(item)
+        except ValueError:
+            pass
+
         self._set_changed()
 
     def remove(self, item):
@@ -55,26 +61,32 @@ class Set(ArrayContainer, abc.MutableSet):
 
         This method does not save object!
         """
-        self._data.remove(item)
+        try:
+            self._data.remove(item)
+        except ValueError as exc:
+            raise KeyError from exc
+
         self._set_changed()
 
-    def add_to_set(self, item):
+    def add_to_set(self, item, reload=True):
         """ Add item directly to database
 
         :param item: item for `$addToSet`
+        :param bool reload: automatically reload all values from database
 
         See `$addToSet` in MongoDB's `update`.
         """
-        item = self._prepare_value(item)
 
-        if hasattr(self._field.item_field, 'to_mongo'):
-            data = self._field.item_field.to_mongo(self.__document__, item)
-        else:
-            data = item
+        index = len(self)
+        item = self._prepare_item(index, item)
+        data = self._field.item_field.to_mongo(self.__document__, item)
 
         qs = self._get_queryset()
         qs.update({'$addToSet': {self.__field_name__: data}}, multi=False)
-        self._data.add(item)
+        self.add(item)
+
+        if reload:
+            self.reload()
 
     def pull(self, query, reload=True):
         """ Pull item from database
@@ -88,15 +100,10 @@ class Set(ArrayContainer, abc.MutableSet):
         qs.update({'$pull': {self.__field_name__: query}}, multi=False)
 
         if reload:
-            doc = qs.find_one()
-            self._load_from_mongo(self.__get_value__(doc))
+            self.reload()
 
 
-class SetField(ArrayField):
+class SetField(ListField):
     """ Field for set values
     """
     container = Set
-
-    @property
-    def default(self):
-        return set()

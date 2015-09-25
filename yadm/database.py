@@ -22,6 +22,7 @@ This module for provide work with MongoDB database.
         print(doc)
 
 """
+from yadm.markers import AttributeNotSet
 from yadm.queryset import QuerySet
 from yadm.bulk import Bulk
 from yadm.serialize import to_mongo
@@ -69,7 +70,7 @@ class Database:
         document.__db__ = self
         collection = self._get_collection(document.__class__)
         document._id = collection.insert(to_mongo(document))
-        document.__fields_changed__.clear()
+        document.__changed_clear__()
         return document
 
     def save(self, document, full=False, upsert=False):
@@ -93,30 +94,68 @@ class Database:
                     upsert=upsert,
                     multi=False,
                 )
+                document.__changed_clear__()
             else:
-                self._get_collection(document).update(
-                    {'_id': document.id},
-                    {'$set': to_mongo(
-                        document,
-                        exclude=['_id'],
-                        include=document.__fields__.keys()),
-                        # include=document.__fields_changed__),  # must be!
-                    },
-                    upsert=upsert,
-                    multi=False,
+                set_data = to_mongo(
+                    document,
+                    exclude=['_id'],
+                    include=list(document.__changed__),
                 )
 
-            document.__fields_changed__.clear()
+                unset_data = [f for f, v in document.__changed__.items()
+                              if v is AttributeNotSet]
+
+                self.update_one(document, set=set_data, unset=unset_data)
+
             return document
         else:
             return self.insert(document)
+
+    def update_one(self, document, reload=True, *,
+                   set=None, unset=None, inc=None,
+                   push=None, pull=None):  # TODO: extend
+        """ Update one document
+
+        :param Document document: document instance for update
+        :param bool reload: if True, reload document
+        """
+        update_data = {}
+
+        if set:
+            update_data['$set'] = set
+
+        if unset:
+            if isinstance(unset, dict):
+                update_data['$unset'] = unset
+            else:
+                update_data['$unset'] = {f: True for f in unset}
+
+        if inc:
+            update_data['$inc'] = inc
+
+        if push:
+            update_data['$push'] = push
+
+        if pull:
+            update_data['$pull'] = pull
+
+        if update_data:
+            self._get_collection(document).update(
+                {'_id': document.id},
+                update_data,
+                upsert=False,
+                multi=False,
+            )
+
+        if reload:
+            self.reload(document)
 
     def remove(self, document):
         """ Remove document from database
 
         :param Document document: document instance for remove from database
         """
-        return self._get_collection(document.__class__).remove(document._id)
+        return self._get_collection(document.__class__).remove({'_id': document._id})
 
     def reload(self, document, new_instance=False):
         """ Reload document
@@ -130,8 +169,10 @@ class Database:
         if new_instance:
             return new
         else:
-            document.__data__ = new.__data__
-            document.__fields_changed__.clear()
+            document.__raw__.clear()
+            document.__raw__.update(new.__raw__)
+            document.__cache__.clear()
+            document.__changed__.clear()
             return document
 
     def bulk(self, document_class, ordered=False, raise_on_errors=True):

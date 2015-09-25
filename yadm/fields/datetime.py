@@ -23,8 +23,7 @@ class DatetimeField(DefaultMixin, Field):
         else:
             return value
 
-    @property
-    def default(self):
+    def get_default(self, document):
         if self.auto_now:
             return datetime.datetime.now(pytz.utc)
         else:

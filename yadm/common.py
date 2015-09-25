@@ -1,5 +1,6 @@
 """ Common part for working with imports, documents and so on
 """
+from collections.abc import Mapping
 
 from zope.dottedname.resolve import resolve
 
@@ -42,3 +43,19 @@ class EnclosedDocDescriptor:
 
     def __delete__(self, instance):
         delattr(instance, self.attr_name)
+
+
+class BaseResult(Mapping):
+    """ Base class for operations results
+    """
+    def __init__(self, raw):
+        self._raw = raw
+
+    def __getitem__(self, item):
+        return self._raw[item]
+
+    def __iter__(self):
+        return iter(self._raw)
+
+    def __len__(self):
+        return len(self._raw)
