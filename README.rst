@@ -92,6 +92,8 @@ CHANGES
 
 * `serialize.from_mongo` now accept `not_loaded` sequence with filed names who must mark as not loaded, `parent` and `name`;
 
+* `serialize.to_mongo` do not call `FieldDescriptor.__set__`;
+
 * ReferenceField now have boolean argument `null` insted `default=None`;
 
 * Tests now use pytest;
