@@ -22,6 +22,7 @@ Work with references.
     assert doc.rdoc.i == 13
 """
 from yadm.common import EnclosedDocDescriptor
+from yadm.markers import AttributeNotSet
 from yadm.documents import Document
 from yadm.fields.base import Field, FieldDescriptor
 
@@ -52,12 +53,20 @@ class ReferenceField(Field):
     """ Field for work with references
 
     :param reference_document_class: class for refered documents
+    :param bool null: if True, None by default
     """
     descriptor_class = ReferenceFieldDescriptor
     reference_document_class = EnclosedDocDescriptor('reference')
 
-    def __init__(self, reference_document_class):
+    def __init__(self, reference_document_class, null=False):
         self.reference_document_class = reference_document_class
+        self.null = null
+
+    def get_default(self, document):
+        if self.null:
+            return AttributeNotSet
+        else:
+            return None
 
     def copy(self):
         return self.__class__(self.reference_document_class)
