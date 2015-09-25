@@ -18,7 +18,7 @@ Full documentation: http://yadm.readthedocs.org
 Quick start
 -----------
 
-::
+.. code:: python
 
     import pymongo
     from yadm import Database, Document, fields
@@ -59,3 +59,39 @@ Quick start
 
     # Save changed post
     db.save(post)
+
+
+CHANGES
+=======
+
+0.9 (XXXX-XX-XX)
+----------------
+
+* Change document structure. No more bad `BaseDocument.__data__` attribute:
+    - `BaseDocument.__raw__`: raw data from mongo;
+    - `BaseDocument.__cache__`: cached objects, casted with fields;
+    - `BaseDocument.__changed__`: changed objects.
+
+* Changes api for custom fields:
+    - Not more need create field descriptors for every field;
+    - `prepare_values` called only for setattr;
+    - `to_mongo` called only for save objects to mongo;
+    - `from_mongo` called only for load values from `BaseDocument.__raw__`;
+    - Remove `Field.default` attribute. Use `Field.get_default` method;
+    - Raise NotLoadedError if field not loaded from projection;
+
+* Changes in `ReferenceField`:
+    - Raise `BrokenReference` if link is bloken;
+    - Raise `NotBindingToDatabase` if document not saved to database;
+
+* Remove `ArrayContainer` and `ArrayContainerField`;
+
+* Remove old `MapIntKeysField` and `MapObjectIdKeysField`. Use new `MapCustomKeysField`;
+
+* Add `Database.update_one` method for run simple update query with specified document;
+
+* `serialize.from_mongo` now accept `not_loaded` sequence with filed names who must mark as not loaded, `parent` and `name`;
+
+* Tests now use pytest;
+
+* And more, and more...
