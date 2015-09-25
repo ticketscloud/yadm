@@ -3,7 +3,7 @@ sys.path.insert(0, '.')
 
 project = u'yadm'
 copyright = u'2014, Alexander "ZZZ" Zelenyak'
-version = '0.4'
+version = '0.9'
 release = version
 
 extensions = ['sphinx.ext.autodoc']
