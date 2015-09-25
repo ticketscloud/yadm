@@ -11,6 +11,7 @@ It's small and simple ODM for use with MongoDB.
    :maxdepth: 5
 
    database
+   queryset
    documents
    fields/index
    serialize

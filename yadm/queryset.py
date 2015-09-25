@@ -3,6 +3,8 @@ from yadm.serialize import from_mongo
 
 
 class QuerySet:
+    """ Query builder
+    """
     def __init__(self, db, document_class):
         self._db = db
         self._document_class = document_class
@@ -130,9 +132,10 @@ class QuerySet:
     def copy(self, *args, **kwargs):
         """ Copy queryset and update it
 
-            :criteria:
-            :projection:
-            :sort:
+        :param dict criteria:
+        :param dict projection:
+        :param dict sort:
+        :return: new :class:`yadm.queryset.QuerySet` object
         """
         qs = self._copy_qs()
         qs._update_qs(*args, **kwargs)
@@ -141,12 +144,24 @@ class QuerySet:
     def find(self, criteria=None, projection=None):
         """ Return queryset copy with new criteria and projection
 
+        :param dict criteria: update queryset's criteria
+        :param dict projection: update queryset's projection
+        :return: new :class:`yadm.queryset.QuerySet`
+
+        .. code:: python
+
             qs({'field': {'$gt': 3}}, {'field': True})
         """
         return self.copy(criteria=criteria, projection=projection)
 
     def find_one(self, criteria=None, projection=None):
         """ Find and return only one document
+
+        :param dict criteria: update queryset's criteria
+        :param dict projection: update queryset's projection
+        :return: :class:`yadm.documents.Document` or **None**
+
+        .. code:: python
 
             qs({'field': {'$gt': 3}}, {'field': True})
         """
@@ -157,6 +172,9 @@ class QuerySet:
 
     def with_id(self, _id):
         """ Find document with id
+
+        :param _id: id of searching document
+        :return: :class:`yadm.documents.Document` or **None**
         """
         doc = self._document_class()
         doc._id = _id
@@ -164,6 +182,11 @@ class QuerySet:
 
     def update(self, update, multi=True):
         """ Update documents in queryset
+
+        :param dict update: update query
+        :param bool multi: update all matched documents
+            *(default True)*
+        :return: update result
         """
         return self._collection.update(
             self._criteria,
@@ -176,17 +199,18 @@ class QuerySet:
             self, update=None, upsert=False,
             full_response=False, new=False,
             **kwargs):
-        """ Execute findAndModify query
+        """ Execute *$findAndModify* query
 
         :param dict update: see second argument to update()
         :param bool upsert: insert if object doesn’t exist
-            (default False)
+            *(default False)*
         :param bool full_response: return the entire response
-            object from the server (default False)
+            object from the server *(default False)*
         :param new: return updated rather than original object
-            (default False)
-        :param **kwargs: any other options the findAndModify
+            *(default False)*
+        :param kwargs: any other options the findAndModify
             command supports can be passed here
+        :return: :class:`yadm.documents.Document` or **None**
         """
         result = self._collection.find_and_modify(
             query=self._criteria,
@@ -204,7 +228,7 @@ class QuerySet:
             return result
 
     def remove(self):
-        """ Remove documents from queryset
+        """ Remove documents in queryset
         """
         return self._collection.remove(self._criteria)
 
@@ -213,7 +237,12 @@ class QuerySet:
 
         Update projection with fields.
 
-            qs(field, field2)
+        :param str fields:
+        :return: new :class:`yadm.queryset.QuerySet`
+
+        .. code:: python
+
+            qs('field', 'field2')
         """
         return self.copy(projection=dict.fromkeys(fields, True))
 
@@ -225,25 +254,46 @@ class QuerySet:
         return qs
 
     def sort(self, *sort):
-        """
+        """ Sort query
+
+        :param tuples sort: tuples with two items:
+            `('field_name', sort_order_as_int)`.
+
+        .. code:: python
+
             qs.sort(('field_1', 1), ('field_2', -1))
         """
         return self.copy(sort=sort)
 
     def count(self):
         """ Count documents in queryset
+
+        :return: **int**
         """
         return self._cursor.count()
 
     def bulk(self):
         """ Return map {id: object}
+
+        :return: **dict**
         """
         qs = self.copy()
         qs._sort = []
         return {obj.id: obj for obj in qs}
 
     def join(self, *field_names):
-        """ Create `yadm.Join` object, join `field_name` and return it
+        """ Create `yadm.Join` object, join `field_names` and return it
+
+        :param str fiels_names: fields for join
+        :return: new :class:`yadm.join.Join`
+
+        Next algorithm for join:
+            1. Get all documents from queryset;
+            2. Aggegate all ids from requested fields;
+            3. Make *$in* queries for get joined documents;
+            4. Bind joined documents to objects from first queryset;
+
+        `Join` object is instance of `abc.Sequence`.
         """
         join = Join(self)
 

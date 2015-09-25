@@ -69,6 +69,8 @@ def from_mongo(document_class, data, not_loaded=(), parent=None, name=None):
     :param dict data: data from MongoDB
     :param list not_loaded: fields,
         who marked as not loaded
+    :param parent: parent for new document
+    :param str name: name for new document
     """
     document = document_class()
 
