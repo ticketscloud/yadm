@@ -64,9 +64,9 @@ class ReferenceField(Field):
 
     def get_default(self, document):
         if self.null:
-            return AttributeNotSet
-        else:
             return None
+        else:
+            return AttributeNotSet
 
     def copy(self):
         return self.__class__(self.reference_document_class)
