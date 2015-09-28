@@ -74,6 +74,8 @@ class ReferenceField(Field):
     def prepare_value(self, document, value):
         if isinstance(value, Document):
             return value
+        elif value is AttributeNotSet:
+            return AttributeNotSet
         else:
             return self.from_mongo(document, value)
 
@@ -81,7 +83,7 @@ class ReferenceField(Field):
         if value is None:
             return None
 
-        elif document is not None and document.__db__ is not None:
+        elif document.__db__ is not None:
             qs = document.__db__.get_queryset(self.reference_document_class)
             doc = qs.with_id(value)
 

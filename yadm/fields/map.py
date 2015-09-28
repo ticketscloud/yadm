@@ -38,6 +38,7 @@ Map
 """
 from collections import abc
 
+from yadm.markers import AttributeNotSet
 from yadm.fields.containers import (
     Container,
     ContainerField,
@@ -89,6 +90,9 @@ class MapField(ContainerField):
         return {}
 
     def prepare_value(self, document, value):
+        if value is AttributeNotSet:
+            return AttributeNotSet
+
         pi = self.prepare_item
         container = self.container(self, document, {})
 
