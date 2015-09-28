@@ -25,7 +25,10 @@ class Set(Container, abc.MutableSet):
                         "".format(self.__class__.__name__))
 
     def __eq__(self, other):
-        return set(self) == set(other)
+        if isinstance(other, set):
+            return set(self) == set(other)
+        else:
+            return False
 
     def add(self, item):
         """ Append item to set
