@@ -131,6 +131,10 @@ class Document(BaseDocument):
 
     _id = ObjectIdField()
 
+    def __init__(self, __db__=None, *args, **kwargs):
+        self.__db__ = __db__
+        super().__init__(*args, **kwargs)
+
     def __str__(self):
         if hasattr(self, '_id'):
             return str(self._id)
