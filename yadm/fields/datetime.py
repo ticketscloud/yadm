@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime, date
 
 import pytz
 import dateutil.parser
@@ -25,7 +25,7 @@ class DatetimeField(DefaultMixin, Field):
 
     def get_default(self, document):
         if self.auto_now:
-            return datetime.datetime.now(pytz.utc)
+            return datetime.now(pytz.utc)
         else:
             return super().default
 
@@ -34,11 +34,11 @@ class DatetimeField(DefaultMixin, Field):
         if value is None:
             return None
 
-        if type(value) is datetime.datetime:
+        if isinstance(value, datetime):
             return cls._fix_timezone(value)
 
-        elif type(value) is datetime.date:
-            return datetime.datetime(
+        elif isinstance(value, date):
+            return datetime(
                 *value.timetuple()[:3],
                 tz=pytz.utc
             )
