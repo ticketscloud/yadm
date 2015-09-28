@@ -131,7 +131,7 @@ class Document(BaseDocument):
 
     _id = ObjectIdField()
 
-    def __init__(self, __db__=None, *args, **kwargs):
+    def __init__(self, *args, __db__=None, **kwargs):
         self.__db__ = __db__
         super().__init__(*args, **kwargs)
 

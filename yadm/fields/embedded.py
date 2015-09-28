@@ -56,6 +56,10 @@ class EmbeddedDocumentField(Field):
                 __name__=self.name,
                 **value)
 
+        elif isinstance(value, self.embedded_document_class):
+            value.__parent__ = document
+            value.__name__ = self.name
+
         elif not isinstance(value, self.embedded_document_class):
             raise TypeError('Only {!r}, dict or None is alowed, but {!r} given'
                             ''.format(self.embedded_document_class, type(value)))
