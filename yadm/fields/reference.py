@@ -94,4 +94,7 @@ class ReferenceField(Field):
             raise NotBindingToDatabase(document)
 
     def to_mongo(self, document, value):
-        return value.id
+        if value is None:
+            return None
+        else:
+            return value.id
