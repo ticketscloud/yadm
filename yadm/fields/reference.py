@@ -91,7 +91,7 @@ class ReferenceField(Field):
                 raise BrokenReference(value)
 
         else:
-            raise NotBindingToDatabase(document)
+            raise NotBindingToDatabase((document, self, value))
 
     def to_mongo(self, document, value):
         if value is None:
