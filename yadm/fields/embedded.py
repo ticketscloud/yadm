@@ -20,7 +20,7 @@ from yadm.common import EnclosedDocDescriptor
 from yadm.markers import AttributeNotSet
 from yadm.fields.base import Field
 from yadm.serialize import to_mongo, from_mongo
-from yadm.testing import mix
+from yadm.testing import create_fake
 
 
 class EmbeddedDocumentField(Field):
@@ -48,7 +48,7 @@ class EmbeddedDocumentField(Field):
             return AttributeNotSet
 
     def get_fake(self, document, faker, depth):
-        return mix(
+        return create_fake(
             self.embedded_document_class,
             __parent__=document,
             __name__=self.name,

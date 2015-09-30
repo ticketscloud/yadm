@@ -7,13 +7,13 @@ from yadm.markers import AttributeNotSet
 DEFAULT_DEEP = 15  # <=450
 
 
-def mix(__document_class__,
-        __db__=None,
-        __parent__=None,
-        __name__=None,
-        __faker__=None,
-        __depth__=DEFAULT_DEEP,
-        **values):
+def create_fake(__document_class__,
+                __db__=None,
+                __parent__=None,
+                __name__=None,
+                __faker__=None,
+                __depth__=DEFAULT_DEEP,
+                **values):
     """ Create document with fake data
 
     :param yadm.documents.BaseDocument __document_class__: document class
@@ -24,7 +24,7 @@ def mix(__document_class__,
     :param str __name__: name of parent field
     :param Faker __faker__: faker instance, create if not specified
     :param int __depth__: maximum recursion depth,
-        not recomendated use greter then 450
+        not recomendated use greater than 450
         (default 15)
     :return yadm.documents.BaseDocument: __document_class__ instance with fake data
     """

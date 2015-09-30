@@ -1,7 +1,7 @@
 from bson import ObjectId
 
 from yadm.documents import Document, EmbeddedDocument
-from yadm.testing import mix
+from yadm.testing import create_fake
 from yadm.fields import (
     BooleanField, StringField, IntegerField, ObjectIdField, EmailField,
     EmbeddedDocumentField, ReferenceField,
@@ -26,7 +26,7 @@ class EmbeddedTestDoc(EmbeddedDocument):
 
 
 def test_simple(db):
-    doc = mix(SimpleTestDoc)
+    doc = create_fake(SimpleTestDoc)
 
     assert doc.__db__ is None
 
@@ -52,7 +52,7 @@ def test_simple(db):
 
 
 def test_simple_save(db):
-    doc = mix(SimpleTestDoc, __db__=db)
+    doc = create_fake(SimpleTestDoc, __db__=db)
 
     assert doc.__db__ is db
 
@@ -79,7 +79,7 @@ class WithEmbeddedTestDoc(Document):
 
 
 def test_embedded(db):
-    doc = mix(WithEmbeddedTestDoc)
+    doc = create_fake(WithEmbeddedTestDoc)
 
     assert hasattr(doc, 'emb')
     assert isinstance(doc.emb, EmbeddedTestDoc)
@@ -87,7 +87,7 @@ def test_embedded(db):
 
 
 def test_embedded_depth_limit(db):
-    doc = mix(WithEmbeddedTestDoc, __depth__=0)
+    doc = create_fake(WithEmbeddedTestDoc, __depth__=0)
 
     assert hasattr(doc, 'emb')
     assert not hasattr(doc.emb, 'name')
@@ -100,7 +100,7 @@ class WithReferenceTestDoc(Document):
 
 
 def test_reference(db):
-    doc = mix(WithReferenceTestDoc)
+    doc = create_fake(WithReferenceTestDoc)
 
     assert hasattr(doc, 'ref')
     assert hasattr(doc.ref, 's')
@@ -111,7 +111,7 @@ def test_reference(db):
 
 
 def test_reference_save(db):
-    doc = mix(WithReferenceTestDoc, __db__=db)
+    doc = create_fake(WithReferenceTestDoc, __db__=db)
 
     assert hasattr(doc, 'ref')
     assert hasattr(doc.ref, 's')
@@ -128,7 +128,7 @@ class WithReferenceCircleTestDoc(Document):
 
 
 def test_reference_circle(db):
-    doc = mix(WithReferenceCircleTestDoc, __db__=db, __depth__=2)
+    doc = create_fake(WithReferenceCircleTestDoc, __db__=db, __depth__=2)
 
     assert db(WithReferenceCircleTestDoc).count() == 3
 

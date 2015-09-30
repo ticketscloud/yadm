@@ -25,7 +25,7 @@ from yadm.common import EnclosedDocDescriptor
 from yadm.markers import AttributeNotSet
 from yadm.documents import Document
 from yadm.fields.base import Field
-from yadm.testing import mix
+from yadm.testing import create_fake
 
 
 class BrokenReference(Exception):
@@ -55,7 +55,7 @@ class ReferenceField(Field):
             return AttributeNotSet
 
     def get_fake(self, document, faker, depth):
-        res = mix(
+        res = create_fake(
             self.reference_document_class,
             __db__=document.__db__,
             __faker__=faker,
