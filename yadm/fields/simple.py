@@ -29,6 +29,12 @@ class SimpleField(DefaultMixin, Field):
         if default is not AttributeNotSet:
             self._check_choices(default)
 
+    def get_fake(self, document, faker, depth):
+        if self.choices is not None:
+            return choice(self.choices)
+        else:
+            return super().get_fake(document, faker, depth)
+
     def prepare_value(self, document, value):
         if value is AttributeNotSet:
             return AttributeNotSet
@@ -43,12 +49,6 @@ class SimpleField(DefaultMixin, Field):
         if self.choices is not None and value not in self.choices:
             raise ValueError("{!r} not in choices: {!r}"
                              "".format(value, self.choices))
-
-    def get_fake(self, document, faker, depth):
-        if self.choices is not None:
-            return choice(self.choices)
-        else:
-            return super().get_fake(document, faker, depth)
 
 
 class ObjectIdField(SimpleField):
@@ -92,7 +92,10 @@ class IntegerField(SimpleField):
     type = int
 
     def get_fake(self, document, faker, depth):
-        return faker.pyint()
+        if self.choices is not None:
+            return choice(self.choices)
+        else:
+            return faker.pyint()
 
 
 class FloatField(SimpleField):
@@ -101,7 +104,10 @@ class FloatField(SimpleField):
     type = float
 
     def get_fake(self, document, faker, depth):
-        return faker.pyfloat()
+        if self.choices is not None:
+            return choice(self.choices)
+        else:
+            return faker.pyfloat()
 
 
 class StringField(SimpleField):
@@ -110,6 +116,9 @@ class StringField(SimpleField):
     type = str
 
     def get_fake(self, document, faker, depth):
+        if self.choices is not None:
+            return choice(self.choices)
+
         try:
             fake = getattr(faker, self.name)()
         except AttributeError:
