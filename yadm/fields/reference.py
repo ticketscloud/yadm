@@ -24,7 +24,7 @@ Work with references.
 from yadm.common import EnclosedDocDescriptor
 from yadm.markers import AttributeNotSet
 from yadm.documents import Document
-from yadm.fields.base import Field, FieldDescriptor
+from yadm.fields.base import Field
 
 
 class BrokenReference(Exception):
@@ -35,27 +35,12 @@ class NotBindingToDatabase(Exception):
     pass
 
 
-class ReferenceFieldDescriptor(FieldDescriptor):
-    """ Descriptor for ReferenceField
-
-    Save document in `document.__fields__` after first get.
-    """
-    def __get__(self, instance, owner):
-        value = super().__get__(instance, owner)
-
-        if instance is not None and isinstance(value, Document):
-            instance.__data__[self.name] = value
-
-        return value
-
-
 class ReferenceField(Field):
     """ Field for work with references
 
     :param reference_document_class: class for refered documents
     :param bool null: if True, None by default
     """
-    descriptor_class = ReferenceFieldDescriptor
     reference_document_class = EnclosedDocDescriptor('reference')
 
     def __init__(self, reference_document_class, null=False):
