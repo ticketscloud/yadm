@@ -65,6 +65,9 @@ class Money(Decimal):
 class MoneyField(DefaultMixin, Field):
     """ Field for work with money
     """
+    def get_fake(self, document, faker, depth):
+        return Money(faker.pydecimal())
+
     def prepare_value(self, document, value):
         """ Cast value to :class:`decimal.Decimal`
         """

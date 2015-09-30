@@ -2,10 +2,7 @@
 Base classes for build database fields.
 """
 
-from yadm.markers import (
-    AttributeNotSet,
-    NotLoaded,
-)
+from yadm.markers import AttributeNotSet, NotLoaded
 
 
 class NotLoadedError(Exception):
@@ -131,6 +128,11 @@ class Field:
         """ Return default value
         """
         return AttributeNotSet
+
+    def get_fake(self, document, faker, deep):
+        """ Return fake data for testing
+        """
+        return self.get_default(document)
 
     def prepare_value(self, document, value):
         """ The method is called when value is assigned

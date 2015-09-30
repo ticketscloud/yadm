@@ -2,6 +2,9 @@ from .simple import StringField
 
 
 class EmailField(StringField):
+    def get_fake(self, document, faker, depth):
+        return faker.email().lower()
+
     def prepare_value(self, document, value):
         value = super().prepare_value(document, value)
 

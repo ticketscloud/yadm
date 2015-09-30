@@ -51,6 +51,9 @@ class DecimalField(DefaultMixin, Field):
     def context(self, value):
         self._context = value
 
+    def get_fake(self, document, faker, depth):
+        return faker.pydecimal()
+
     @staticmethod
     def _integer_from_digits(digits):
         """ Make integer from digits

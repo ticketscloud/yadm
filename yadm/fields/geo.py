@@ -153,8 +153,17 @@ class PointField(GeoOneTypeField):
     """
     type = Point
 
+    def get_fake(self, document, faker, depth):
+        return Point(faker.longitude(), faker.latitude())
+
 
 class MultiPointField(GeoOneTypeField):
     """ Field for MultiPoint
     """
     type = MultiPoint
+
+    def get_fake(self, document, faker, depth):
+        def fn():
+            return Point(faker.longitude(), faker.latitude())
+
+        return [fn() for _ in range(4)]

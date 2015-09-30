@@ -25,6 +25,7 @@ from yadm.common import EnclosedDocDescriptor
 from yadm.markers import AttributeNotSet
 from yadm.documents import Document
 from yadm.fields.base import Field
+from yadm.testing import mix
 
 
 class BrokenReference(Exception):
@@ -52,6 +53,18 @@ class ReferenceField(Field):
             return None
         else:
             return AttributeNotSet
+
+    def get_fake(self, document, faker, depth):
+        res = mix(
+            self.reference_document_class,
+            __db__=document.__db__,
+            __faker__=faker,
+            __depth__=depth)
+
+        if res is AttributeNotSet and self.null:
+            return None
+        else:
+            return res
 
     def copy(self):
         return self.__class__(self.reference_document_class)

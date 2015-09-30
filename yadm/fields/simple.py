@@ -1,6 +1,7 @@
 """
 Fields for basic data types.
 """
+from random import choice
 
 from bson import ObjectId
 
@@ -19,7 +20,7 @@ class SimpleField(DefaultMixin, Field):
 
     def __init__(self, default=AttributeNotSet, choices=None):
         if self.type is NotImplemented:
-            raise ValueError('Attribute "type" is not implemented!')
+            raise NotImplementedError("Attribute 'type' is not implemented!")
 
         self.choices = choices
 
@@ -43,6 +44,12 @@ class SimpleField(DefaultMixin, Field):
             raise ValueError("{!r} not in choices: {!r}"
                              "".format(value, self.choices))
 
+    def get_fake(self, document, faker, depth):
+        if self.choices is not None:
+            return choice(self.choices)
+        else:
+            return super().get_fake(document, faker, depth)
+
 
 class ObjectIdField(SimpleField):
     """ Field for ObjectId
@@ -63,6 +70,9 @@ class ObjectIdField(SimpleField):
         else:
             return AttributeNotSet
 
+    def get_fake(self, document, faker, depth):
+        return ObjectId()
+
     def copy(self):
         return self.__class__(default_gen=self.default_gen)
 
@@ -72,11 +82,17 @@ class BooleanField(SimpleField):
     """
     type = bool
 
+    def get_fake(self, document, faker, depth):
+        return faker.pybool()
+
 
 class IntegerField(SimpleField):
     """ Field for integer
     """
     type = int
+
+    def get_fake(self, document, faker, depth):
+        return faker.pyint()
 
 
 class FloatField(SimpleField):
@@ -84,8 +100,22 @@ class FloatField(SimpleField):
     """
     type = float
 
+    def get_fake(self, document, faker, depth):
+        return faker.pyfloat()
+
 
 class StringField(SimpleField):
     """ Field for string
     """
     type = str
+
+    def get_fake(self, document, faker, depth):
+        try:
+            fake = getattr(faker, self.name)()
+        except AttributeError:
+            fake = None
+
+        if isinstance(fake, str):
+            return fake
+        else:
+            return faker.pystr()
