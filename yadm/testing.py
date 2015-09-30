@@ -1,10 +1,13 @@
+""" YADM with faker integration
+"""
+
 from faker import Faker
 
 from yadm.documents import BaseDocument, Document, EmbeddedDocument
 from yadm.markers import AttributeNotSet
 
 
-DEFAULT_DEEP = 15  # <=450
+DEFAULT_DEEP = 4  # <=450
 
 
 def create_fake(__document_class__,
@@ -25,7 +28,7 @@ def create_fake(__document_class__,
     :param Faker __faker__: faker instance, create if not specified
     :param int __depth__: maximum recursion depth,
         not recomendated use greater than 450
-        (default 15)
+        (default 4)
     :return yadm.documents.BaseDocument: __document_class__ instance with fake data
     """
     if not issubclass(__document_class__, BaseDocument):
