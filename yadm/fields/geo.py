@@ -147,6 +147,9 @@ class GeoOneTypeField(GeoField):
         else:
             raise TypeError(value)
 
+    def _get_fake_point(self, faker):
+        return Point(float(faker.longitude()), float(faker.latitude()))
+
 
 class PointField(GeoOneTypeField):
     """ Field for Point
@@ -154,7 +157,7 @@ class PointField(GeoOneTypeField):
     type = Point
 
     def get_fake(self, document, faker, depth):
-        return Point(faker.longitude(), faker.latitude())
+        return self._get_fake_point(faker)
 
 
 class MultiPointField(GeoOneTypeField):
@@ -163,7 +166,4 @@ class MultiPointField(GeoOneTypeField):
     type = MultiPoint
 
     def get_fake(self, document, faker, depth):
-        def fn():
-            return Point(faker.longitude(), faker.latitude())
-
-        return [fn() for _ in range(4)]
+        return [self._get_fake_point(faker) for _ in range(4)]

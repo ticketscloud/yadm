@@ -29,6 +29,12 @@ class DatetimeField(DefaultMixin, Field):
         else:
             return super().default
 
+    def get_fake(self, document, faker, depth):
+        if self.auto_now:
+            return datetime.now(pytz.utc)
+        else:
+            return faker.date_time()
+
     @classmethod
     def prepare_value(cls, document, value):
         if value is None:
