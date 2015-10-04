@@ -120,6 +120,10 @@ class MapField(ContainerField):
 
 class MapCustomKeys(Map):
     def __init__(self, field, parent, value):
+        k2s = field.key_to_str
+        pi = field.prepare_item
+        value = {k2s(k): pi(self, k, v) for k, v in value.items()}
+
         super().__init__(field, parent, value)
         self.key_factory = field.key_factory
         self.key_to_str = field.key_to_str
@@ -141,7 +145,12 @@ class MapCustomKeys(Map):
         return self.key_to_str(item) in self._data
 
     def __eq__(self, other):
-        return self._data == {self.key_to_str(k): v for k, v in super().items()}
+        if other is None or other is AttributeNotSet:
+            return False
+        elif isinstance(other, dict):
+            other = self.__class__(self._field, self.__parent__, other)
+
+        return self._data == other._data
 
     def set(self, key, value, reload=True):
         return super().set(self.key_to_str(key), value, reload)
@@ -169,3 +178,25 @@ class MapCustomKeysField(MapField):
         super().__init__(item_field, auto_create=auto_create)
         self.key_factory = key_factory
         self.key_to_str = key_to_str
+
+    def prepare_value(self, document, value):
+        if value is AttributeNotSet:
+            return AttributeNotSet
+
+        pi = self.prepare_item
+        k2s = self.key_to_str
+
+        container = self.container(self, document, {})
+
+        if isinstance(value, dict):
+            items = value.items()
+        else:
+            items = value
+
+        container._data.update((k2s(k), pi(container, k, i)) for k, i in items)
+        return container
+
+    def to_mongo(self, document, value):
+        tm = self.item_field.to_mongo
+        k2s = self.key_to_str
+        return {k2s(k): tm(value, i) for k, i in value.items()}
