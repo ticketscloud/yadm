@@ -149,4 +149,4 @@ def test_custom_setitem(db):
     assert doc.map == {one: 1, two: 3}
 
     doc.map[two] = 2
-    assert doc.map == {one: 1, two: 3}
+    assert doc.map == {one: 1, two: 2}
