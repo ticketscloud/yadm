@@ -84,9 +84,7 @@ class BaseDocument(metaclass=MetaDocument):
         self.__changed__.clear()
 
     def __str__(self):
-        """ Implement it for pretty str and repr documents
-        """
-        return str(hex(id(self)))
+        return repr(self)
 
     def __repr__(self):
         return '{}({})'.format(self.__class__.__name__, str(hex(id(self))))
@@ -94,6 +92,15 @@ class BaseDocument(metaclass=MetaDocument):
     @property
     def __data__(self):  # b/c
         return self.__raw__
+
+    def __fake__(self, values, faker, depth):
+        """ Fake data customizer
+        """
+        # # pre pocessor and prepare values
+        # yield values  # send new values
+        # # post processor
+        # yield
+        # # post save processor
 
     def __debug_print__(self):
         from pprint import pprint
