@@ -142,11 +142,13 @@ class Document(BaseDocument):
         self.__db__ = __db__
         super().__init__(*args, **kwargs)
 
-    def __str__(self):
+    def __repr__(self):
         if hasattr(self, '_id'):
-            return str(self._id)
+            _id = str(self._id)
         else:
-            return '<new>'
+            _id = '<new>'
+
+        return '{}({})'.format(self.__class__.__name__, _id)
 
     def __eq__(self, other):
         if isinstance(other, Document):
