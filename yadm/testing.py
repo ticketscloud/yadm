@@ -48,15 +48,36 @@ def create_fake(__document_class__,
         document.__parent__ = __parent__
         document.__name__ = __name__
 
+    doc_fake_proc = document.__fake__(values, __faker__, __depth__ - 1)
+
+    if doc_fake_proc is not None:
+        values = next(doc_fake_proc)
+
     for name, field in __document_class__.__fields__.items():
         if name in values:
-            setattr(document, name, values[name])
+            fake = values[name]
+        elif hasattr(document, '__fake__{}__'.format(name)):
+            attr = getattr(document, '__fake__{}__'.format(name))
+            fake = attr(__faker__, __depth__ - 1)
         else:
             fake = field.get_fake(document, __faker__, __depth__ - 1)
-            if fake is not AttributeNotSet:
-                setattr(document, name, fake)
+
+        if fake is not AttributeNotSet:
+            setattr(document, name, fake)
+
+    if doc_fake_proc is not None:
+        try:
+            next(doc_fake_proc)
+        except StopIteration:
+            doc_fake_proc = None
 
     if __db__ is not None:
-        return __db__.insert(document)
-    else:
-        return document
+        __db__.insert(document)
+
+        if doc_fake_proc is not None:
+            try:
+                next(doc_fake_proc)
+            except StopIteration:
+                pass
+
+    return document
