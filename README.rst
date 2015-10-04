@@ -64,7 +64,7 @@ Quick start
 CHANGES
 =======
 
-0.9 (XXXX-XX-XX)
+1.0 (XXXX-XX-XX)
 ----------------
 
 * Change document structure. No more bad `BaseDocument.__data__` attribute:
@@ -95,6 +95,8 @@ CHANGES
 * `serialize.to_mongo` do not call `FieldDescriptor.__set__`;
 
 * ReferenceField now have boolean argument `null` insted `default=None`;
+
+* Fakers! Subsystem for generate test objects;
 
 * Tests now use pytest;
 
