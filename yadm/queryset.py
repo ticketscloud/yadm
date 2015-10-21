@@ -265,6 +265,14 @@ class QuerySet:
         """
         return self.copy(sort=sort)
 
+    def distinct(self, field):
+        """ Distinct query
+
+        :param str field: field for distinct
+        :return: list with result data
+        """
+        return self._cursor.distinct(field)
+
     def count(self):
         """ Count documents in queryset
 
