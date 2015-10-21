@@ -6,7 +6,7 @@ from yadm import fields
 from yadm.markers import NotLoaded
 
 
-class TestDoc(Document):
+class Doc(Document):
     __collection__ = 'testdocs'
     i = fields.IntegerField
     s = fields.StringField
@@ -20,7 +20,7 @@ def qs(db):
             's': 'str({})'.format(n),
         })
 
-    return db.get_queryset(TestDoc)
+    return db.get_queryset(Doc)
 
 
 def test_count(qs):
@@ -35,7 +35,7 @@ def test_len(qs):
 
 def test_find_one(qs):
     doc = qs.find_one({'i': 7})
-    assert isinstance(doc, TestDoc)
+    assert isinstance(doc, Doc)
     assert hasattr(doc, 'i')
     assert doc.i == 7
 
@@ -206,7 +206,7 @@ def test_bulk(qs):
     assert isinstance(bulk, dict)
     assert len(bulk), 4
     assert isinstance(list(bulk)[0], ObjectId)
-    assert isinstance(list(bulk.values())[0], TestDoc)
+    assert isinstance(list(bulk.values())[0], Doc)
     _id = list(bulk)[0]
     assert bulk[_id].id == _id
     assert {d.i for d in bulk.values()} == {6, 7, 8, 9}
