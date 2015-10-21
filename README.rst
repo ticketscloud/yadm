@@ -83,6 +83,7 @@ CHANGES
 * Changes in `ReferenceField`:
     - Raise `BrokenReference` if link is bloken;
     - Raise `NotBindingToDatabase` if document not saved to database;
+    - Now have boolean argument `null` insted `default=None`;
 
 * Remove `ArrayContainer` and `ArrayContainerField`;
 
@@ -90,11 +91,11 @@ CHANGES
 
 * Add `Database.update_one` method for run simple update query with specified document;
 
+* Add `QuerySet.distinct`;
+
 * `serialize.from_mongo` now accept `not_loaded` sequence with filed names who must mark as not loaded, `parent` and `name`;
 
 * `serialize.to_mongo` do not call `FieldDescriptor.__set__`;
-
-* ReferenceField now have boolean argument `null` insted `default=None`;
 
 * Fakers! Subsystem for generate test objects;
 
