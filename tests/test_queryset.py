@@ -201,6 +201,19 @@ def test_contains(qs):
     assert doc not in qs.find({'i': {'$ne': 0}})
 
 
+def test_distinct(db, qs):
+    res = qs.distinct('i')
+    assert isinstance(res, list)
+    assert len(res) == len(set(res))
+
+    db.insert(Doc(i=3))
+    db.insert(Doc(i=4))
+    db.insert(Doc(i=10))
+
+    res = qs.distinct('i')
+    assert len(res) == len(set(res))
+
+
 def test_bulk(qs):
     bulk = qs.find({'i': {'$gte': 6}}).bulk()
     assert isinstance(bulk, dict)
