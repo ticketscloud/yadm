@@ -109,7 +109,8 @@ class MultiPoint(GeoCoordinates, Sequence):
 class GeoField(Field):
     """ Base field for GeoJSON objects
     """
-    def __init__(self, types=TYPES):
+    def __init__(self, types=TYPES, **kwargs):
+        super().__init__(**kwargs)
         self.types = types
         self.types_dict = {t.type: t for t in types}
 
@@ -134,7 +135,9 @@ class GeoOneTypeField(GeoField):
     """
     type = None
 
-    def __init__(self):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
         if self.type is None:
             raise NotImplementedError('attribute "type" must be implemented')
 

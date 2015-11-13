@@ -34,10 +34,14 @@ class DecimalField(DefaultMixin, Field):
     :param decimal.Context context: context for decimal operations
         (default: run :func:`decimal.getcontext` when need)
     :param decimal.Decimal default:
+
+    TODO: context in copy()
     """
-    def __init__(self, context=None, default=AttributeNotSet):
+    _context = None
+
+    def __init__(self, *, context=None, **kwargs):
+        super().__init__(**kwargs)
         self.context = context
-        super().__init__(default=default)
 
     @property
     def context(self):

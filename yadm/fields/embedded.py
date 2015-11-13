@@ -34,7 +34,9 @@ class EmbeddedDocumentField(Field):
     auto_create = True
     embedded_document_class = EnclosedDocDescriptor('embedded')
 
-    def __init__(self, embedded_document_class, auto_create=True):
+    def __init__(self, embedded_document_class, *,
+                 auto_create=True, **kwargs):
+        super().__init__(**kwargs)
         self.embedded_document_class = embedded_document_class
         self.auto_create = auto_create
 
@@ -93,4 +95,6 @@ class EmbeddedDocumentField(Field):
     def copy(self):
         """ Return copy of field
         """
-        return self.__class__(self.embedded_document_class)
+        return self.__class__(self.embedded_document_class,
+                              smart_null=self.smart_null,
+                              default=self.default)

@@ -83,7 +83,8 @@ CHANGES
 * Changes in `ReferenceField`:
     - Raise `BrokenReference` if link is bloken;
     - Raise `NotBindingToDatabase` if document not saved to database;
-    - Now have boolean argument `null` insted `default=None`;
+
+* `smart_null` keyword for `Field`;
 
 * Remove `ArrayContainer` and `ArrayContainerField`;
 

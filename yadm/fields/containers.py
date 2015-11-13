@@ -77,8 +77,10 @@ class ContainerField(Field):
     """
     container = Container
 
-    def __init__(self, item_field, auto_create=True):
-        if isinstance(item_field, type):
+    def __init__(self, item_field, *, auto_create=True, **kwargs):
+        super().__init__(**kwargs)
+
+        if not isinstance(item_field, Field):
             raise TypeError("first argument must be field isinstance,"
                             " but {}".format(item_field))
 

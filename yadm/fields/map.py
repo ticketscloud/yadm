@@ -170,12 +170,11 @@ class MapCustomKeysField(MapField):
     """
     container = MapCustomKeys
 
-    def __init__(self,
-                 item_field,
-                 key_factory,
+    def __init__(self, item_field, key_factory, *,
                  key_to_str=str,
-                 auto_create=True):
-        super().__init__(item_field, auto_create=auto_create)
+                 auto_create=True,
+                 **kwargs):
+        super().__init__(item_field, auto_create=auto_create, **kwargs)
         self.key_factory = key_factory
         self.key_to_str = key_to_str
 

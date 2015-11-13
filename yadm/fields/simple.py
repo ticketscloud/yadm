@@ -18,13 +18,14 @@ class SimpleField(DefaultMixin, Field):
     type = NotImplemented
     choices = None
 
-    def __init__(self, default=AttributeNotSet, choices=None):
+    def __init__(self, default=AttributeNotSet, *, choices=None, **kwargs):
         if self.type is NotImplemented:
             raise NotImplementedError("Attribute 'type' is not implemented!")
 
         self.choices = choices
 
-        super().__init__(default=default)
+        kwargs['default'] = default
+        super().__init__(**kwargs)
 
         if default is not AttributeNotSet:
             self._check_choices(default)

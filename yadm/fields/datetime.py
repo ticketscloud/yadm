@@ -12,7 +12,7 @@ class DatetimeField(DefaultMixin, Field):
     :param bool auto_now: datetime.now as default
         (default: False)
     """
-    def __init__(self, auto_now=False, **kwargs):
+    def __init__(self, *, auto_now=False, **kwargs):
         self.auto_now = auto_now
         super().__init__(**kwargs)
 

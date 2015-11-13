@@ -40,16 +40,15 @@ class ReferenceField(Field):
     """ Field for work with references
 
     :param reference_document_class: class for refered documents
-    :param bool null: if True, None by default
     """
     reference_document_class = EnclosedDocDescriptor('reference')
 
-    def __init__(self, reference_document_class, null=False):
+    def __init__(self, reference_document_class, **kwargs):
+        super().__init__(**kwargs)
         self.reference_document_class = reference_document_class
-        self.null = null
 
     def get_default(self, document):
-        if self.null:
+        if self.smart_null:
             return None
         else:
             return AttributeNotSet
@@ -61,7 +60,7 @@ class ReferenceField(Field):
             __faker__=faker,
             __depth__=depth)
 
-        if res is AttributeNotSet and self.null:
+        if res is AttributeNotSet and self.smart_null:
             return None
         else:
             return res

@@ -86,13 +86,17 @@ class Field:
     .. py:attribute:: descriptor_class
 
         Class of desctiptor for work with field
+
+    :param bool smart_null: "smart null" functional
+
     """
     descriptor_class = FieldDescriptor
+    smart_null = False
     name = None
     document_class = None
 
-    def __init__(self):
-        pass
+    def __init__(self, smart_null=False):
+        self.smart_null = smart_null
 
     def __repr__(self):
         class_name = type(self).__name__
@@ -122,7 +126,7 @@ class Field:
     def copy(self):
         """ Return copy of field
         """
-        return self.__class__()
+        return self.__class__(smart_null=self.smart_null)
 
     def get_default(self, document):
         """ Return default value
@@ -163,9 +167,9 @@ class Field:
 class DefaultMixin:
     default = AttributeNotSet
 
-    def __init__(self, default=AttributeNotSet):
+    def __init__(self, *args, default=AttributeNotSet, **kwargs):
+        super().__init__(*args, **kwargs)
         self.default = default
-        super().__init__()
 
     def get_default(self, document):
         return self.default
@@ -173,4 +177,4 @@ class DefaultMixin:
     def copy(self):
         """ Return copy of field
         """
-        return self.__class__(default=self.default)
+        return self.__class__(smart_null=self.smart_null, default=self.default)

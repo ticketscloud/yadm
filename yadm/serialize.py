@@ -81,6 +81,9 @@ def from_mongo(document_class, data, not_loaded=(), parent=None, name=None):
         elif name in not_loaded:
             document.__raw__[name] = NotLoaded
 
+        elif field.smart_null:
+            document.__raw__[name] = None
+
         else:
             document.__raw__[name] = AttributeNotSet
 
