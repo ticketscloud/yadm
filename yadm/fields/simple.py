@@ -5,7 +5,7 @@ from random import choice
 
 from bson import ObjectId
 
-from yadm.fields.base import Field, DefaultMixin
+from yadm.fields.base import Field, DefaultMixin, pass_null
 from yadm.markers import AttributeNotSet
 
 
@@ -36,11 +36,12 @@ class SimpleField(DefaultMixin, Field):
         else:
             return super().get_fake(document, faker, depth)
 
+    @pass_null
     def prepare_value(self, document, value):
         if value is AttributeNotSet:
             return AttributeNotSet
 
-        elif not isinstance(value, self.type) and value is not None:
+        elif not isinstance(value, self.type):
             value = self.type(value)
 
         self._check_choices(value)
@@ -65,7 +66,6 @@ class ObjectIdField(SimpleField):
         self.default_gen = default_gen
 
     def get_default(self, document):
-        # import ipdb; ipdb.set_trace()
         if self.default_gen:
             return ObjectId()
         else:

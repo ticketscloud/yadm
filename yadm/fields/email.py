@@ -1,4 +1,4 @@
-from .simple import StringField
+from yadm.fields.simple import StringField
 
 
 class EmailField(StringField):

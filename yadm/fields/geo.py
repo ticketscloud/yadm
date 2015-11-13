@@ -9,7 +9,7 @@ GeoJSON: http://geojson.org/geojson-spec.html
 from collections.abc import Sequence
 
 from yadm.documents import DocumentItemMixin
-from yadm.fields.base import Field
+from yadm.fields.base import Field, pass_null
 
 
 TYPES = []
@@ -114,13 +114,12 @@ class GeoField(Field):
         self.types = types
         self.types_dict = {t.type: t for t in types}
 
+    @pass_null
     def to_mongo(self, document, geo):
-        return geo.to_mongo() if geo is not None else None
+        return geo.to_mongo()
 
+    @pass_null
     def from_mongo(self, document, data):
-        if data is None:
-            return None
-
         geo_type = self.types_dict.get(data['type'])
 
         if geo_type is None:
@@ -144,8 +143,9 @@ class GeoOneTypeField(GeoField):
         self.types = [self.type]
         self.types_dict = {self.type.type: self.type}
 
+    @pass_null
     def prepare_value(self, document, value):
-        if isinstance(value, (self.type, type(None))):
+        if isinstance(value, self.type):
             return value
         else:
             raise TypeError(value)

@@ -39,6 +39,7 @@ Map
 from collections import abc
 
 from yadm.markers import AttributeNotSet
+from yadm.fields.base import pass_null
 from yadm.fields.containers import (
     Container,
     ContainerField,
@@ -104,10 +105,12 @@ class MapField(ContainerField):
         container._data.update((k, pi(container, k, i)) for k, i in items)
         return container
 
+    @pass_null
     def to_mongo(self, document, value):
         tm = self.item_field.to_mongo
         return {k: tm(value, i) for k, i in value.items()}
 
+    @pass_null
     def from_mongo(self, document, value):
         fm = self.item_field.from_mongo
         sp = self._set_parent
@@ -178,6 +181,7 @@ class MapCustomKeysField(MapField):
         self.key_factory = key_factory
         self.key_to_str = key_to_str
 
+    @pass_null
     def prepare_value(self, document, value):
         if value is AttributeNotSet:
             return AttributeNotSet
@@ -195,6 +199,7 @@ class MapCustomKeysField(MapField):
         container._data.update((k2s(k), pi(container, k, i)) for k, i in items)
         return container
 
+    @pass_null
     def to_mongo(self, document, value):
         tm = self.item_field.to_mongo
         k2s = self.key_to_str

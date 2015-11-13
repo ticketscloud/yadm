@@ -38,6 +38,7 @@ List of objects
 """
 from collections import abc
 
+from yadm.fields.base import pass_null
 from yadm.fields.containers import (
     Container,
     ContainerField,
@@ -180,10 +181,12 @@ class ListField(ContainerField):
         container._data.extend(g)
         return container
 
+    @pass_null
     def to_mongo(self, document, value):
         tm = self.item_field.to_mongo
         return [tm(value, i) for i in value]
 
+    @pass_null
     def from_mongo(self, document, value):
         fm = self.item_field.from_mongo
         sp = self._set_parent

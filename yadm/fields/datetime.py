@@ -3,7 +3,7 @@ from datetime import datetime, date
 import pytz
 import dateutil.parser
 
-from yadm.fields.base import Field, DefaultMixin
+from yadm.fields.base import Field, DefaultMixin, pass_null
 
 
 class DatetimeField(DefaultMixin, Field):
@@ -36,10 +36,8 @@ class DatetimeField(DefaultMixin, Field):
             return faker.date_time()
 
     @classmethod
+    @pass_null
     def prepare_value(cls, document, value):
-        if value is None:
-            return None
-
         if isinstance(value, datetime):
             return cls._fix_timezone(value)
 
@@ -58,11 +56,11 @@ class DatetimeField(DefaultMixin, Field):
                             ' date or string, but {!r}'.format(type(value)))
 
     @classmethod
+    @pass_null
     def from_mongo(cls, document, value):
-        if value is not None:
-            return cls._fix_timezone(value)
+        return cls._fix_timezone(value)
 
     @classmethod
+    @pass_null
     def to_mongo(cls, document, value):
-        if value is not None:
-            return cls._fix_timezone(value)
+        return cls._fix_timezone(value)

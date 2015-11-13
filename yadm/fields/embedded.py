@@ -18,7 +18,7 @@ Work with embedded documents.
 
 from yadm.common import EnclosedDocDescriptor
 from yadm.markers import AttributeNotSet
-from yadm.fields.base import Field
+from yadm.fields.base import Field, pass_null
 from yadm.serialize import to_mongo, from_mongo
 from yadm.testing import create_fake
 
@@ -57,8 +57,9 @@ class EmbeddedDocumentField(Field):
             __faker__=faker,
             __depth__=depth)
 
+    @pass_null
     def prepare_value(self, document, value):
-        if value in [None, AttributeNotSet]:
+        if value is AttributeNotSet:
             return value
 
         elif isinstance(value, dict):
@@ -77,16 +78,12 @@ class EmbeddedDocumentField(Field):
 
         return value
 
+    @pass_null
     def to_mongo(self, document, value):
-        if value is None:
-            return None
-        else:
-            return to_mongo(value)
+        return to_mongo(value)
 
+    @pass_null
     def from_mongo(self, document, value):
-        if value is None:
-            return None
-
         value = from_mongo(self.embedded_document_class, value,
                            parent=document, name=self.name)
 

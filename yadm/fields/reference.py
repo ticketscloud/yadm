@@ -24,7 +24,7 @@ Work with references.
 from yadm.common import EnclosedDocDescriptor
 from yadm.markers import AttributeNotSet
 from yadm.documents import Document
-from yadm.fields.base import Field
+from yadm.fields.base import Field, pass_null
 from yadm.testing import create_fake
 
 
@@ -68,6 +68,7 @@ class ReferenceField(Field):
     def copy(self):
         return self.__class__(self.reference_document_class)
 
+    @pass_null
     def prepare_value(self, document, value):
         if isinstance(value, Document):
             return value
@@ -76,11 +77,9 @@ class ReferenceField(Field):
         else:
             return self.from_mongo(document, value)
 
+    @pass_null
     def from_mongo(self, document, value):
-        if value is None:
-            return None
-
-        elif document.__db__ is not None:
+        if document.__db__ is not None:
             qs = document.__db__.get_queryset(self.reference_document_class)
             doc = qs.with_id(value)
 
@@ -92,8 +91,6 @@ class ReferenceField(Field):
         else:
             raise NotBindingToDatabase((document, self, value))
 
+    @pass_null
     def to_mongo(self, document, value):
-        if value is None:
-            return None
-        else:
-            return value.id
+        return value.id

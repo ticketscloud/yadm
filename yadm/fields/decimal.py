@@ -24,8 +24,7 @@ This code save to MongoDB document:
 from decimal import Decimal, getcontext
 from functools import reduce
 
-from yadm.fields.base import Field, DefaultMixin
-from yadm.markers import AttributeNotSet
+from yadm.fields.base import Field, DefaultMixin, pass_null
 
 
 class DecimalField(DefaultMixin, Field):
@@ -69,29 +68,27 @@ class DecimalField(DefaultMixin, Field):
         """
         return reduce(lambda cur, acc: cur * 10 + acc, digits, 0)
 
+    @pass_null
     def prepare_value(self, document, value):
         """ Cast value to :class:`decimal.Decimal`
         """
-        if value is None:
-            return None
-        elif isinstance(value, Decimal):
+        if isinstance(value, Decimal):
             return value
         elif isinstance(value, (str, int)):
             return Decimal(value, context=self.context)
         else:
             raise TypeError(value)
 
+    @pass_null
     def to_mongo(self, document, value):
-        if value is None:
-            return None
-        else:
-            sign, digits, exp = value.as_tuple()
-            integer = self._integer_from_digits(digits)
-            return {
-                'i': -integer if sign else integer,
-                'e': exp
-            }
+        sign, digits, exp = value.as_tuple()
+        integer = self._integer_from_digits(digits)
+        return {
+            'i': -integer if sign else integer,
+            'e': exp
+        }
 
+    @pass_null
     def from_mongo(self, document, value):
         sign = value['i'] < 0  # False - positive, True - negative
 

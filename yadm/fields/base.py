@@ -1,12 +1,24 @@
 """
 Base classes for build database fields.
 """
+import functools
 
 from yadm.markers import AttributeNotSet, NotLoaded
 
 
 class NotLoadedError(Exception):
     pass
+
+
+def pass_null(method):
+    @functools.wraps(method)
+    def wrapper(self, document, value):
+        if value is None:
+            return None
+        else:
+            return method(self, document, value)
+
+    return wrapper
 
 
 class FieldDescriptor:
