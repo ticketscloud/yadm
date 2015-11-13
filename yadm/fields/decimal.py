@@ -93,9 +93,6 @@ class DecimalField(DefaultMixin, Field):
             }
 
     def from_mongo(self, document, value):
-        if value is AttributeNotSet:
-            raise AttributeError(self.name)
-
         sign = value['i'] < 0  # False - positive, True - negative
 
         digits = []

@@ -35,6 +35,12 @@ class FieldDescriptor:
 
         elif name in instance.__raw__:
             raw = instance.__raw__[name]
+
+            if raw is AttributeNotSet:
+                return self.field.get_if_attribute_not_set(instance)
+            if raw is NotLoaded:
+                return self.field.get_if_not_loaded(instance)
+
             value = self.field.from_mongo(instance, raw)
 
             from yadm.documents import DocumentItemMixin
@@ -49,7 +55,7 @@ class FieldDescriptor:
             instance.__changed__[name] = value
 
         if value is AttributeNotSet:
-            raise AttributeError(name)
+            return self.field.get_if_attribute_not_set(instance)
 
         return value
 
@@ -133,6 +139,16 @@ class Field:
         """
         return AttributeNotSet
 
+    def get_if_not_loaded(self, document):
+        """ Call if field data marked as not loaded
+        """
+        raise NotLoadedError(self, document)
+
+    def get_if_attribute_not_set(self, document):
+        """ Call if key not exist in document
+        """
+        raise AttributeError(self.name)
+
     def get_fake(self, document, faker, deep):
         """ Return fake data for testing
         """
@@ -156,11 +172,6 @@ class Field:
         return value
 
     def from_mongo(self, document, value):
-        if value is AttributeNotSet:
-            raise AttributeError(self.name)
-        elif value is NotLoaded:
-            raise NotLoadedError(self.name)
-
         return value
 
 

@@ -78,7 +78,8 @@ CHANGES
     - `to_mongo` called only for save objects to mongo;
     - `from_mongo` called only for load values from `BaseDocument.__raw__`;
     - Remove `Field.default` attribute. Use `Field.get_default` method;
-    - Raise NotLoadedError if field not loaded from projection;
+    - Add `Field.get_if_not_loaded` and `Field.get_if_attribute_not_set` method;
+    - By default raise `NotLoadedError` if field not loaded from projection;
 
 * Changes in `ReferenceField`:
     - Raise `BrokenReference` if link is bloken;
