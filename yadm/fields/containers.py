@@ -77,11 +77,11 @@ class ContainerField(Field):
     """
     container = Container
 
-    def __init__(self, item_field, *, auto_create=True, **kwargs):
+    def __init__(self, item_field=None, *, auto_create=True, **kwargs):
         super().__init__(**kwargs)
 
-        if not isinstance(item_field, Field):
-            raise TypeError("first argument must be field isinstance,"
+        if not isinstance(item_field, (Field, type(None))):
+            raise TypeError("first argument must be field isinstance or None,"
                             " but {}".format(item_field))
 
         self.item_field = item_field
@@ -94,9 +94,13 @@ class ContainerField(Field):
             return AttributeNotSet
 
     def prepare_item(self, container, item, value):
-        value = self.item_field.prepare_value(container, value)
-        self._set_parent(container, item, value)
-        return value
+        if self.item_field is not None:
+            value = self.item_field.prepare_value(container, value)
+            self._set_parent(container, item, value)
+            return value
+        else:
+            raise NotImplementedError(
+                "item_field is None, but prepare_item is not implemented")
 
     def prepare_value(self, document, value):
         # return self.container(self, document, value)
