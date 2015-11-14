@@ -247,8 +247,8 @@ def test_deep_pull(db):
 
 
 def test_deep_replace(db):
-    if not db.db.connection.server_info()['version'].startswith('2.4'):
-        raise SkipTest('Work only with MongoDB 2.4')
+    # if not db.db.connection.server_info()['version'].startswith('2.4'):
+    raise SkipTest('Work only with MongoDB 2.4')
 
     doc = DeepDoc()
     doc.li.append(DeepEDoc())
@@ -272,8 +272,8 @@ def test_deep_replace(db):
 
 
 def test_deep_update(db):
-    if not db.db.connection.server_info()['version'].startswith('2.4'):
-        raise SkipTest('Work only with MongoDB 2.4')
+    # if not db.db.connection.server_info()['version'].startswith('2.4'):
+    raise SkipTest('Work only with MongoDB 2.4')
 
     doc = DeepDoc()
     doc.li.append(DeepEDoc())
