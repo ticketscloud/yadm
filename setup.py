@@ -2,7 +2,7 @@ from setuptools import setup
 
 # python setup.py sdist --formats=bztar
 
-version = '1.0.0-rc1'
+version = '1.0.0'
 description = 'Yet Another Document Mapper (ODM) for MongoDB'
 long_description = open('README.rst', 'rb').read().decode('utf8')
 
@@ -18,7 +18,7 @@ setup(
     license='BSD',
     platforms='any',
     install_requires=[
-        'pymongo<3',
+        'pymongo',
         'zope.dottedname',
         'python-dateutil',
         'pytz',
@@ -26,7 +26,7 @@ setup(
     ],
 
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
         'Topic :: Database',
         'Intended Audience :: Developers',
         'Operating System :: OS Independent',
