@@ -64,7 +64,7 @@ Quick start
 CHANGES
 =======
 
-1.0 (XXXX-XX-XX)
+1.0 (2015-11-14)
 ----------------
 
 * Change document structure. No more bad `BaseDocument.__data__` attribute:
