@@ -6,9 +6,9 @@ Basic documents classes for build models.
     class User(Document):
         __collection__ = 'users'
 
-        first_name = fields.StringField
-        last_name = fields.StringField
-        age = fields.IntegerField
+        first_name = fields.StringField()
+        last_name = fields.StringField()
+        age = fields.IntegerField()
 
 
 All fields placed in :py:mod:`yadm.fields` package.
@@ -47,6 +47,18 @@ class MetaDocument(type):
 
 class BaseDocument(metaclass=MetaDocument):
     """ Base class for all documents
+
+    .. py:attribute:: __raw__
+
+        Dict with raw data from mongo
+
+    .. py:attribute:: __cache__
+
+        Dict with cached objects, casted with fields
+
+    .. py:attribute:: __changed__
+
+        Dict with changed objects
     """
     __raw__ = None
     __cache__ = None
@@ -91,6 +103,10 @@ class BaseDocument(metaclass=MetaDocument):
 
     @property
     def __data__(self):  # b/c
+        """ Deprecated! For backward compatibility only!
+
+        Old way to storing data in documents. Now equal to :py:attr:`__raw__`.
+        """
         return self.__raw__
 
     def __fake__(self, values, faker, depth):
@@ -103,6 +119,8 @@ class BaseDocument(metaclass=MetaDocument):
         # # post save processor
 
     def __debug_print__(self):
+        """ Print debug information
+        """
         from pprint import pprint
         pprint((
             self,

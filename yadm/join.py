@@ -8,7 +8,15 @@ from yadm.fields.reference import ReferenceField
 
 
 class Join(abc.Sequence):
-    """ Helper for build joins
+    """ Helper for build client-side joins
+
+    .. code:: python
+
+        # Doc.ref is instance of ReferenceField
+        qs = db(Doc).find({'k': 1})  # queryset filter
+        join = qs.join('ref')  # create join query in this place
+        for doc in join:
+            print(doc.ref)  # do not create query to database
     """
     def __init__(self, qs):
         self._qs = qs

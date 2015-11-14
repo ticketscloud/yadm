@@ -15,7 +15,7 @@ class Bulk:
     :param bool raise_on_errors: raise BulkWriteError exception
         if write errors (default `True`)
 
-    Context manager:
+    Context manager example:
 
         with db.bulk(Doc) as bulk:
             bulk.insert(doc_1)
@@ -54,6 +54,10 @@ class Bulk:
             self.execute()
 
     def execute(self):
+        """ Execute the bulk query
+
+        :return: :py:class:`BulkResult` instance
+        """
         try:
             raw_data = self._bulk_mongo.execute()
         except BulkWriteError as exc:
@@ -73,8 +77,8 @@ class Bulk:
         :param Document document: document for insert
 
         .. warning::
-            This unlike `Database.insert`!
-            It not set `document.id` and `document.__db__`.
+            This unlike :py:class:`Database.insert <yadm.database.Database.insert>`!
+            Currently, it is not bind objects to database and set id.
         """
         if not isinstance(document, self._document_class):
             raise TypeError("Bulk.insert() argument must be a {}, not '{}'"
@@ -98,22 +102,32 @@ class BulkResult(BaseResult):
 
     @property
     def n_inserted(self):
+        """ Provide `nInserted` from raw result
+        """
         return self['nInserted']
 
     @property
     def n_upserted(self):
+        """ Provide `nUpserted` from raw result
+        """
         return self['nUpserted']
 
     @property
     def n_modified(self):
+        """ Provide `nModified` from raw result
+        """
         return self['nModified']
 
     @property
     def n_removed(self):
+        """ Provide `nRemoved` from raw result
+        """
         return self['nRemoved']
 
     @property
     def write_errors(self):
+        """ Provide `writeErrors` from raw result
+        """
         return _BulkResultWriteErrors(self._bulk, self._raw['writeErrors'])
 
     @property

@@ -7,7 +7,16 @@ from yadm.markers import AttributeNotSet, NotLoaded
 
 
 class NotLoadedError(Exception):
-    pass
+    """ Raise if value marked as not loaded
+
+    .. code:: python
+
+        doc = db(Doc).fields('a').find_one()
+        try:
+            doc.b
+        except NotLoadedError:
+            print("raised!")
+    """
 
 
 def pass_null(method):
@@ -23,6 +32,15 @@ def pass_null(method):
 
 class FieldDescriptor:
     """ Base desctiptor for fields
+
+    .. py:attribute:: name
+
+    Name of field
+
+    .. py:attribute:: field
+
+    Field instance for this desctiptor
+
     """
     def __init__(self, name, field):
         self.name = name
@@ -34,6 +52,22 @@ class FieldDescriptor:
         return '<{} "{}.{}">'.format(class_name, document_class_name, self.name)
 
     def __get__(self, instance, owner):
+        """ Get python value from document
+
+        1. Lookup in __changed__;
+        2. Lookup in __cache__;
+        3. Lookup in __raw__:
+
+            - if AttributeNotSet -- call Field.get_if_attribute_not_set;
+            - if NotLoaded -- call Field.get_if_not_loaded;
+            - call Field.from_mongo;
+            - set __name__ and __parent__
+            - save to __cache__
+
+        4. Call Field.get_default;
+        5. If AttributeNotSet -- call Field.get_if_attribute_not_set;
+        6. Return value.
+        """
         name = self.name
 
         if instance is None:
@@ -72,6 +106,12 @@ class FieldDescriptor:
         return value
 
     def __set__(self, instance, value):
+        """ Set value to document
+
+        1. Call Field.prepare_value for cast value;
+        2. Save in Document.__changed__;
+        3. Call Field.set_parent_changed.
+        """
         if not isinstance(instance, type):
             value = self.field.prepare_value(instance, value)
 
@@ -94,24 +134,40 @@ class FieldDescriptor:
             raise TypeError("can't set field directly")
 
     def __delete__(self, instance):
+        """ Mark document's key as not set
+        """
         if not isinstance(instance, type):
             setattr(instance, self.name, AttributeNotSet)
 
 
 class Field:
-    """ Base field for all batabase fields
+    """ Base field for all database fields
+
+    :param bool smart_null:
+
+        If it `True`, access to not exists fields return
+        `None` instead `AttributeError` exception.
+        You will not be able to distinguish null value from
+        not exist. Use with care.
 
     .. py:attribute:: descriptor_class
 
         Class of desctiptor for work with field
 
-    :param bool smart_null: "smart null" functional
+    .. py:attribute:: document_class
 
+        Class of document.
+        Set in :py:meth:`contribute_to_class`.
+
+    .. py:attribute:: name
+
+        Name of field in document.
+        Set in :py:meth:`contribute_to_class`.
     """
     descriptor_class = FieldDescriptor
     smart_null = False
-    name = None
     document_class = None
+    name = None
 
     def __init__(self, smart_null=False):
         self.smart_null = smart_null
@@ -181,9 +237,21 @@ class Field:
         return value
 
     def to_mongo(self, document, value):
+        """ Convert python value to mongo value
+
+        :param BaseDocument document: document
+        :param value: python value
+        :return: mongo value
+        """
         return value
 
     def from_mongo(self, document, value):
+        """ Convert mongo value to python value
+
+        :param BaseDocument document: document
+        :param value: mongo value
+        :return: python value
+        """
         return value
 
 

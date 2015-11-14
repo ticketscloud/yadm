@@ -65,7 +65,8 @@ class Database:
 
         :param Document document: document instance for insert to database
 
-        It's set :attr:`yadm.documents.Document._id`.
+        It's bind new document to database set
+        :py:attr:`_id <yadm.documents.Document._id>`.
         """
         document.__db__ = self
         collection = self._get_collection(document.__class__)
@@ -82,7 +83,8 @@ class Database:
         :param bool upsert: see documentation for MongoDB's `update`
             (default: `False`)
 
-        If document has not `id` this :meth:`insert` new document.
+        If document has no `_id`
+        :py:meth:`insert <Database.insert>` new document.
         """
         if hasattr(document, '_id'):
             document.__db__ = self
@@ -153,14 +155,14 @@ class Database:
     def remove(self, document):
         """ Remove document from database
 
-        :param Document document: document instance for remove from database
+        :param Document document: instance for remove from database
         """
         return self._get_collection(document.__class__).remove({'_id': document._id})
 
     def reload(self, document, new_instance=False):
         """ Reload document
 
-        :param Document document: document for reload
+        :param Document document: instance for reload
         :param bool new_instance: if `True` return new instance of document,
             else change data in given document (default: `False`)
         """

@@ -74,7 +74,7 @@ CHANGES
 
 * Changes api for custom fields:
     - Not more need create field descriptors for every field;
-    - `prepare_values` called only for setattr;
+    - `prepare_value` called only for setattr;
     - `to_mongo` called only for save objects to mongo;
     - `from_mongo` called only for load values from `BaseDocument.__raw__`;
     - Remove `Field.default` attribute. Use `Field.get_default` method;
@@ -86,6 +86,8 @@ CHANGES
     - Raise `NotBindingToDatabase` if document not saved to database;
 
 * `smart_null` keyword for `Field`;
+
+* Fields in document must be instances (not classes!);
 
 * Remove `ArrayContainer` and `ArrayContainerField`;
 

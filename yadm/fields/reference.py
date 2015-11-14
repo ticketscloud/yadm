@@ -29,11 +29,14 @@ from yadm.testing import create_fake
 
 
 class BrokenReference(Exception):
-    pass
+    """ Raise if referrenced document is not found
+    """
 
 
 class NotBindingToDatabase(Exception):
-    pass
+    """ Raise if set ObjectId insted referenced document
+    to new document, who not binded to database.
+    """
 
 
 class ReferenceField(Field):
@@ -54,6 +57,8 @@ class ReferenceField(Field):
             return AttributeNotSet
 
     def get_fake(self, document, faker, depth):
+        """ Try create referenced document
+        """
         res = create_fake(
             self.reference_document_class,
             __db__=document.__db__,
@@ -66,7 +71,8 @@ class ReferenceField(Field):
             return res
 
     def copy(self):
-        return self.__class__(self.reference_document_class)
+        return self.__class__(self.reference_document_class,
+                              smart_null=self.smart_null)
 
     @pass_null
     def prepare_value(self, document, value):
