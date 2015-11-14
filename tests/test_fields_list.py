@@ -1,93 +1,107 @@
+import pytest
+
 from yadm import fields
 from yadm.documents import Document
 
-from .test_database import BaseDatabaseTest
+
+class TestDoc(Document):
+    __collection__ = 'testdoc'
+    li = fields.ListField(fields.IntegerField())
 
 
-class ListFieldTest(BaseDatabaseTest):
-    def setUp(self):
-        super().setUp()
+def test_default():
+    doc = TestDoc()
+    assert isinstance(doc.li, fields.list.List)
+    assert not doc.li
+    assert len(doc.li) == 0
+    assert doc.li._data == []
+    assert doc.li == []
 
-        class TestDoc(Document):
-            __collection__ = 'testdoc'
-            li = fields.ListField(fields.IntegerField())
 
-        self.TestDoc = TestDoc
+def test_default_no_auto():
+    class TestDoc(Document):
+        __collection__ = 'testdoc'
+        li = fields.ListField(fields.IntegerField(), auto_create=False)
 
-    def test_default(self):
-        td = self.TestDoc()
-        self.assertIsInstance(td.li, fields.list.List)
-        self.assertFalse(td.li)
-        self.assertEqual(len(td.li), 0)
-        self.assertEqual(td.li._data, [])
-        self.assertEqual(td.li, [])
+    doc = TestDoc()
+    assert not hasattr(doc, 'li')
 
-    def test_get(self):
-        _id = self.db.db.testdoc.insert({'li': [1, 2, 3]})
-        td = self.db.get_queryset(self.TestDoc).with_id(_id)
 
-        self.assertTrue(td.li)
-        self.assertEqual(len(td.li), 3)
-        self.assertEqual(td.li._data, [1, 2, 3])
-        self.assertEqual(list(td.li), [1, 2, 3])
-        self.assertEqual(td.li[1], 2)
+def test_get(db):
+    _id = db.db.testdoc.insert({'li': [1, 2, 3]})
+    doc = db.get_queryset(TestDoc).with_id(_id)
 
-    def test_append(self):
-        _id = self.db.db.testdoc.insert({'li': [1, 2, 3]})
-        td = self.db.get_queryset(self.TestDoc).with_id(_id)
-        td.li.append(4)
+    assert doc.li
+    assert len(doc.li) == 3
+    assert doc.li._data == [1, 2, 3]
+    assert list(doc.li) == [1, 2, 3]
+    assert doc.li[1] == 2
 
-        self.assertEqual(td.li, [1, 2, 3, 4])
 
-    def test_append_valueerror(self):
-        td = self.TestDoc()
-        self.assertRaises(ValueError, td.li.append, 'not a number')
+def test_append(db):
+    _id = db.db.testdoc.insert({'li': [1, 2, 3]})
+    doc = db.get_queryset(TestDoc).with_id(_id)
+    doc.li.append(4)
+    assert doc.li == [1, 2, 3, 4]
 
-    def test_append_save(self):
-        _id = self.db.db.testdoc.insert({'li': [1, 2, 3]})
-        td = self.db.get_queryset(self.TestDoc).with_id(_id)
-        td.li.append(4)
-        self.db.save(td)
 
-        data = self.db.db.testdoc.find_one({'_id': _id})
-        self.assertEqual(data['li'], [1, 2, 3, 4])
+def test_append_valueerror():
+    doc = TestDoc()
+    with pytest.raises(ValueError):
+        doc.li.append('not a number')
 
-    def test_remove(self):
-        _id = self.db.db.testdoc.insert({'li': [1, 2, 3]})
-        td = self.db.get_queryset(self.TestDoc).with_id(_id)
-        td.li.remove(2)
 
-        self.assertEqual(td.li, [1, 3])
+def test_append_save(db):
+    _id = db.db.testdoc.insert({'li': [1, 2, 3]})
+    doc = db.get_queryset(TestDoc).with_id(_id)
+    doc.li.append(4)
+    db.save(doc)
 
-    def test_remove_save(self):
-        _id = self.db.db.testdoc.insert({'li': [1, 2, 3]})
-        td = self.db.get_queryset(self.TestDoc).with_id(_id)
-        td.li.remove(2)
-        self.db.save(td)
+    data = db.db.testdoc.find_one({'_id': _id})
+    assert data['li'] == [1, 2, 3, 4]
 
-        data = self.db.db.testdoc.find_one({'_id': _id})
-        self.assertEqual(data['li'], [1, 3])
 
-    def test_push(self):
-        _id = self.db.db.testdoc.insert({'li': [1, 2, 3]})
-        td = self.db.get_queryset(self.TestDoc).with_id(_id)
-        td.li.push(4)
+def test_remove(db):
+    _id = db.db.testdoc.insert({'li': [1, 2, 3]})
+    doc = db.get_queryset(TestDoc).with_id(_id)
+    doc.li.remove(2)
 
-        self.assertEqual(td.li, [1, 2, 3, 4])
+    assert doc.li == [1, 3]
 
-        data = self.db.db.testdoc.find_one({'_id': _id})
-        self.assertEqual(data['li'], [1, 2, 3, 4])
 
-    def test_push_valueerror(self):
-        td = self.TestDoc()
-        self.assertRaises(ValueError, td.li.push, 'not a number')
+def test_remove_save(db):
+    _id = db.db.testdoc.insert({'li': [1, 2, 3]})
+    doc = db.get_queryset(TestDoc).with_id(_id)
+    doc.li.remove(2)
+    db.save(doc)
 
-    def test_pull(self):
-        _id = self.db.db.testdoc.insert({'li': [1, 2, 3]})
-        td = self.db.get_queryset(self.TestDoc).with_id(_id)
-        td.li.pull(2)
+    data = db.db.testdoc.find_one({'_id': _id})
+    assert data['li'] == [1, 3]
 
-        self.assertEqual(td.li, [1, 3])
 
-        data = self.db.db.testdoc.find_one({'_id': _id})
-        self.assertEqual(data['li'], [1, 3])
+def test_push(db):
+    _id = db.db.testdoc.insert({'li': [1, 2, 3]})
+    doc = db.get_queryset(TestDoc).with_id(_id)
+    doc.li.push(4)
+
+    assert doc.li == [1, 2, 3, 4]
+
+    data = db.db.testdoc.find_one({'_id': _id})
+    assert data['li'] == [1, 2, 3, 4]
+
+
+def test_push_valueerror():
+    doc = TestDoc()
+    with pytest.raises(ValueError):
+        doc.li.push('not a number')
+
+
+def test_pull(db):
+    _id = db.db.testdoc.insert({'li': [1, 2, 3]})
+    doc = db.get_queryset(TestDoc).with_id(_id)
+    doc.li.pull(2)
+
+    assert doc.li == [1, 3]
+
+    data = db.db.testdoc.find_one({'_id': _id})
+    assert data['li'] == [1, 3]

@@ -6,9 +6,9 @@ Basic documents classes for build models.
     class User(Document):
         __collection__ = 'users'
 
-        first_name = fields.StringField
-        last_name = fields.StringField
-        age = fields.IntegerField
+        first_name = fields.StringField()
+        last_name = fields.StringField()
+        age = fields.IntegerField()
 
 
 All fields placed in :py:mod:`yadm.fields` package.
@@ -16,14 +16,14 @@ All fields placed in :py:mod:`yadm.fields` package.
 
 from bson import ObjectId
 
-from yadm.markers import AttributeNotSet, NoDefault
 from yadm.fields.base import Field
 from yadm.fields.simple import ObjectIdField
 
 
 class MetaDocument(type):
-    '''Metaclass for documents'''
-    def __init__(cls, name, bases, cls_dict):
+    """ Metaclass for documents
+    """
+    def __init__(cls, name, bases, cls_dict):  # noqa
         cls.__fields__ = {}
 
         for base in bases:
@@ -47,8 +47,22 @@ class MetaDocument(type):
 
 class BaseDocument(metaclass=MetaDocument):
     """ Base class for all documents
+
+    .. py:attribute:: __raw__
+
+        Dict with raw data from mongo
+
+    .. py:attribute:: __cache__
+
+        Dict with cached objects, casted with fields
+
+    .. py:attribute:: __changed__
+
+        Dict with changed objects
     """
-    __initialized__ = False
+    __raw__ = None
+    __cache__ = None
+    __changed__ = None
 
     def __init__(self, *args, **kwargs):
         if args:
@@ -67,29 +81,53 @@ class BaseDocument(metaclass=MetaDocument):
         else:
             data = {}
 
-        self.__data__ = {}
-        self.__fields_changed__ = set()
+        self.__raw__ = {}
+        self.__cache__ = {}
+        self.__changed__ = {}
 
         for key, field in self.__fields__.items():
             if key in data:
                 setattr(self, key, data[key])
-            else:
-                default = field.default
 
-                if default is NoDefault:
-                    self.__data__[key] = AttributeNotSet
-                else:
-                    setattr(self, key, default)
+        self.__changed_clear__()
 
-        self.__initialized__ = data.get('__initialized__', True)
+    def __changed_clear__(self):
+        self.__cache__.update(self.__changed__)
+        self.__changed__.clear()
 
     def __str__(self):
-        """ Implement it for pretty str and repr documents
-        """
-        return str(id(self))
+        return repr(self)
 
     def __repr__(self):
-        return '{}({})'.format(self.__class__.__name__, str(self))
+        return '{}({})'.format(self.__class__.__name__, str(hex(id(self))))
+
+    @property
+    def __data__(self):  # b/c
+        """ Deprecated! For backward compatibility only!
+
+        Old way to storing data in documents. Now equal to :py:attr:`__raw__`.
+        """
+        return self.__raw__
+
+    def __fake__(self, values, faker, depth):
+        """ Fake data customizer
+        """
+        # # pre pocessor and prepare values
+        # yield values  # send new values
+        # # post processor
+        # yield
+        # # post save processor
+
+    def __debug_print__(self):
+        """ Print debug information
+        """
+        from pprint import pprint
+        pprint((
+            self,
+            self.__raw__,
+            self.__cache__,
+            self.__changed__,
+        ))
 
 
 class Document(BaseDocument):
@@ -118,11 +156,17 @@ class Document(BaseDocument):
 
     _id = ObjectIdField()
 
-    def __str__(self):
+    def __init__(self, *args, __db__=None, **kwargs):
+        self.__db__ = __db__
+        super().__init__(*args, **kwargs)
+
+    def __repr__(self):
         if hasattr(self, '_id'):
-            return '{!s}:{!s}'.format(self.__collection__, self._id)
+            _id = str(self._id)
         else:
-            return '{!s}:<empty>'.format(self.__collection__)
+            _id = '<new>'
+
+        return '{}({})'.format(self.__class__.__name__, _id)
 
     def __eq__(self, other):
         if isinstance(other, Document):
@@ -250,11 +294,7 @@ class DocumentItemMixin:
 class EmbeddedDocument(DocumentItemMixin, BaseDocument):
     """ Class for build embedded documents
     """
-    def __init__(self, *args, **kwargs):
-        if '__parent__' in kwargs:
-            self.__parent__ = kwargs.pop('__parent__')
-
-        if '__name__' in kwargs:
-            self.__name__ = kwargs.pop('__name__')
-
+    def __init__(self, *args, __parent__=None, __name__=None, **kwargs):
+        self.__parent__ = __parent__
+        self.__name__ = __name__
         super().__init__(*args, **kwargs)

@@ -27,7 +27,8 @@ This code save to MongoDB document:
 """
 from decimal import Decimal, Context, ROUND_UP
 
-from yadm.fields.base import Field, DefaultMixin
+from yadm.fields.base import Field, DefaultMixin, pass_null
+from yadm.markers import AttributeNotSet
 
 
 class Money(Decimal):
@@ -65,13 +66,15 @@ class Money(Decimal):
 class MoneyField(DefaultMixin, Field):
     """ Field for work with money
     """
+    def get_fake(self, document, faker, depth):
+        return Money(faker.pydecimal(
+            left_digits=5, right_digits=2, positive=True))
+
+    @pass_null
     def prepare_value(self, document, value):
         """ Cast value to :class:`decimal.Decimal`
         """
-        if value is None:
-            return None
-
-        elif isinstance(value, Money):
+        if isinstance(value, Money):
             return value
 
         elif isinstance(value, (str, Decimal)):
@@ -80,11 +83,9 @@ class MoneyField(DefaultMixin, Field):
         else:
             raise TypeError(repr(value))
 
+    @pass_null
     def to_mongo(self, document, value):
-        if value is None:
-            return None
-
-        elif isinstance(value, (str, Decimal)):
+        if isinstance(value, (str, Decimal)):
             return Money(value).to_mongo()
 
         elif isinstance(value, Money):
@@ -99,5 +100,7 @@ class MoneyField(DefaultMixin, Field):
     def from_mongo(self, document, data):
         if isinstance(data, int):
             return Money(data / Decimal(100))
+        elif data is AttributeNotSet:
+            return AttributeNotSet
         else:
             return self.prepare_value(document, data)

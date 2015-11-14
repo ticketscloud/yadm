@@ -9,7 +9,8 @@ Documents
 
 
 .. autoclass:: BaseDocument(**kwargs)
-    :members: __str__
+    :members:
+    :special-members: __data__, __fake__, __debug_print__
 
 .. autoclass:: Document(**kwargs)
     :members:

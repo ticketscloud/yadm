@@ -7,14 +7,6 @@ Yet Another Document Mapper
 
 It's small and simple ODM for use with MongoDB.
 
-.. toctree::
-   :maxdepth: 5
-
-   database
-   documents
-   fields/index
-   serialize
-
 -----------
 Quick start
 -----------
@@ -29,8 +21,8 @@ Quick start
     class BlogPost(Document):
         __collection__ = 'blog_posts'
 
-        title = fields.StringField
-        body = fields.StringField
+        title = fields.StringField()
+        body = fields.StringField()
 
 
     # Create post
@@ -60,3 +52,60 @@ Quick start
 
     # Save changed post
     db.save(post)
+
+
+CHANGES
+=======
+
+1.0 (XXXX-XX-XX)
+----------------
+
+* Change document structure. No more bad :py:attr:`BaseDocument.__data__ <yadm.documents.BaseDocument.__data__>` attribute:
+    - :py:attr:`BaseDocument.__raw__ <yadm.documents.BaseDocument.__raw__>`: raw data from mongo;
+    - :py:attr:`BaseDocument.__cache__ <yadm.documents.BaseDocument.__cache__>`: cached objects, casted with fields;
+    - :py:attr:`BaseDocument.__changed__ <yadm.documents.BaseDocument.__changed__>`: changed objects.
+
+* Changes api for custom fields:
+    - Not more need create field descriptors for every field;
+    - :py:meth:`prepare_value <yadm.fields.base.Field.prepare_value>` called only for setattr;
+    - :py:meth:`to_mongo <yadm.fields.base.Field.to_mongo>` called only for save objects to mongo;
+    - :py:meth:`from_mongo <yadm.fields.base.Field.from_mongo>` called only for load values from :py:attr:`BaseDocument.__raw__ <yadm.documents.BaseDocument.__raw__>`;
+    - Remove `Field.default` attribute. Use :py:meth:`Field.get_default <yadm.fields.base.Field.get_default>` method;
+    - Add :py:meth:`get_if_not_loaded <yadm.fields.base.Field.get_if_not_loaded>` and :py:meth:`get_if_attribute_not_set <yadm.fields.base.Field.get_if_attribute_not_set>` method;
+    - By default raise :py:class:`NotLoadedError <yadm.fields.base.NotLoadedError>` if field not loaded from projection;
+
+* Changes in :py:class:`ReferenceField <yadm.fields.reference.ReferenceField>`:
+    - Raise :py:class:`BrokenReference <yadm.fields.reference.BrokenReference>` if link is bloken;
+    - Raise :py:class:`NotBindingToDatabase <yadm.fields.reference.NotBindingToDatabase>` if document not saved to database;
+
+* `smart_null` keyword for :py:class:`Field <yadm.fields.base.Field>`;
+
+* Fields in document must be instances (not classes!);
+
+* Remove `ArrayContainer` and `ArrayContainerField`;
+
+* Remove old `MapIntKeysField` and `MapObjectIdKeysField`. Use new :py:class:`MapCustomKeysField <yadm.fields.map.MapCustomKeysField>`;
+
+* Add :py:meth:`Database.update_one <yadm.database.Database.update_one>` method for run simple update query with specified document;
+
+* Add :py:meth:`QuerySet.distinct <yadm.queryset.QuerySet.distinct>`;
+
+* :py:func:`serialize.from_mongo <yadm.serialize.from_mongo>` now accept `not_loaded` sequence with filed names who must mark as not loaded, `parent` and `name`;
+
+* :py:func:`serialize.to_mongo <yadm.serialize.to_mongo>` do not call :py:meth:`FieldDescriptor.__set__ <yadm.fields.base.FieldDescriptor.__set__>`;
+
+* Fakers! Subsystem for generate test objects;
+
+* Tests now use pytest;
+
+* And more, and more...
+
+
+-----------------
+API documentation
+-----------------
+
+.. toctree::
+   :maxdepth: 5
+
+   api/index

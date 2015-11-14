@@ -1,9 +1,9 @@
-import datetime
+from datetime import datetime, date
 
 import pytz
 import dateutil.parser
 
-from yadm.fields.base import Field, DefaultMixin
+from yadm.fields.base import Field, DefaultMixin, pass_null
 
 
 class DatetimeField(DefaultMixin, Field):
@@ -12,7 +12,7 @@ class DatetimeField(DefaultMixin, Field):
     :param bool auto_now: datetime.now as default
         (default: False)
     """
-    def __init__(self, auto_now=False, **kwargs):
+    def __init__(self, *, auto_now=False, **kwargs):
         self.auto_now = auto_now
         super().__init__(**kwargs)
 
@@ -23,23 +23,26 @@ class DatetimeField(DefaultMixin, Field):
         else:
             return value
 
-    @property
-    def default(self):
+    def get_default(self, document):
         if self.auto_now:
-            return datetime.datetime.now(pytz.utc)
+            return datetime.now(pytz.utc)
         else:
             return super().default
 
-    @classmethod
-    def prepare_value(cls, document, value):
-        if value is None:
-            return None
+    def get_fake(self, document, faker, depth):
+        if self.auto_now:
+            return datetime.now(pytz.utc)
+        else:
+            return faker.date_time()
 
-        if type(value) is datetime.datetime:
+    @classmethod
+    @pass_null
+    def prepare_value(cls, document, value):
+        if isinstance(value, datetime):
             return cls._fix_timezone(value)
 
-        elif type(value) is datetime.date:
-            return datetime.datetime(
+        elif isinstance(value, date):
+            return datetime(
                 *value.timetuple()[:3],
                 tz=pytz.utc
             )
@@ -53,11 +56,11 @@ class DatetimeField(DefaultMixin, Field):
                             ' date or string, but {!r}'.format(type(value)))
 
     @classmethod
+    @pass_null
     def from_mongo(cls, document, value):
-        if value is not None:
-            return cls._fix_timezone(value)
+        return cls._fix_timezone(value)
 
     @classmethod
+    @pass_null
     def to_mongo(cls, document, value):
-        if value is not None:
-            return cls._fix_timezone(value)
+        return cls._fix_timezone(value)

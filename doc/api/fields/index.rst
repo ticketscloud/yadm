@@ -16,3 +16,5 @@ Fields
    containers
    list
    set
+   map
+   geo

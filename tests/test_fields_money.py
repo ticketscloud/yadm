@@ -1,69 +1,63 @@
-from unittest import TestCase
-
 from yadm import fields
 from yadm.documents import Document
 
-from .test_database import BaseDatabaseTest
+
+def test_money_str():
+    assert str(fields.Money('3.14')) == '3.14'
+    assert str(fields.Money('0.14')) == '0.14'
+    assert str(fields.Money('30.14')) == '30.14'
+    assert str(fields.Money('3.1')) == '3.10'
+    assert str(fields.Money('0.1')) == '0.10'
 
 
-class MoneyTest(TestCase):
-    def test_str(self):
-        self.assertEqual(str(fields.Money('3.14')), '3.14')
-        self.assertEqual(str(fields.Money('0.14')), '0.14')
-        self.assertEqual(str(fields.Money('30.14')), '30.14')
-        self.assertEqual(str(fields.Money('3.1')), '3.10')
-        self.assertEqual(str(fields.Money('0.1')), '0.10')
-
-    def test_to_mongo(self):
-        self.assertEqual(fields.Money('3.14').to_mongo(), 314)
-        self.assertEqual(fields.Money('0.14').to_mongo(), 14)
-        self.assertEqual(fields.Money('30.14').to_mongo(), 3014)
-        self.assertEqual(fields.Money('3.1').to_mongo(), 310)
-        self.assertEqual(fields.Money('0.1').to_mongo(), 10)
+def test_money_to_mongo():
+    assert fields.Money('3.14').to_mongo() == 314
+    assert fields.Money('0.14').to_mongo() == 14
+    assert fields.Money('30.14').to_mongo() == 3014
+    assert fields.Money('3.1').to_mongo() == 310
+    assert fields.Money('0.1').to_mongo() == 10
 
 
-class MoneyFieldTest(BaseDatabaseTest):
-    def setUp(self):
-        super().setUp()
+class TestDoc(Document):
+    __collection__ = 'testdocs'
+    money = fields.MoneyField()
 
-        class TestDoc(Document):
-            __collection__ = 'testdocs'
-            money = fields.MoneyField()
 
-        self.TestDoc = TestDoc
+def test_save(db):  # noqa
+    doc = TestDoc()
+    doc.money = fields.Money('3.14')
+    db.save(doc)
 
-    def test_save(self):
-        doc = self.TestDoc()
-        doc.money = fields.Money('3.14')
-        self.db.save(doc)
+    data = db.db.testdocs.find_one()
 
-        data = self.db.db.testdocs.find_one()
+    assert 'money' in data
+    assert isinstance(data['money'], int)
+    assert data['money'] == 314
 
-        self.assertIn('money', data)
-        self.assertIsInstance(data['money'], int)
-        self.assertEqual(data['money'], 314)
 
-    def test_load(self):
-        self.db.db.testdocs.insert({'money': 314})
+def test_load(db):
+    db.db.testdocs.insert({'money': 314})
 
-        doc = self.db.get_queryset(self.TestDoc).find_one()
+    doc = db.get_queryset(TestDoc).find_one()
 
-        self.assertTrue(hasattr(doc, 'money'))
-        self.assertIsInstance(doc.money, fields.Money)
-        self.assertEqual(doc.money, fields.Money('3.14'))
+    assert hasattr(doc, 'money')
+    assert isinstance(doc.money, fields.Money)
+    assert doc.money == fields.Money('3.14')
 
-    def test_load_and_save(self):
-        self.db.db.testdocs.insert({'money': 314})
 
-        doc = self.db.get_queryset(self.TestDoc).find_one()
-        self.db.save(doc)
+def test_load_and_save(db):
+    db.db.testdocs.insert({'money': 314})
 
-        self.assertTrue(hasattr(doc, 'money'))
-        self.assertIsInstance(doc.money, fields.Money)
-        self.assertEqual(doc.money, fields.Money('3.14'))
+    doc = db.get_queryset(TestDoc).find_one()
+    doc.money = fields.Money('42.00')
+    db.save(doc)
 
-        data = self.db.db.testdocs.find_one()
+    assert hasattr(doc, 'money')
+    assert isinstance(doc.money, fields.Money)
+    assert doc.money == fields.Money('42.00')
 
-        self.assertIn('money', data)
-        self.assertIsInstance(data['money'], int)
-        self.assertEqual(data['money'], 314)
+    data = db.db.testdocs.find_one()
+
+    assert 'money' in data
+    assert isinstance(data['money'], int)
+    assert data['money'] == 4200

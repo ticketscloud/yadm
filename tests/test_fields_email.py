@@ -1,24 +1,22 @@
-from unittest import TestCase
+import pytest
 
 from yadm.documents import Document
 from yadm.fields.email import EmailField
 
 
-class EmailFieldTest(TestCase):
-    def test_ok(self):
-        class TestDoc(Document):
-            e = EmailField()
+class TestDoc(Document):
+    e = EmailField()
 
-        td = TestDoc()
-        td.e = 'E@mA.iL'
 
-        self.assertEqual(td.e, 'e@ma.il')
+def test_ok():
+    doc = TestDoc()
+    doc.e = 'E@mA.iL'
 
-    def test_error(self):
-        class TestDoc(Document):
-            e = EmailField()
+    assert doc.e == 'e@ma.il'
 
-        td = TestDoc()
 
-        with self.assertRaises(ValueError):
-            td.e = 'EmA.iL'
+def test_error():
+    doc = TestDoc()
+
+    with pytest.raises(ValueError):
+        doc.e = 'EmA.iL'

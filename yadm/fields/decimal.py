@@ -24,8 +24,7 @@ This code save to MongoDB document:
 from decimal import Decimal, getcontext
 from functools import reduce
 
-from yadm.fields.base import Field, DefaultMixin
-from yadm.markers import NoDefault
+from yadm.fields.base import Field, DefaultMixin, pass_null
 
 
 class DecimalField(DefaultMixin, Field):
@@ -34,10 +33,14 @@ class DecimalField(DefaultMixin, Field):
     :param decimal.Context context: context for decimal operations
         (default: run :func:`decimal.getcontext` when need)
     :param decimal.Decimal default:
+
+    TODO: context in copy()
     """
-    def __init__(self, context=None, default=NoDefault):
+    _context = None
+
+    def __init__(self, *, context=None, **kwargs):
+        super().__init__(**kwargs)
         self.context = context
-        super().__init__(default=default)
 
     @property
     def context(self):
@@ -51,6 +54,9 @@ class DecimalField(DefaultMixin, Field):
     def context(self, value):
         self._context = value
 
+    def get_fake(self, document, faker, depth):
+        return faker.pydecimal()
+
     @staticmethod
     def _integer_from_digits(digits):
         """ Make integer from digits
@@ -62,38 +68,37 @@ class DecimalField(DefaultMixin, Field):
         """
         return reduce(lambda cur, acc: cur * 10 + acc, digits, 0)
 
+    @pass_null
     def prepare_value(self, document, value):
         """ Cast value to :class:`decimal.Decimal`
         """
-        if value is None:
-            return None
-        elif isinstance(value, Decimal):
+        if isinstance(value, Decimal):
             return value
-        elif isinstance(value, (str, int, float)):
+        elif isinstance(value, (str, int)):
             return Decimal(value, context=self.context)
         else:
-            sign = value['i'] < 0  # False - positive, True - negative
+            raise TypeError(value)
 
-            digits = []
-            i = abs(value['i'])
-
-            while i:
-                i, d = divmod(i, 10)
-                digits.append(d)
-            digits.reverse()
-
-            return Decimal((sign, digits, value['e']), context=self.context)
-
+    @pass_null
     def to_mongo(self, document, value):
-        if value is None:
-            return None
-        else:
-            sign, digits, exp = value.as_tuple()
-            integer = self._integer_from_digits(digits)
-            return {
-                'i': -integer if sign else integer,
-                'e': exp
-            }
+        sign, digits, exp = value.as_tuple()
+        integer = self._integer_from_digits(digits)
+        return {
+            'i': -integer if sign else integer,
+            'e': exp
+        }
 
-    def from_mongo(self, document, data):
-        return self.prepare_value(document, data)
+    @pass_null
+    def from_mongo(self, document, value):
+        sign = value['i'] < 0  # False - positive, True - negative
+
+        digits = []
+        i = abs(value['i'])
+
+        while i:
+            i, d = divmod(i, 10)
+            digits.append(d)
+
+        digits.reverse()
+
+        return Decimal((sign, digits, value['e']), context=self.context)

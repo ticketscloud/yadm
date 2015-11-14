@@ -1,92 +1,109 @@
+import pytest
+
 from yadm import fields
 from yadm.documents import Document
 
-from .test_database import BaseDatabaseTest
+
+class TestDoc(Document):
+    __collection__ = 'testdoc'
+    s = fields.SetField(fields.IntegerField())
 
 
-class SimpleSetFieldTest(BaseDatabaseTest):
-    def setUp(self):
-        super().setUp()
+def test_default():
+    doc = TestDoc()
+    assert isinstance(doc.s, fields.set.Set)
+    assert not doc.s
+    assert len(doc.s) == 0
+    assert doc.s == set()
+    assert isinstance(doc.s._data, list)
+    assert not doc.s._data
 
-        class TestDoc(Document):
-            __collection__ = 'testdoc'
-            s = fields.SetField(fields.IntegerField)
 
-        self.TestDoc = TestDoc
+def test_get(db):
+    _id = db.db.testdoc.insert({'s': [1, 2, 3]})
+    doc = db.get_queryset(TestDoc).with_id(_id)
 
-    def test_default(self):
-        td = self.TestDoc()
-        self.assertIsInstance(td.s, fields.set.Set)
-        self.assertFalse(td.s)
-        self.assertEqual(len(td.s), 0)
-        self.assertEqual(td.s._data, set())
+    assert doc.s
+    assert len(doc.s) == 3
+    assert doc.s._data == [1, 2, 3]
+    assert doc.s == {1, 2, 3}
 
-    def test_get(self):
-        _id = self.db.db.testdoc.insert({'s': [1, 2, 3]})
-        td = self.db.get_queryset(self.TestDoc).with_id(_id)
+    with pytest.raises(TypeError):
+        doc.s[1]
 
-        self.assertTrue(td.s)
-        self.assertEqual(len(td.s), 3)
-        self.assertEqual(td.s._data, {1, 2, 3})
-        self.assertEqual(set(td.s), {1, 2, 3})
-        self.assertRaises(TypeError, td.s.__getitem__, 1)
+    with pytest.raises(TypeError):
+        doc.s[1] = 10
 
-    def test_add(self):
-        _id = self.db.db.testdoc.insert({'s': [1, 2, 3]})
-        td = self.db.get_queryset(self.TestDoc).with_id(_id)
-        td.s.add(4)
+    with pytest.raises(TypeError):
+        del doc.s[1]
 
-        self.assertEqual(td.s, {1, 2, 3, 4})
 
-    def test_add_typeerror(self):
-        td = self.TestDoc()
-        self.assertRaises(ValueError, td.s.add, 'not a number')
+def test_add(db):
+    _id = db.db.testdoc.insert({'s': [1, 2, 3]})
+    doc = db.get_queryset(TestDoc).with_id(_id)
+    doc.s.add(4)
 
-    def test_add_save(self):
-        _id = self.db.db.testdoc.insert({'s': [1, 2, 3]})
-        td = self.db.get_queryset(self.TestDoc).with_id(_id)
-        td.s.add(4)
-        self.db.save(td)
+    assert doc.s == {1, 2, 3, 4}
 
-        data = self.db.db.testdoc.find_one({'_id': _id})
-        self.assertEqual(data['s'], [1, 2, 3, 4])
 
-    def test_remove(self):
-        _id = self.db.db.testdoc.insert({'s': [1, 2, 3]})
-        td = self.db.get_queryset(self.TestDoc).with_id(_id)
-        td.s.remove(2)
+def test_add_typeerror():
+    doc = TestDoc()
 
-        self.assertEqual(td.s, {1, 3})
+    with pytest.raises(ValueError):
+        doc.s.add('not a number')
 
-    def test_remove_save(self):
-        _id = self.db.db.testdoc.insert({'s': [1, 2, 3]})
-        td = self.db.get_queryset(self.TestDoc).with_id(_id)
-        td.s.remove(2)
-        self.db.save(td)
 
-        data = self.db.db.testdoc.find_one({'_id': _id})
-        self.assertEqual(data['s'], [1, 3])
+def test_add_save(db):
+    _id = db.db.testdoc.insert({'s': [1, 2, 3]})
+    doc = db.get_queryset(TestDoc).with_id(_id)
+    doc.s.add(4)
+    db.save(doc)
 
-    def test_add_to_set(self):
-        _id = self.db.db.testdoc.insert({'s': [1, 2, 3]})
-        td = self.db.get_queryset(self.TestDoc).with_id(_id)
-        td.s.add_to_set(4)
+    data = db.db.testdoc.find_one({'_id': _id})
+    assert data['s'] == [1, 2, 3, 4]
 
-        self.assertEqual(td.s, {1, 2, 3, 4})
 
-        data = self.db.db.testdoc.find_one({'_id': _id})
-        self.assertEqual(data['s'], [1, 2, 3, 4])
+def test_remove(db):
+    _id = db.db.testdoc.insert({'s': [1, 2, 3]})
+    doc = db.get_queryset(TestDoc).with_id(_id)
+    doc.s.remove(2)
 
-    def test_add_to_set_typeerror(self):
-        td = self.TestDoc()
-        self.assertRaises(ValueError, td.s.add_to_set, 'not a number')
+    assert doc.s == {1, 3}
 
-    def test_pull(self):
-        _id = self.db.db.testdoc.insert({'s': [1, 2, 3]})
-        td = self.db.get_queryset(self.TestDoc).with_id(_id)
-        td.s.pull(2)
 
-        self.assertEqual(td.s, {1, 3})
+def test_remove_save(db):
+    _id = db.db.testdoc.insert({'s': [1, 2, 3]})
+    doc = db.get_queryset(TestDoc).with_id(_id)
+    doc.s.remove(2)
+    db.save(doc)
 
-        data = self.db.db.testdoc.find_one({'_id': _id})
-        self.assertEqual(data['s'], [1, 3])
+    data = db.db.testdoc.find_one({'_id': _id})
+    assert data['s'] == [1, 3]
+
+
+def test_add_to_set(db):
+    _id = db.db.testdoc.insert({'s': [1, 2, 3]})
+    doc = db.get_queryset(TestDoc).with_id(_id)
+    doc.s.add_to_set(4)
+
+    assert doc.s == {1, 2, 3, 4}
+
+    data = db.db.testdoc.find_one({'_id': _id})
+    assert data['s'] == [1, 2, 3, 4]
+
+
+def test_add_to_set_typeerror():
+    doc = TestDoc()
+    with pytest.raises(ValueError):
+        doc.s.add_to_set('not a number')
+
+
+def test_pull(db):
+    _id = db.db.testdoc.insert({'s': [1, 2, 3]})
+    doc = db.get_queryset(TestDoc).with_id(_id)
+    doc.s.pull(2)
+
+    assert doc.s == {1, 3}
+
+    data = db.db.testdoc.find_one({'_id': _id})
+    assert data['s'] == [1, 3]

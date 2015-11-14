@@ -1,4 +1,3 @@
-
 from unittest import TestCase
 
 from yadm import (
@@ -63,12 +62,12 @@ class EnclosedDocDescriptorTest(TestCase):
         self.CR = ReferenceField('tests.test_common.Baz')
         self.CE = EmbeddedDocumentField('tests.test_common.Qux')
 
-    def assertReference(self, classinfo, expected_value):
+    def assertReference(self, classinfo, expected_value):  # noqa
         self.assertEquals(classinfo.reference_document_class, expected_value)
         self.assertEquals(getattr(classinfo, '_reference_document_class'),
                           expected_value)
 
-    def assertEmbedded(self, classinfo, expected_value):
+    def assertEmbedded(self, classinfo, expected_value):  # noqa
         self.assertEquals(classinfo.embedded_document_class, expected_value)
         self.assertEquals(getattr(classinfo, '_embedded_document_class'),
                           expected_value)
@@ -92,6 +91,7 @@ class EnclosedDocDescriptorTest(TestCase):
 
         with self.assertRaises(ImportError):
             Thud.rf.reference_document_class
+
         with self.assertRaises(ImportError):
             Thud2.ef.embedded_document_class
 

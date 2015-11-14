@@ -1,87 +1,82 @@
 from yadm import fields
 from yadm.documents import Document, EmbeddedDocument
 
-from .test_database import BaseDatabaseTest
+
+class TestEDoc(EmbeddedDocument):
+    i = fields.IntegerField()
 
 
-class SetEmbeddedFieldTest(BaseDatabaseTest):
-    def setUp(self):
-        super().setUp()
+class TestDoc(Document):
+    __collection__ = 'testdocs'
+    li = fields.SetField(fields.EmbeddedDocumentField(TestEDoc))
 
-        class TestEDoc(EmbeddedDocument):
-            i = fields.IntegerField()
 
-        class TestDoc(Document):
-            __collection__ = 'testdocs'
-            li = fields.SetField(fields.EmbeddedDocumentField(TestEDoc))
+def test_save(db):
+    doc = TestDoc()
 
-        self.TestEDoc = TestEDoc
-        self.TestDoc = TestDoc
+    edoc = TestEDoc()
+    edoc.i = 13
+    doc.li.add(edoc)
 
-    def test_save(self):
-        td = self.TestDoc()
+    edoc = TestEDoc()
+    edoc.i = 42
+    doc.li.add(edoc)
 
-        ted = self.TestEDoc()
-        ted.i = 13
-        td.li.add(ted)
+    db.insert(doc)
 
-        ted = self.TestEDoc()
-        ted.i = 42
-        td.li.add(ted)
+    data = db.db.testdocs.find_one()
 
-        self.db.insert(td)
+    assert 'li' in data
+    assert len(data['li']) == 2
+    assert 'i' in data['li'][0]
 
-        data = self.db.db.testdocs.find_one()
+    res = set()
 
-        self.assertIn('li', data)
-        self.assertEqual(len(data['li']), 2)
-        self.assertIn('i', data['li'][0])
+    for item in data['li']:
+        assert 'i' in item
+        assert isinstance(item['i'], int)
+        res.add(item['i'])
 
-        res = set()
+    assert res == {13, 42}
 
-        for item in data['li']:
-            self.assertIn('i', item)
-            self.assertIsInstance(item['i'], int)
-            res.add(item['i'])
 
-        self.assertEquals(res, {13, 42})
+def test_load(db):
+    _id = db.db.testdocs.insert({'li': []})
+    db.db.testdocs.update({'_id': _id}, {'$addToSet': {'li': {'i': 13}}})
+    db.db.testdocs.update({'_id': _id}, {'$addToSet': {'li': {'i': 42}}})
 
-    def test_load(self):
-        _id = self.db.db.testdocs.insert({'li': []})
-        self.db.db.testdocs.update({'_id': _id}, {'$addToSet': {'li': {'i': 13}}})
-        self.db.db.testdocs.update({'_id': _id}, {'$addToSet': {'li': {'i': 42}}})
+    doc = db.get_queryset(TestDoc).find_one()
 
-        doc = self.db.get_queryset(self.TestDoc).find_one()
+    assert hasattr(doc, 'li')
+    assert len(doc.li) == 2
 
-        self.assertTrue(hasattr(doc, 'li'))
-        self.assertEqual(len(doc.li), 2)
+    res = set()
 
-        res = set()
+    for item in doc.li:
+        assert isinstance(item, TestEDoc)
+        assert hasattr(item, 'i')
+        assert isinstance(item.i, int)
+        res.add(item.i)
 
-        for item in doc.li:
-            self.assertIsInstance(item, self.TestEDoc)
-            self.assertTrue(hasattr(item, 'i'))
-            self.assertIsInstance(item.i, int)
-            res.add(item.i)
+    assert res == {13, 42}
 
-        self.assertEquals(res, {13, 42})
 
-    def test_add_to_set(self):
-        td = self.TestDoc()
-        self.db.insert(td)
+def test_add_to_set(db):
+    doc = TestDoc()
+    db.insert(doc)
 
-        ted = self.TestEDoc()
-        ted.i = 13
-        td.li.add_to_set(ted)
+    edoc = TestEDoc()
+    edoc.i = 13
+    doc.li.add_to_set(edoc)
 
-        ted = self.TestEDoc()
-        ted.i = 42
-        td.li.add_to_set(ted)
+    edoc = TestEDoc()
+    edoc.i = 42
+    doc.li.add_to_set(edoc)
 
-        data = self.db.db.testdocs.find_one()
+    data = db.db.testdocs.find_one()
 
-        self.assertIn('li', data)
-        self.assertEqual(len(data['li']), 2)
-        self.assertIn('i', data['li'][0])
-        self.assertEqual(data['li'][0]['i'], 13)
-        self.assertEqual(data['li'][1]['i'], 42)
+    assert 'li' in data
+    assert len(data['li']) == 2
+    assert 'i' in data['li'][0]
+    assert data['li'][0]['i'] == 13
+    assert data['li'][1]['i'] == 42

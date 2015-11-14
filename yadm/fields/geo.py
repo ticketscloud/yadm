@@ -9,7 +9,7 @@ GeoJSON: http://geojson.org/geojson-spec.html
 from collections.abc import Sequence
 
 from yadm.documents import DocumentItemMixin
-from yadm.fields.base import Field
+from yadm.fields.base import Field, pass_null
 
 
 TYPES = []
@@ -109,19 +109,17 @@ class MultiPoint(GeoCoordinates, Sequence):
 class GeoField(Field):
     """ Base field for GeoJSON objects
     """
-    def __init__(self, types=TYPES):
+    def __init__(self, types=TYPES, **kwargs):
+        super().__init__(**kwargs)
         self.types = types
         self.types_dict = {t.type: t for t in types}
 
+    @pass_null
     def to_mongo(self, document, geo):
-        return geo.to_mongo() if geo is not None else None
+        return geo.to_mongo()
 
+    @pass_null
     def from_mongo(self, document, data):
-        if data is None or isinstance(data, Geo):
-            return data
-        elif data is None:
-            return None
-
         geo_type = self.types_dict.get(data['type'])
 
         if geo_type is None:
@@ -136,18 +134,24 @@ class GeoOneTypeField(GeoField):
     """
     type = None
 
-    def __init__(self):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
         if self.type is None:
             raise NotImplementedError('attribute "type" must be implemented')
 
         self.types = [self.type]
         self.types_dict = {self.type.type: self.type}
 
+    @pass_null
     def prepare_value(self, document, value):
-        if isinstance(value, self.type) or value is None:
+        if isinstance(value, self.type):
             return value
-        elif isinstance(value, dict):
-            return self.type.from_mongo(value)
+        else:
+            raise TypeError(value)
+
+    def _get_fake_point(self, faker):
+        return Point(float(faker.longitude()), float(faker.latitude()))
 
 
 class PointField(GeoOneTypeField):
@@ -155,8 +159,14 @@ class PointField(GeoOneTypeField):
     """
     type = Point
 
+    def get_fake(self, document, faker, depth):
+        return self._get_fake_point(faker)
+
 
 class MultiPointField(GeoOneTypeField):
     """ Field for MultiPoint
     """
     type = MultiPoint
+
+    def get_fake(self, document, faker, depth):
+        return [self._get_fake_point(faker) for _ in range(4)]

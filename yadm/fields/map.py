@@ -38,8 +38,8 @@ Map
 """
 from collections import abc
 
-from bson import ObjectId
-
+from yadm.markers import AttributeNotSet
+from yadm.fields.base import pass_null
 from yadm.fields.containers import (
     Container,
     ContainerField,
@@ -49,32 +49,7 @@ from yadm.fields.containers import (
 class Map(Container, abc.MutableMapping):
     """ Map
     """
-    def __iter__(self):
-        return iter(self._data)
-
-    def __repr__(self):
-        return '{}({!r})'.format(self.__class__.__name__, self._data)
-
-    def _load_from_mongo(self, data):
-        self._data = {}
-
-        for key, value in (data or {}).items():
-            if hasattr(self._field.value_field, 'from_mongo'):
-                value = self._field.value_field.from_mongo(self.__parent__, value)
-            else:
-                value = self._prepare_value(value)
-
-            self._data[key] = value
-
-    def _prepare_value(self, value):
-        """ `prepare_value` function for `value_field`
-        """
-        if hasattr(self._field.value_field, 'prepare_value'):
-            return self._field.value_field.prepare_value(self.__parent__, value)
-        else:
-            return value
-
-    def set(self, key, value):
+    def set(self, key, value, reload=True):
         """ Set key directly in database
 
         :param key: key
@@ -82,30 +57,29 @@ class Map(Container, abc.MutableMapping):
 
         See `$set` in MongoDB's `set`.
         """
-        key = str(key)
-
-        if hasattr(self._field.value_field, 'to_mongo'):
-            value = self._field.value_field.to_mongo(self.__document__, value)
-        else:
-            value = self._prepare_value(value)
-
+        value = self._prepare_item(key, value)
         qs = self._get_queryset()
         fn = '.'.join([self.__field_name__, key])
         qs.update({'$set': {fn: value}}, multi=False)
         self._data[key] = value
 
-    def unset(self, key):
+        if reload:
+            self.reload()
+
+    def unset(self, key, reload=True):
         """ Unset key directly in database
 
         :param key: key
 
         See `$unset` in MongoDB's `unset`.
         """
-        key = str(key)
         qs = self._get_queryset()
         fn = '.'.join([self.__field_name__, key])
         qs.update({'$unset': {fn: True}}, multi=False)
         del self._data[key]
+
+        if reload:
+            self.reload()
 
 
 class MapField(ContainerField):
@@ -113,74 +87,120 @@ class MapField(ContainerField):
     """
     container = Map
 
-    def __init__(self, value_field):
-        self.value_field = value_field
-
-    @property
-    def default(self):
+    def get_default_value(self):
         return {}
 
-    def from_mongo(self, document, value):
-        if isinstance(value, self.container):
-            return value
-        else:
-            return self.container(document, self, value)
+    def prepare_value(self, document, value):
+        if value is AttributeNotSet:
+            return AttributeNotSet
 
+        pi = self.prepare_item
+        container = self.container(self, document, {})
+
+        if isinstance(value, dict):
+            items = value.items()
+        else:
+            items = value
+
+        container._data.update((k, pi(container, k, i)) for k, i in items)
+        return container
+
+    @pass_null
     def to_mongo(self, document, value):
-        tm = self.value_field.to_mongo
-        return {k: tm(document, v) for k, v in value._data.items()}
+        tm = self.item_field.to_mongo
+        return {k: tm(value, i) for k, i in value.items()}
+
+    @pass_null
+    def from_mongo(self, document, value):
+        fm = self.item_field.from_mongo
+        sp = self._set_parent
+
+        container = self.container(self, document, {})
+        g = ((k, sp(container, k, fm(container, i))) for k, i in value.items())
+        container._data.update(g)
+        return container
 
 
 class MapCustomKeys(Map):
-    def from_str(self, value):
-        """ Cast value """
-        raise NotImplementedError
+    def __init__(self, field, parent, value):
+        k2s = field.key_to_str
+        pi = field.prepare_item
+        value = {k2s(k): pi(self, k, v) for k, v in value.items()}
 
-    def _load_from_mongo(self, data):
-        data = {str(k): v for k, v in data.items()}
-        super()._load_from_mongo(data)
+        super().__init__(field, parent, value)
+        self.key_factory = field.key_factory
+        self.key_to_str = field.key_to_str
 
     def __iter__(self):
-        from_str = self.from_str
-        return (from_str(k) for k in super().__iter__())
+        key_factory = self.key_factory
+        return (key_factory(k) for k in super().__iter__())
 
-    def __getitem__(self, key):
-        return super().__getitem__(str(key))
+    def __getitem__(self, item):
+        return super().__getitem__(self.key_to_str(item))
 
-    def __setitem__(self, key, value):
-        super().__setitem__(str(key), value)
+    def __setitem__(self, item, value):
+        super().__setitem__(self.key_to_str(item), value)
 
-    def __delitem__(self, key):
-        super().__delitem__(str(key))
+    def __delitem__(self, item):
+        super().__delitem__(self.key_to_str(item))
 
-    def __contains__(self, key):
-        return str(key) in self._data
+    def __contains__(self, item):
+        return self.key_to_str(item) in self._data
+
+    def __eq__(self, other):
+        if other is None or other is AttributeNotSet:
+            return False
+        elif isinstance(other, dict):
+            other = self.__class__(self._field, self.__parent__, other)
+
+        return self._data == other._data
+
+    def set(self, key, value, reload=True):
+        return super().set(self.key_to_str(key), value, reload)
+
+    def unset(self, key, value, reload=True):
+        return super().unset(self.key_to_str(key), value, reload)
 
 
 class MapCustomKeysField(MapField):
+    """ Field for maps with custom key type
+
+    :param field item_field:
+    :param func key_factory: function, who return thue key
+        from raw string key
+    :param func key_to_str:
+    :param bool auto_create:
+    """
     container = MapCustomKeys
 
+    def __init__(self, item_field, key_factory, *,
+                 key_to_str=str,
+                 auto_create=True,
+                 **kwargs):
+        super().__init__(item_field, auto_create=auto_create, **kwargs)
+        self.key_factory = key_factory
+        self.key_to_str = key_to_str
+
+    @pass_null
     def prepare_value(self, document, value):
-        if value is None:
-            return None
-        elif isinstance(value, self.container):
-            return value
+        if value is AttributeNotSet:
+            return AttributeNotSet
+
+        pi = self.prepare_item
+        k2s = self.key_to_str
+
+        container = self.container(self, document, {})
+
+        if isinstance(value, dict):
+            items = value.items()
         else:
-            value = {str(k): v for k, v in value.items()}
-            return self.container(document, self, value)
+            items = value
 
+        container._data.update((k2s(k), pi(container, k, i)) for k, i in items)
+        return container
 
-class MapIntKeys(MapCustomKeys):
-    from_str = int
-
-
-class MapIntKeysField(MapCustomKeysField):
-    container = MapIntKeys
-
-
-class MapObjectIdKeys(MapCustomKeys):
-    from_str = ObjectId
-
-
-class MapObjectIdKeysField(MapCustomKeysField):
-    container = MapObjectIdKeys
+    @pass_null
+    def to_mongo(self, document, value):
+        tm = self.item_field.to_mongo
+        k2s = self.key_to_str
+        return {k2s(k): tm(value, i) for k, i in value.items()}
