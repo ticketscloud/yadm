@@ -147,6 +147,8 @@ class GeoOneTypeField(GeoField):
     def prepare_value(self, document, value):
         if isinstance(value, self.type):
             return value
+        elif isinstance(value, dict):
+            return self.type.from_mongo(value)
         else:
             raise TypeError(value)
 

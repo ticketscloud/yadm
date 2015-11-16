@@ -84,3 +84,19 @@ def test_doc_get(db):
     assert isinstance(doc.point, fields.Point)
     assert doc.point.longitude == 1
     assert doc.point.latitude == 2
+
+
+def test_doc_set_object():
+    doc = TestDoc()
+    doc.point = fields.Point(1, 2)
+    assert isinstance(doc.point, fields.Point)
+    assert doc.point.longitude == 1
+    assert doc.point.latitude == 2
+
+
+def test_doc_set_geojson():
+    doc = TestDoc()
+    doc.point = {'type': 'Point', 'coordinates': [1, 2]}
+    assert isinstance(doc.point, fields.Point)
+    assert doc.point.longitude == 1
+    assert doc.point.latitude == 2
