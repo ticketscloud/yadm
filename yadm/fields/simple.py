@@ -47,6 +47,16 @@ class SimpleField(DefaultMixin, Field):
         self._check_choices(value)
         return value
 
+    @pass_null
+    def from_mongo(self, document, value):
+        if value is AttributeNotSet:
+            return AttributeNotSet
+
+        elif not isinstance(value, self.type):
+            value = self.type(value)
+
+        return value
+
     def _check_choices(self, value):
         if self.choices is not None and value not in self.choices:
             raise ValueError("{!r} not in choices: {!r}"
