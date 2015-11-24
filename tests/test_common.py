@@ -1,4 +1,4 @@
-from unittest import TestCase
+import pytest
 
 from yadm import (
     Document,
@@ -54,77 +54,80 @@ class FooDocField(Field):
     embedded_document_class = EnclosedDocDescriptor('embedded')
 
 
-class EnclosedDocDescriptorTest(TestCase):
+@pytest.fixture(scope='function')
+def fs(request):
+    class FieldsSet:
+        R = ReferenceField(Foo)
+        E = EmbeddedDocumentField(Bar)
+        CR = ReferenceField('tests.test_common.Baz')
+        CE = EmbeddedDocumentField('tests.test_common.Qux')
 
-    def setUp(self):
-        self.R = ReferenceField(Foo)
-        self.E = EmbeddedDocumentField(Bar)
-        self.CR = ReferenceField('tests.test_common.Baz')
-        self.CE = EmbeddedDocumentField('tests.test_common.Qux')
+    return FieldsSet
 
-    def assertReference(self, classinfo, expected_value):  # noqa
-        self.assertEquals(classinfo.reference_document_class, expected_value)
-        self.assertEquals(getattr(classinfo, '_reference_document_class'),
-                          expected_value)
 
-    def assertEmbedded(self, classinfo, expected_value):  # noqa
-        self.assertEquals(classinfo.embedded_document_class, expected_value)
-        self.assertEquals(getattr(classinfo, '_embedded_document_class'),
-                          expected_value)
+def assert_reference(classinfo, expected_value):
+    assert classinfo.reference_document_class == expected_value
+    assert getattr(classinfo, '_reference_document_class') == expected_value
 
-    def test_reference(self):
-        self.assertReference(self.R, Foo)
 
-    def test_embedded(self):
-        self.assertEmbedded(self.E, Bar)
+def assert_embedded(classinfo, expected_value):
+    assert classinfo.embedded_document_class == expected_value
+    assert getattr(classinfo, '_embedded_document_class') == expected_value
 
-    def test_resolving(self):
-        self.assertReference(self.CR, Baz)
-        self.assertEmbedded(self.CE, Qux)
 
-        self.assertEmbedded(Corge.grault, Foo)
-        self.assertReference(Corge.garply, Bar)
-        self.assertEmbedded(Corge.waldo, Baz)
-        self.assertReference(Corge.fred, Qux)
-        self.assertEmbedded(Corge.plugh, Corge)
-        self.assertReference(Corge.xyzzy, Corge)
+def test_reference(fs):
+    assert_reference(fs.R, Foo)
 
-        with self.assertRaises(ImportError):
-            Thud.rf.reference_document_class
 
-        with self.assertRaises(ImportError):
-            Thud2.ef.embedded_document_class
+def test_embedded(fs):
+    assert_embedded(fs.E, Bar)
 
-    def test_lowlevel(self):
-        # wrong enclosed_cls_type value
-        try:
-            EnclosedDocDescriptor('reference')
-            EnclosedDocDescriptor('embedded')
-        except Exception as e:
-            self.assertTrue(False, 'Unexpected exception: {!r}'.format(e))
-        for cls_type in ('waldo', 'fred'):
-            with self.assertRaises(ValueError):
-                EnclosedDocDescriptor(cls_type)
 
-        # class binding
-        self.assertIsInstance(FooDocField.reference_document_class,
-                              EnclosedDocDescriptor)
-        self.assertIsInstance(FooDocField.embedded_document_class,
-                              EnclosedDocDescriptor)
+def test_resolving(fs):
+    assert_reference(fs.CR, Baz)
+    assert_embedded(fs.CE, Qux)
 
-        # getattr --> None
-        doc_field = FooDocField()
-        self.assertIsNone(doc_field.reference_document_class)
-        self.assertIsNone(doc_field.embedded_document_class)
+    assert_embedded(Corge.grault, Foo)
+    assert_reference(Corge.garply, Bar)
+    assert_embedded(Corge.waldo, Baz)
+    assert_reference(Corge.fred, Qux)
+    assert_embedded(Corge.plugh, Corge)
+    assert_reference(Corge.xyzzy, Corge)
 
-        doc_field.reference_document_class = Foo
-        doc_field.embedded_document_class = Bar
+    with pytest.raises(ImportError):
+        Thud.rf.reference_document_class
 
-        self.assertReference(doc_field, Foo)
-        self.assertEmbedded(doc_field, Bar)
+    with pytest.raises(ImportError):
+        Thud2.ef.embedded_document_class
 
-        # destructor
-        del doc_field.reference_document_class
-        self.assertIsNone(getattr(doc_field, '_reference_document_class', None))
-        del doc_field.embedded_document_class
-        self.assertIsNone(getattr(doc_field, '_embedded_document_class', None))
+
+def test_lowlevel(fs):
+    EnclosedDocDescriptor('reference')
+    EnclosedDocDescriptor('embedded')
+
+    for cls_type in ('waldo', 'fred'):
+        with pytest.raises(ValueError):
+            EnclosedDocDescriptor(cls_type)
+
+    # class binding
+    assert isinstance(FooDocField.reference_document_class,
+                      EnclosedDocDescriptor)
+    assert isinstance(FooDocField.embedded_document_class,
+                      EnclosedDocDescriptor)
+
+    # getattr --> None
+    doc_field = FooDocField()
+    assert doc_field.reference_document_class is None
+    assert doc_field.embedded_document_class is None
+
+    doc_field.reference_document_class = Foo
+    doc_field.embedded_document_class = Bar
+
+    assert_reference(doc_field, Foo)
+    assert_embedded(doc_field, Bar)
+
+    # destructor
+    del doc_field.reference_document_class
+    assert getattr(doc_field, '_reference_document_class', None) is None
+    del doc_field.embedded_document_class
+    assert getattr(doc_field, '_embedded_document_class', None) is None
