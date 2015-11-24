@@ -25,6 +25,7 @@ class Bar(EmbeddedDocument):
 
 
 class Baz(Document):
+    __collection__ = 'baz'
     f = FloatField(3.14)
 
 
@@ -131,3 +132,11 @@ def test_lowlevel(fs):
     assert getattr(doc_field, '_reference_document_class', None) is None
     del doc_field.embedded_document_class
     assert getattr(doc_field, '_embedded_document_class', None) is None
+
+
+def test_redefine_notloaded(db):
+    baz = Baz(f=13.0)
+    db.save(baz)
+    baz = db(Baz).fields('_id').find_one({'f': 13.0})
+    baz.f = 666.0
+    db.save(baz)

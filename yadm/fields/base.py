@@ -122,7 +122,10 @@ class FieldDescriptor:
             elif name in instance.__cache__:
                 value_old = instance.__cache__[name]
             elif name in instance.__raw__:
-                value_old = getattr(instance, name, AttributeNotSet)
+                try:
+                    value_old = getattr(instance, name, AttributeNotSet)
+                except NotLoadedError:
+                    value_old = NotLoaded
             else:
                 value_old = AttributeNotSet
 
