@@ -1,3 +1,4 @@
+from yadm.fields.base import pass_null
 from yadm.fields.simple import StringField
 
 
@@ -5,11 +6,27 @@ class EmailField(StringField):
     def get_fake(self, document, faker, depth):
         return faker.email().lower()
 
+    @pass_null
     def prepare_value(self, document, value):
-        value = super().prepare_value(document, value)
+        value = super().prepare_value(document, value).lower()
+        self.check_email(value)
+        return value
 
-        if value is not None:
-            if '@' not in value:
-                raise ValueError('"{}" is not email'.format(value))
+    @classmethod
+    def check_email(cls, value):
+        """ Check email classmethod
 
-            return value.lower()
+        Raise `ValueError` if value is not email.
+
+        Usage: `EmailField.check_email(some_untrusted_email)`
+        """
+        if '@' not in value:
+            cls._raise(value)
+
+        parts = value.split('@')
+        if len(parts) != 2 or len([p for p in parts if p]) != 2:
+            cls._raise(value)
+
+    @staticmethod
+    def _raise(value):
+        raise ValueError('"{}" is not email'.format(value))
