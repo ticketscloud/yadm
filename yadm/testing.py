@@ -7,7 +7,7 @@ from yadm.documents import BaseDocument, Document, EmbeddedDocument
 from yadm.markers import AttributeNotSet
 
 
-DEFAULT_DEEP = 4  # <=450
+DEFAULT_DEPTH = 4  # <=450
 
 
 def create_fake(__document_class__,
@@ -15,7 +15,7 @@ def create_fake(__document_class__,
                 __parent__=None,
                 __name__=None,
                 __faker__=None,
-                __depth__=DEFAULT_DEEP,
+                __depth__=DEFAULT_DEPTH,
                 **values):
     """ Create document with fake data
 
