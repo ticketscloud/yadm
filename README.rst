@@ -28,8 +28,8 @@ Quick start
     class BlogPost(Document):
         __collection__ = 'blog_posts'
 
-        title = fields.StringField
-        body = fields.StringField
+        title = fields.StringField()
+        body = fields.StringField()
 
 
     # Create post
