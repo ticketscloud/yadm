@@ -150,3 +150,24 @@ def test_custom_setitem(db):
 
     doc.map[two] = 2
     assert doc.map == {one: 1, two: 2}
+
+
+def test_complex_references(db):
+    class RefDoc(Document):
+        __collection__ = 'refs'
+        i = fields.IntegerField()
+
+    class Doc(Document):
+        __collection__ = 'docs'
+        refs = fields.MapCustomKeysField(
+            fields.ListField(fields.ReferenceField(RefDoc)),
+            key_factory=ObjectId)
+
+    _id = ObjectId()
+    ref = db.save(RefDoc(i=1))
+    doc = db.save(Doc(refs={_id: [ref]}))
+    assert doc.refs == {_id: [ref]}
+
+    doc = db(Doc).find_one({'_id': doc.id})
+    assert doc.refs == {_id: [ref]}
+    assert doc.refs[_id][0] is not ref

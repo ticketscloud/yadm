@@ -226,7 +226,7 @@ class DocumentItemMixin:
         """
         obj = self
 
-        while getattr(obj, '__parent__', None):
+        while getattr(obj, '__parent__', None) is not None:
             obj = obj.__parent__
 
         return obj
@@ -251,7 +251,7 @@ class DocumentItemMixin:
         """
         obj = self
 
-        while getattr(obj, '__parent__', None):
+        while getattr(obj, '__parent__', None) is not None:
             yield obj
             obj = obj.__parent__
 
