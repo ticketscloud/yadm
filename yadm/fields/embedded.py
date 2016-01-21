@@ -40,14 +40,19 @@ class EmbeddedDocumentField(Field):
         self.embedded_document_class = embedded_document_class
         self.auto_create = auto_create
 
-    def get_default(self, document):
+    def get_if_attribute_not_set(self, document):
+        """ Call if key not exist in document
+
+        If auto_create is True, create and return new
+        embedded document. Else AttributeError is raised.
+        """
         if self.auto_create:
             return self.embedded_document_class(
                 __parent__=document,
                 __name__=self.name,
             )
         else:
-            return AttributeNotSet
+            raise AttributeError(self.name)
 
     def get_fake(self, document, faker, depth):
         return create_fake(

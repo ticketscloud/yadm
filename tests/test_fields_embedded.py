@@ -31,6 +31,26 @@ def test_default_auto():
     assert isinstance(doc.e, ETestDoc)
 
 
+def test_default_auto_not_save_empty(db):
+    class ETD(EmbeddedDocument):
+        i = fields.IntegerField()
+
+    class TD(Document):
+        __collection__ = 'testdoc'
+        e = fields.EmbeddedDocumentField(ETD)
+
+    doc = db.save(TD())
+    raw = db.db.testdoc.find_one(doc.id)
+    assert 'e' not in raw
+    assert set(raw) == {'_id'}
+
+    doc.e.i = 13
+    db.save(doc)
+    raw = db.db.testdoc.find_one(doc.id)
+    assert 'e' in raw
+    assert raw == {'_id': doc.id, 'e': {'i': 13}}
+
+
 def test_get(db):
     _id = db.db.testdoc.insert({'e': {'i': 13}})
     doc = db.get_queryset(TestDoc).with_id(_id)
