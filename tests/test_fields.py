@@ -59,3 +59,7 @@ def test_id_set_str():
 
     assert isinstance(doc._id, ObjectId)
     assert doc._id == _id
+
+
+def test_repr():
+    assert '_id' in repr(TestDoc._id)

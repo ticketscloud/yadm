@@ -2,6 +2,7 @@ import pytest
 from bson import ObjectId
 
 from yadm.documents import Document
+from yadm.markers import AttributeNotSet
 from yadm import fields
 
 
@@ -57,6 +58,48 @@ def test_changed_clear(doc):
     assert not doc.__raw__
     assert doc.__cache__ == {'i': 13}
     assert not doc.__changed__
+
+
+def test_raw_cache_changed(db, doc):
+    assert not doc.__raw__
+    assert not doc.__cache__
+    assert not doc.__changed__
+
+    doc.i = 13
+
+    assert not doc.__raw__
+    assert not doc.__cache__
+    assert doc.__changed__ == {'i': 13}
+
+    db.save(doc)
+
+    assert not doc.__raw__
+    assert doc.__cache__ == {'i': 13, '_id': doc.id, 'b': AttributeNotSet}
+    assert not doc.__changed__
+
+    doc = db.reload(doc, new_instance=True)
+
+    assert doc.__raw__ == {'i': 13, '_id': doc.id, 'b': AttributeNotSet}
+    assert doc.__cache__ == {'_id': doc.id}
+    assert not doc.__changed__
+
+    doc.b = False
+
+    assert doc.__raw__ == {'i': 13, '_id': doc.id, 'b': AttributeNotSet}
+    assert doc.__cache__ == {'_id': doc.id}
+    assert doc.__changed__ == {'b': False}
+
+    assert doc.i == 13  # call descriptor's get
+
+    assert doc.__raw__ == {'i': 13, '_id': doc.id, 'b': AttributeNotSet}
+    assert doc.__cache__ == {'i': 13, '_id': doc.id}
+    assert doc.__changed__ == {'b': False}
+
+    doc.i = 12  # call descriptor's set, for cover
+
+    assert doc.__raw__ == {'i': 13, '_id': doc.id, 'b': AttributeNotSet}
+    assert doc.__cache__ == {'i': 13, '_id': doc.id}
+    assert doc.__changed__ == {'i': 12, 'b': False}
 
 
 def test_eq():

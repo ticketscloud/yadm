@@ -46,7 +46,7 @@ class FieldDescriptor:
         self.name = name
         self.field = field
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         class_name = type(self).__name__
         document_class_name = type(self.field.document_class).__name__
         return '<{} "{}.{}">'.format(class_name, document_class_name, self.name)
@@ -134,7 +134,7 @@ class FieldDescriptor:
                 self.field.set_parent_changed(instance)
 
         else:
-            raise TypeError("can't set field directly")
+            raise TypeError("can't set field directly")  # pragma: no cover
 
     def __delete__(self, instance):
         """ Mark document's key as not set
@@ -220,12 +220,12 @@ class Field:
         """
         raise AttributeError(self.name)
 
-    def get_fake(self, document, faker, deep):
+    def get_fake(self, document, faker, deep):  # pragma: no cover
         """ Return fake data for testing
         """
         return self.get_default(document)
 
-    def prepare_value(self, document, value):
+    def prepare_value(self, document, value):  # pragma: no cover
         """ The method is called when value is assigned
             for the attribute
 
@@ -239,7 +239,7 @@ class Field:
         """
         return value
 
-    def to_mongo(self, document, value):
+    def to_mongo(self, document, value):  # pragma: no cover
         """ Convert python value to mongo value
 
         :param BaseDocument document: document
@@ -248,7 +248,7 @@ class Field:
         """
         return value
 
-    def from_mongo(self, document, value):
+    def from_mongo(self, document, value):  # pragma: no cover
         """ Convert mongo value to python value
 
         :param BaseDocument document: document

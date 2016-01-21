@@ -1,3 +1,5 @@
+import pytest
+
 import pymongo
 
 from yadm.documents import Document
@@ -8,7 +10,9 @@ from yadm import fields
 
 class TestDoc(Document):
     __collection__ = 'testdocs'
+    b = fields.BooleanField()
     i = fields.IntegerField()
+    l = fields.ListField(fields.IntegerField())
 
 
 def test_init(db):
@@ -64,12 +68,74 @@ def test_save(db):
     doc = from_mongo(TestDoc, col.find_one({'i': 13}))
     doc.i = 26
 
+    col.update({'_id': doc.id}, {'$set': {'b': True}})
+
     db.save(doc)
 
+    assert doc.i == 26
+    assert doc.b is True
     assert db.db.testdocs.find().count() == 1
     assert db.db.testdocs.find()[0]['i'] == 26
+    assert db.db.testdocs.find()[0]['b'] is True
     assert not doc.__changed__
     assert doc.__db__ is db
+
+
+def test_save_full(db):
+    col = db.db.testdocs
+    col.insert({'i': 13})
+
+    doc = from_mongo(TestDoc, col.find_one({'i': 13}))
+    doc.i = 26
+
+    col.update({'_id': doc.id}, {'$set': {'b': True}})
+
+    db.save(doc, full=True)
+
+    assert doc.i == 26
+    assert not hasattr(doc, 'b')
+    assert db.db.testdocs.find().count() == 1
+    assert db.db.testdocs.find()[0]['i'] == 26
+    assert 'b' not in db.db.testdocs.find()[0]
+    assert not doc.__changed__
+    assert doc.__db__ is db
+
+
+@pytest.mark.parametrize('unset', [['i'], {'i': True}])
+def test_update_one(db, unset):
+    col = db.db.testdocs
+    _id = col.insert({'i': 13})
+
+    doc = from_mongo(TestDoc, col.find_one(_id))
+    db.update_one(doc, set={'b': True}, unset=unset)
+
+    assert doc.b
+    assert not hasattr(doc, 'i')
+
+
+def test_update_one__inc(db):
+    col = db.db.testdocs
+    _id = col.insert({'i': 12})
+
+    doc = from_mongo(TestDoc, col.find_one(_id))
+    db.update_one(doc, inc={'i': 1})
+
+    assert doc.i == 13
+    assert not hasattr(doc, 'b')
+
+
+@pytest.mark.parametrize('cmd, v, r', [
+    ('push', 4, [1, 2, 3, 4]),
+    ('pull', 2, [1, 3]),
+])
+def test_update_one__push_pull(db, cmd, v, r):
+    col = db.db.testdocs
+    _id = col.insert({'l': [1, 2, 3]})
+
+    doc = from_mongo(TestDoc, col.find_one(_id))
+    db.update_one(doc, **{cmd: {'l': v}})
+
+    assert doc.l == r
 
 
 def test_remove(db):

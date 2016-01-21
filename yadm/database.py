@@ -39,7 +39,7 @@ class Database:
         self.name = name
         self.db = client[name]
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return 'Database({!r})'.format(self.db)
 
     def __call__(self, *args, **kwargs):

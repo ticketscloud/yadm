@@ -54,8 +54,8 @@ class BaseResult(Mapping):
     def __getitem__(self, item):
         return self._raw[item]
 
-    def __iter__(self):
+    def __iter__(self):  # pragma: no cover
         return iter(self._raw)
 
-    def __len__(self):
+    def __len__(self):  # pragma: no cover
         return len(self._raw)
