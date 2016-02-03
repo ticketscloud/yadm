@@ -59,7 +59,6 @@ def test_setattr_save(db):
     db.save(doc)
 
     data = db.db.testdoc.find_one({'_id': _id})
-    print(data)
     assert data['map'] == {'a': 1, 'b': 2, 'c': 3, 'd': 4}
     assert doc.map == {'a': 1, 'b': 2, 'c': 3, 'd': 4}
 
