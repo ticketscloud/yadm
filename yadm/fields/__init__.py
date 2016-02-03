@@ -1,5 +1,4 @@
-"""
-This package contain all fields.
+""" This package contain all fields.
 """
 
 from yadm.fields.base import FieldDescriptor, Field, NotLoadedError  # noqa
@@ -23,6 +22,7 @@ from yadm.fields.embedded import EmbeddedDocumentField  # noqa
 from yadm.fields.list import ListField  # noqa
 from yadm.fields.set import SetField  # noqa
 from yadm.fields.map import MapField, MapCustomKeysField  # noqa
+from yadm.fields.mongo_map import UnmutableMap, MongoMapField  # noqa
 
 from yadm.fields.reference import (  # noqa
     ReferenceField,
