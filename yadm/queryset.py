@@ -1,3 +1,5 @@
+from bson import ObjectId
+
 from yadm.join import Join
 from yadm.serialize import from_mongo
 
@@ -165,6 +167,9 @@ class QuerySet:
 
             qs({'field': {'$gt': 3}}, {'field': True})
         """
+        if isinstance(criteria, ObjectId):
+            criteria = {'_id': criteria}
+
         qs = self.copy(criteria=criteria, projection=projection)
         collection = qs._db._get_collection(qs._document_class)
         data = collection.find_one(qs._criteria, qs._projection)
