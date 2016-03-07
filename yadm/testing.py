@@ -50,20 +50,30 @@ def create_fake(__document_class__,
 
     doc_fake_proc = document.__fake__(values, __faker__, __depth__ - 1)
 
+    # extend values from __fake__ method
     if doc_fake_proc is not None:
         values = next(doc_fake_proc)
 
-    for name, field in __document_class__.__fields__.items():
-        if name in values:
-            fake = values[name]
-        elif hasattr(document, '__fake__{}__'.format(name)):
-            attr = getattr(document, '__fake__{}__'.format(name))
-            fake = attr(__faker__, __depth__ - 1)
-        else:
-            fake = field.get_fake(document, __faker__, __depth__ - 1)
-
+    # first: set values
+    for name, fake in values.items():
         if fake is not AttributeNotSet:
             setattr(document, name, fake)
+
+    # second: field faker
+    for name, field in __document_class__.__fields__.items():
+        if name not in values and not hasattr(document, '__fake__{}__'.format(name)):
+            fake = field.get_fake(document, __faker__, __depth__ - 1)
+            if fake is not AttributeNotSet:
+                setattr(document, name, fake)
+
+    # third: __fake__{name}__ methods
+    for name, field in __document_class__.__fields__.items():
+        if name not in values and hasattr(document, '__fake__{}__'.format(name)):
+            attr = getattr(document, '__fake__{}__'.format(name))
+            fake = attr(__faker__, __depth__ - 1)
+
+            if fake is not AttributeNotSet:
+                setattr(document, name, fake)
 
     if doc_fake_proc is not None:
         try:
