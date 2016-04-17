@@ -69,7 +69,9 @@ CHANGES
 
 * Add ``exc`` argument to ``QuerySet.find_one`` for raise exception if not found;
 
-* Add cacheing on queryset level and use it for ``ReferenceField``.
+* Add cacheing on queryset level and use it for ``ReferenceField``;
+
+* Deprecate ``QuerySet.with_id``.
 
 
 1.0 (2015-11-14)

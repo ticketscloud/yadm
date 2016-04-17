@@ -28,7 +28,7 @@ def test_save(db):
     doc.dt = datetime(1970, 1, 1, tzinfo=pytz.utc)
     db.insert(doc)
 
-    doc = db.get_queryset(TestDoc).with_id(doc.id)
+    doc = db.get_queryset(TestDoc).find_one(doc.id)
     data = db.db.testdocs.find_one()
 
     assert isinstance(data['dt'], datetime)
@@ -39,7 +39,7 @@ def test_load(db):
     epoch = datetime(1970, 1, 1, tzinfo=pytz.utc)
     _id = db.db.testdocs.insert({'dt': epoch})
 
-    doc = db.get_queryset(TestDoc).with_id(_id)
+    doc = db.get_queryset(TestDoc).find_one(_id)
 
     assert isinstance(doc.dt, datetime)
     assert doc.dt == epoch
@@ -55,7 +55,7 @@ def test_default_now_save(db):
     doc = TestDoc()
     db.insert(doc)
 
-    doc = db.get_queryset(TestDoc).with_id(doc.id)
+    doc = db.get_queryset(TestDoc).find_one(doc.id)
     data = db.db.testdocs.find_one()
 
     assert isinstance(data['now'], datetime)
@@ -69,7 +69,7 @@ def test_now_save(db):
     doc.now = epoch
     db.insert(doc)
 
-    doc = db.get_queryset(TestDoc).with_id(doc.id)
+    doc = db.get_queryset(TestDoc).find_one(doc.id)
     data = db.db.testdocs.find_one()
 
     assert isinstance(data['now'], datetime)
@@ -80,7 +80,7 @@ def test_now_load(db):
     epoch = datetime(1970, 1, 1, tzinfo=pytz.utc)
     _id = db.db.testdocs.insert({'now': epoch})
 
-    doc = db.get_queryset(TestDoc).with_id(_id)
+    doc = db.get_queryset(TestDoc).find_one(_id)
 
     assert isinstance(doc.now, datetime)
     assert doc.now == epoch

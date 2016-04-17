@@ -17,7 +17,7 @@ Work with references.
     doc.rdoc = rdoc
     db.insert(doc)
 
-    doc = db.get_queryset(Doc).with_id(doc.id)  # reload doc
+    doc = db.get_queryset(Doc).find_one(doc.id)  # reload doc
     assert doc.rdoc.id == rdoc.id
     assert doc.rdoc.i == 13
 """

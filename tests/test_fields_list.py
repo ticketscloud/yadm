@@ -29,7 +29,7 @@ def test_default_no_auto():
 
 def test_get(db):
     _id = db.db.testdoc.insert({'li': [1, 2, 3]})
-    doc = db.get_queryset(TestDoc).with_id(_id)
+    doc = db.get_queryset(TestDoc).find_one(_id)
 
     assert doc.li
     assert len(doc.li) == 3
@@ -40,7 +40,7 @@ def test_get(db):
 
 def test_append(db):
     _id = db.db.testdoc.insert({'li': [1, 2, 3]})
-    doc = db.get_queryset(TestDoc).with_id(_id)
+    doc = db.get_queryset(TestDoc).find_one(_id)
     doc.li.append(4)
     assert doc.li == [1, 2, 3, 4]
 
@@ -53,7 +53,7 @@ def test_append_valueerror():
 
 def test_append_save(db):
     _id = db.db.testdoc.insert({'li': [1, 2, 3]})
-    doc = db.get_queryset(TestDoc).with_id(_id)
+    doc = db.get_queryset(TestDoc).find_one(_id)
     doc.li.append(4)
     db.save(doc)
 
@@ -63,7 +63,7 @@ def test_append_save(db):
 
 def test_remove(db):
     _id = db.db.testdoc.insert({'li': [1, 2, 3]})
-    doc = db.get_queryset(TestDoc).with_id(_id)
+    doc = db.get_queryset(TestDoc).find_one(_id)
     doc.li.remove(2)
 
     assert doc.li == [1, 3]
@@ -71,7 +71,7 @@ def test_remove(db):
 
 def test_remove_save(db):
     _id = db.db.testdoc.insert({'li': [1, 2, 3]})
-    doc = db.get_queryset(TestDoc).with_id(_id)
+    doc = db.get_queryset(TestDoc).find_one(_id)
     doc.li.remove(2)
     db.save(doc)
 
@@ -81,7 +81,7 @@ def test_remove_save(db):
 
 def test_push(db):
     _id = db.db.testdoc.insert({'li': [1, 2, 3]})
-    doc = db.get_queryset(TestDoc).with_id(_id)
+    doc = db.get_queryset(TestDoc).find_one(_id)
     doc.li.push(4)
 
     assert doc.li == [1, 2, 3, 4]
@@ -98,7 +98,7 @@ def test_push_valueerror():
 
 def test_pull(db):
     _id = db.db.testdoc.insert({'li': [1, 2, 3]})
-    doc = db.get_queryset(TestDoc).with_id(_id)
+    doc = db.get_queryset(TestDoc).find_one(_id)
     doc.li.pull(2)
 
     assert doc.li == [1, 3]

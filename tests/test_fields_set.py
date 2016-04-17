@@ -21,7 +21,7 @@ def test_default():
 
 def test_get(db):
     _id = db.db.testdoc.insert({'s': [1, 2, 3]})
-    doc = db.get_queryset(TestDoc).with_id(_id)
+    doc = db.get_queryset(TestDoc).find_one(_id)
 
     assert doc.s
     assert len(doc.s) == 3
@@ -40,7 +40,7 @@ def test_get(db):
 
 def test_add(db):
     _id = db.db.testdoc.insert({'s': [1, 2, 3]})
-    doc = db.get_queryset(TestDoc).with_id(_id)
+    doc = db.get_queryset(TestDoc).find_one(_id)
     doc.s.add(4)
 
     assert doc.s == {1, 2, 3, 4}
@@ -55,7 +55,7 @@ def test_add_typeerror():
 
 def test_add_save(db):
     _id = db.db.testdoc.insert({'s': [1, 2, 3]})
-    doc = db.get_queryset(TestDoc).with_id(_id)
+    doc = db.get_queryset(TestDoc).find_one(_id)
     doc.s.add(4)
     db.save(doc)
 
@@ -65,7 +65,7 @@ def test_add_save(db):
 
 def test_remove(db):
     _id = db.db.testdoc.insert({'s': [1, 2, 3]})
-    doc = db.get_queryset(TestDoc).with_id(_id)
+    doc = db.get_queryset(TestDoc).find_one(_id)
     doc.s.remove(2)
 
     assert doc.s == {1, 3}
@@ -73,7 +73,7 @@ def test_remove(db):
 
 def test_remove_save(db):
     _id = db.db.testdoc.insert({'s': [1, 2, 3]})
-    doc = db.get_queryset(TestDoc).with_id(_id)
+    doc = db.get_queryset(TestDoc).find_one(_id)
     doc.s.remove(2)
     db.save(doc)
 
@@ -83,7 +83,7 @@ def test_remove_save(db):
 
 def test_add_to_set(db):
     _id = db.db.testdoc.insert({'s': [1, 2, 3]})
-    doc = db.get_queryset(TestDoc).with_id(_id)
+    doc = db.get_queryset(TestDoc).find_one(_id)
     doc.s.add_to_set(4)
 
     assert doc.s == {1, 2, 3, 4}
@@ -100,7 +100,7 @@ def test_add_to_set_typeerror():
 
 def test_pull(db):
     _id = db.db.testdoc.insert({'s': [1, 2, 3]})
-    doc = db.get_queryset(TestDoc).with_id(_id)
+    doc = db.get_queryset(TestDoc).find_one(_id)
     doc.s.pull(2)
 
     assert doc.s == {1, 3}

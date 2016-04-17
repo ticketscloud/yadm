@@ -78,7 +78,7 @@ def test_doc_get(db):
     _id = db.db.testdoc.insert(
         {'point': {'type': 'Point', 'coordinates': [1, 2]}}
     )
-    doc = db(TestDoc).with_id(_id)
+    doc = db(TestDoc).find_one(_id)
 
     assert hasattr(doc, 'point')
     assert isinstance(doc.point, fields.Point)

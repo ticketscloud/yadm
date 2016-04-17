@@ -19,7 +19,7 @@ def test_get(db):
     id_ref = db.db.testdocs_ref.insert({})
     id = db.db.testdocs.insert({'ref': id_ref})
 
-    doc = db.get_queryset(TestDoc).with_id(id)
+    doc = db.get_queryset(TestDoc).find_one(id)
 
     assert doc._id == id
     assert isinstance(doc.ref, Document)
@@ -28,7 +28,7 @@ def test_get(db):
 
 def test_get_broken(db):
     id = db.db.testdocs.insert({'ref': ObjectId()})
-    doc = db.get_queryset(TestDoc).with_id(id)
+    doc = db.get_queryset(TestDoc).find_one(id)
 
     with pytest.raises(fields.BrokenReference):
         doc.ref
@@ -36,7 +36,7 @@ def test_get_broken(db):
 
 def test_get_notbindingtodatabase(db):
     id = db.db.testdocs.insert({'ref': ObjectId()})
-    doc = db.get_queryset(TestDoc).with_id(id)
+    doc = db.get_queryset(TestDoc).find_one(id)
     doc.__db__ = None
 
     with pytest.raises(fields.NotBindingToDatabase):
@@ -45,7 +45,7 @@ def test_get_notbindingtodatabase(db):
 
 def test_set_objectid(db):
     id = db.db.testdocs.insert({})
-    doc = db.get_queryset(TestDoc).with_id(id)
+    doc = db.get_queryset(TestDoc).find_one(id)
     doc.ref = db.db.testdocs_ref.insert({})
 
     assert isinstance(doc.ref, TestDocRef)
@@ -61,7 +61,7 @@ def test_set_objectid(db):
 
 def test_set_doc(db):
     id = db.db.testdocs.insert({})
-    doc = db.get_queryset(TestDoc).with_id(id)
+    doc = db.get_queryset(TestDoc).find_one(id)
 
     doc_ref = TestDocRef()
     db.save(doc_ref)
@@ -88,7 +88,7 @@ def test_not_object_id_get(db):
     id_ref = db.db.testdocs_ref.insert({'_id': 13})
     id = db.db.testdocs.insert({'ref': id_ref})
 
-    doc = db.get_queryset(TestDocNotObjectId).with_id(id)
+    doc = db.get_queryset(TestDocNotObjectId).find_one(id)
 
     assert doc._id == id
     assert isinstance(doc.ref, Document)
@@ -108,7 +108,7 @@ def test_embedded_get(db):
     id_ref = db.db.testdocs_ref.insert({})
     id = db.db.testdocs.insert({'emb': {'ref': id_ref}})
 
-    doc = db.get_queryset(TestDocWEmbedded).with_id(id)
+    doc = db.get_queryset(TestDocWEmbedded).find_one(id)
 
     assert doc._id == id
     assert isinstance(doc.emb, TestDocEmb)

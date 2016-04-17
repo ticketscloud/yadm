@@ -53,7 +53,7 @@ def test_default_auto_not_save_empty(db):
 
 def test_get(db):
     _id = db.db.testdoc.insert({'e': {'i': 13}})
-    doc = db.get_queryset(TestDoc).with_id(_id)
+    doc = db.get_queryset(TestDoc).find_one(_id)
 
     assert hasattr(doc, 'e')
     assert isinstance(doc.e, ETestDoc)
@@ -109,7 +109,7 @@ def test_set_insert(db):
 
 def test_set_save(db):
     _id = db.db.testdoc.insert({'e': {'i': 13}})
-    doc = db.get_queryset(TestDoc).with_id(_id)
+    doc = db.get_queryset(TestDoc).find_one(_id)
 
     doc.e.i = 26
     db.save(doc)
@@ -120,7 +120,7 @@ def test_set_save(db):
 
 def test_delete_save(db):
     _id = db.db.testdoc.insert({'e': {'i': 13}})
-    doc = db.get_queryset(TestDoc).with_id(_id)
+    doc = db.get_queryset(TestDoc).find_one(_id)
 
     del doc.e
     db.save(doc)
@@ -131,7 +131,7 @@ def test_delete_save(db):
 
 def test_delete_deep_save(db):
     _id = db.db.testdoc.insert({'e': {'i': 13, 'id': ObjectId()}})
-    doc = db.get_queryset(TestDoc).with_id(_id)
+    doc = db.get_queryset(TestDoc).find_one(_id)
 
     del doc.e.i
     db.save(doc)

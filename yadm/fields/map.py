@@ -13,26 +13,26 @@ Map
     assert doc.map == {'a': 1, 'b': 2}
 
     db.insert(doc)
-    doc = db.get_queryset(Doc).with_id(doc.id)  # reload
+    doc = db.get_queryset(Doc).find_one(doc.id)  # reload
 
     doc.map['c'] = 3  # do not save
     assert doc.map == {'a': 1, 'b': 2, 'c': 3}
-    doc = db.get_queryset(Doc).with_id(doc.id)  # reload
+    doc = db.get_queryset(Doc).find_one(doc.id)  # reload
     assert doc.map == {'a': 1, 'b': 2}
 
     del doc.map['b']  # do not save too
     assert doc.map == {'a': 1}
-    doc = db.get_queryset(Doc).with_id(doc.id)  # reload
+    doc = db.get_queryset(Doc).find_one(doc.id)  # reload
     assert doc.map == {'a': 1, 'b': 2}
 
     doc.map.set('d', 3)  # $set query
     assert doc.map == {'a': 1, 'b': 2, 'c': 3}
-    doc = db.get_queryset(Doc).with_id(doc.id)  # reload
+    doc = db.get_queryset(Doc).find_one(doc.id)  # reload
     assert doc.map == {'a': 1, 'b': 2, 'c': 3}
 
     doc.map.unset('d', 3)  # $unset query
     assert doc.map == {'a': 1, 'b': 2}
-    doc = db.get_queryset(Doc).with_id(doc.id)  # reload
+    doc = db.get_queryset(Doc).find_one(doc.id)  # reload
     assert doc.map == {'a': 1, 'b': 2}
 
 """

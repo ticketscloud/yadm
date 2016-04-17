@@ -13,26 +13,26 @@ List of objects
     assert doc.integers == [1, 2]
 
     db.insert(doc)
-    doc = db.get_queryset(Doc).with_id(doc.id)  # reload
+    doc = db.get_queryset(Doc).find_one(doc.id)  # reload
 
     doc.integers.append(3)  # do not save
     assert doc.integers == [1, 2, 3]
-    doc = db.get_queryset(Doc).with_id(doc.id)  # reload
+    doc = db.get_queryset(Doc).find_one(doc.id)  # reload
     assert doc.integers == [1, 2]
 
     doc.integers.remove(2)  # do not save too
     assert doc.integers == [1]
-    doc = db.get_queryset(Doc).with_id(doc.id)  # reload
+    doc = db.get_queryset(Doc).find_one(doc.id)  # reload
     assert doc.integers == [1, 2]
 
     doc.integers.push(3)  # $push query
     assert doc.integers == [1, 2, 3]
-    doc = db.get_queryset(Doc).with_id(doc.id)  # reload
+    doc = db.get_queryset(Doc).find_one(doc.id)  # reload
     assert doc.integers == [1, 2, 3]
 
     doc.integers.pull(2)  # $pull query
     assert doc.integers == [1, 3]
-    doc = db.get_queryset(Doc).with_id(doc.id)  # reload
+    doc = db.get_queryset(Doc).find_one(doc.id)  # reload
     assert doc.integers == [1, 3]
 
 """

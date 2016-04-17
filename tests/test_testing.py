@@ -69,7 +69,7 @@ def test_simple_save(db):
     assert len(doc.s) > 0
 
     assert db(SimpleTestDoc).count() == 1
-    assert db(SimpleTestDoc).with_id(doc.id)
+    assert db(SimpleTestDoc).find_one(doc.id)
 
 
 class WithEmbeddedTestDoc(Document):

@@ -165,7 +165,7 @@ class Database:
         :param bool new_instance: if `True` return new instance of document,
             else change data in given document (default: `False`)
         """
-        new = self.get_queryset(document.__class__).with_id(document.id)
+        new = self.get_queryset(document.__class__).find_one(document.id)
 
         if new_instance:
             return new

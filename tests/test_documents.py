@@ -123,7 +123,7 @@ def test_id(doc):
 
 def test_attributeerror(db):
     _id = db.db.testdocs.insert({'i': 13})
-    doc = db(TestDoc).with_id(_id)
+    doc = db(TestDoc).find_one(_id)
 
     assert doc.i == 13
 
@@ -133,7 +133,7 @@ def test_attributeerror(db):
 
 def test_notloaded(db):
     _id = db.db.testdocs.insert({'i': 13, 'b': False})
-    doc = db(TestDoc).fields('i').with_id(_id)
+    doc = db(TestDoc).fields('i').find_one(_id)
 
     assert doc.i == 13
 

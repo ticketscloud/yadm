@@ -32,7 +32,7 @@ class QuerySet:
         return self._from_mongo_list(self._cursor)
 
     def __contains__(self, document):
-        return self.with_id(document.id) is not None
+        return self.find_one(document.id) is not None
 
     def __getitem__(self, item):
         if isinstance(item, slice):
@@ -202,9 +202,13 @@ class QuerySet:
     def with_id(self, _id):
         """ Find document with id
 
+        This method is deprecated. Use find_one.
+
         :param _id: id of searching document
         :return: :class:`yadm.documents.Document` or **None**
         """
+        import warnings
+        warnings.warn("QuerySet.with_id is deprecated", DeprecationWarning)
         doc = self._document_class()
         doc._id = _id
         return self.find_one({'_id': doc._id})
