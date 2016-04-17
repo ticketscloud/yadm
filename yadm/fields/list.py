@@ -1,5 +1,5 @@
 """
-List of objects
+List of objects.
 
 .. code-block:: python
 
@@ -46,10 +46,10 @@ from yadm.fields.containers import (
 
 
 class List(Container, abc.MutableSequence):
-    """ Container for list
+    """ Container for list.
     """
     def insert(self, index, item):
-        """ Append item to list
+        """ Append item to list.
 
         :param int index:
         :param item: item for insert
@@ -60,7 +60,7 @@ class List(Container, abc.MutableSequence):
         self._set_changed()
 
     def append(self, item):
-        """ Append item to list
+        """ Append item to list.
 
         :param item: item for append
 
@@ -71,7 +71,7 @@ class List(Container, abc.MutableSequence):
         self._set_changed()
 
     def remove(self, item):
-        """ Remove item from list
+        """ Remove item from list.
 
         :param item: item for remove
 
@@ -81,7 +81,7 @@ class List(Container, abc.MutableSequence):
         self._set_changed()
 
     def push(self, item, reload=True):
-        """ Push item directly to database
+        """ Push item directly to database.
 
         :param item: item for `$push`
         :param bool reload: automatically reload all values from database
@@ -100,7 +100,7 @@ class List(Container, abc.MutableSequence):
             self.reload()
 
     def pull(self, query, reload=True):
-        """ Pull item from database
+        """ Pull item from database.
 
         :param query: query for `$pull` on this field
         :param bool reload: automatically reload all values from database
@@ -114,7 +114,7 @@ class List(Container, abc.MutableSequence):
             self.reload()
 
     def replace(self, query, item, reload=True):
-        """ Replace list elements
+        """ Replace list elements.
 
         :param query: query for `update`.
             Keys of this query is relative.
@@ -135,7 +135,7 @@ class List(Container, abc.MutableSequence):
             self.reload()
 
     def update(self, query, values, reload=True):
-        """ Update fields in embedded documents
+        """ Update fields in embedded documents.
 
         :param query: query for `update`.
             Keys of this query is relative.
@@ -159,7 +159,7 @@ class List(Container, abc.MutableSequence):
 
 
 class ListField(ContainerField):
-    """ Field for list values
+    """ Field for list values.
 
     For example, document with list of integers:
 

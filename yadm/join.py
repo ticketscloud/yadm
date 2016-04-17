@@ -8,7 +8,7 @@ from yadm.fields.reference import ReferenceField
 
 
 class Join(abc.Sequence):
-    """ Helper for build client-side joins
+    """ Helper for build client-side joins.
 
     .. code:: python
 
@@ -53,7 +53,7 @@ class Join(abc.Sequence):
     # end abc.Sequence
 
     def get_queryset(self, field_name):
-        """ Return queryset for joined objects
+        """ Return queryset for joined objects.
         """
         field = self._get_field(field_name)
         qs = self._db(field.reference_document_class)
@@ -61,7 +61,7 @@ class Join(abc.Sequence):
         return qs.find({'_id': {'$in': list(ids)}})
 
     def join(self, *field_names):
-        """ Do manual join
+        """ Do manual join.
         """
         self._load_names_types_maps(*field_names)
         self._load_map_name_ids(*field_names)

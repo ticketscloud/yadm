@@ -13,7 +13,7 @@ def _to_mongo_value(result, document, field, name, value):
 
 
 def to_mongo(document, exclude=(), include=None):
-    """ Serialize document to MongoDB data
+    """ Serialize document to MongoDB data.
 
     :param BaseDocument document: document for serializing
     :param list exclude: exclude fields
@@ -63,7 +63,7 @@ def to_mongo(document, exclude=(), include=None):
 
 
 def from_mongo(document_class, data, not_loaded=(), parent=None, name=None):
-    """ Deserialize MongoDB data to document
+    """ Deserialize MongoDB data to document.
 
     :param document_class: document class
     :param dict data: data from MongoDB

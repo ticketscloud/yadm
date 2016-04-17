@@ -21,7 +21,7 @@ from yadm.fields.simple import ObjectIdField
 
 
 class MetaDocument(type):
-    """ Metaclass for documents
+    """ Metaclass for documents.
     """
     def __init__(cls, name, bases, cls_dict):  # noqa
         cls.__fields__ = {}
@@ -46,7 +46,7 @@ class MetaDocument(type):
 
 
 class BaseDocument(metaclass=MetaDocument):
-    """ Base class for all documents
+    """ Base class for all documents.
 
     .. py:attribute:: __raw__
 
@@ -110,7 +110,7 @@ class BaseDocument(metaclass=MetaDocument):
         return self.__raw__
 
     def __fake__(self, values, faker, depth):
-        """ Fake data customizer
+        """ Fake data customizer.
         """
         # # pre pocessor and prepare values
         # yield values  # send new values
@@ -119,7 +119,7 @@ class BaseDocument(metaclass=MetaDocument):
         # # post save processor
 
     def __debug_print__(self):
-        """ Print debug information
+        """ Print debug information.
         """
         from pprint import pprint
         pprint((
@@ -131,7 +131,7 @@ class BaseDocument(metaclass=MetaDocument):
 
 
 class Document(BaseDocument):
-    """ Class for build first level documents
+    """ Class for build first level documents.
 
     .. py:attribute:: __collection__
 
@@ -198,8 +198,8 @@ class Document(BaseDocument):
 
 
 class DocumentItemMixin:
-    """ Mixin for custom all fields values,
-    such as :py:class:`EmbeddedDocument`, :py:class:`yadm.fields.containers.Container`
+    """ Mixin for custom all fields values, such as :py:class:`EmbeddedDocument`,
+    :py:class:`yadm.fields.containers.Container`.
 
     .. py:attribute:: __parent__
 
@@ -224,7 +224,7 @@ class DocumentItemMixin:
 
     @property
     def __document__(self):
-        """ Root document
+        """ Root document.
 
         .. code-block:: python
 
@@ -239,7 +239,7 @@ class DocumentItemMixin:
 
     @property
     def __db__(self):
-        """ Database object
+        """ Database object.
 
         .. code-block:: python
 
@@ -249,13 +249,13 @@ class DocumentItemMixin:
 
     @property
     def __qs__(self):
-        """ Queryset object
+        """ Queryset object.
         """
         return self.__document__.__qs__
 
     @property
     def __path__(self):
-        """ Path to root generator
+        """ Path to root generator.
 
         .. code-block:: python
 
@@ -269,7 +269,7 @@ class DocumentItemMixin:
 
     @property
     def __path_names__(self):
-        """ Path to root generator
+        """ Path to root generator.
 
         .. code-block:: python
 
@@ -280,8 +280,7 @@ class DocumentItemMixin:
 
     @property
     def __field_name__(self):
-        """ Dotted field name for MongoDB opperations,
-        like as $set, $push and other...
+        """ Dotted field name for MongoDB opperations, like as $set, $push and other...
 
         .. code-block:: python
 
@@ -290,7 +289,7 @@ class DocumentItemMixin:
         return '.'.join(reversed([str(i) for i in self.__path_names__]))
 
     def __get_value__(self, document):
-        """ Get value from document with path to self
+        """ Get value from document with path to self.
         """
         obj = document
 
@@ -304,7 +303,7 @@ class DocumentItemMixin:
 
 
 class EmbeddedDocument(DocumentItemMixin, BaseDocument):
-    """ Class for build embedded documents
+    """ Class for build embedded documents.
     """
     def __init__(self, *args, __parent__=None, __name__=None, **kwargs):
         self.__parent__ = __parent__

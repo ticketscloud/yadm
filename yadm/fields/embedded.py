@@ -24,7 +24,7 @@ from yadm.testing import create_fake
 
 
 class EmbeddedDocumentField(Field):
-    """ Field for embedded objects
+    """ Field for embedded objects.
 
     :param EmbeddedDocument embedded_document_class:
         class for embedded document
@@ -41,7 +41,7 @@ class EmbeddedDocumentField(Field):
         self.auto_create = auto_create
 
     def get_if_attribute_not_set(self, document):
-        """ Call if key not exist in document
+        """ Call if key not exist in document.
 
         If auto_create is True, create and return new
         embedded document. Else AttributeError is raised.
@@ -95,7 +95,7 @@ class EmbeddedDocumentField(Field):
         return value
 
     def copy(self):
-        """ Return copy of field
+        """ Return copy of field.
         """
         return self.__class__(self.embedded_document_class,
                               smart_null=self.smart_null,

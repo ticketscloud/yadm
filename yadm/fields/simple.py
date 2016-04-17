@@ -10,7 +10,7 @@ from yadm.markers import AttributeNotSet
 
 
 class SimpleField(DefaultMixin, Field):
-    """ Base field for simple types
+    """ Base field for simple types.
 
     :param default: default value
     :param set choices: set of possible values
@@ -64,7 +64,7 @@ class SimpleField(DefaultMixin, Field):
 
 
 class ObjectIdField(SimpleField):
-    """ Field for ObjectId
+    """ Field for ObjectId.
 
     :param bool default_gen: generate default value if not set
     """
@@ -89,7 +89,7 @@ class ObjectIdField(SimpleField):
 
 
 class BooleanField(SimpleField):
-    """ Field for boolean values
+    """ Field for boolean values.
     """
     type = bool
 
@@ -98,7 +98,7 @@ class BooleanField(SimpleField):
 
 
 class IntegerField(SimpleField):
-    """ Field for integer
+    """ Field for integer.
     """
     type = int
 
@@ -110,7 +110,7 @@ class IntegerField(SimpleField):
 
 
 class FloatField(SimpleField):
-    """ Field for float
+    """ Field for float.
     """
     type = float
 
@@ -122,7 +122,7 @@ class FloatField(SimpleField):
 
 
 class StringField(SimpleField):
-    """ Field for string
+    """ Field for string.
     """
     type = str
 

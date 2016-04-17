@@ -7,7 +7,7 @@ from yadm.documents import DocumentItemMixin
 
 
 class Container(DocumentItemMixin):
-    """ Base class for containers
+    """ Base class for containers.
     """
     def __init__(self, field, parent, value):
         self.__name__ = field.name
@@ -52,7 +52,7 @@ class Container(DocumentItemMixin):
         return self._field.prepare_item(self, item, value)
 
     def _get_queryset(self):
-        """ Return queryset for got data for this field
+        """ Return queryset for got data for this field.
         """
         if self.__db__ is None:
             raise RuntimeError('object not binded to database')
@@ -62,7 +62,7 @@ class Container(DocumentItemMixin):
         return qs.fields(self.__field_name__)
 
     def reload(self):
-        """ Reload all object from database
+        """ Reload all object from database.
         """
         if len(list(self.__path__)) > 1:
             raise ValueError("can't reload deep objects: {}"
@@ -73,7 +73,7 @@ class Container(DocumentItemMixin):
 
 
 class ContainerField(Field):
-    """ Base class for container fields
+    """ Base class for container fields.
     """
     container = Container
 

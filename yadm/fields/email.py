@@ -14,7 +14,7 @@ class EmailField(StringField):
 
     @classmethod
     def check_email(cls, value):
-        """ Check email classmethod
+        """ Check email classmethod.
 
         Raise `ValueError` if value is not email.
 

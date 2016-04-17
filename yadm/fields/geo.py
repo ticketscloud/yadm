@@ -22,13 +22,13 @@ def _geo_type(type):
 
 
 class Geo(DocumentItemMixin):
-    """ Base class for GeoJSON data
+    """ Base class for GeoJSON data.
     """
     type = None
 
 
 class GeoCoordinates(Geo):
-    """ Base class for GeoJSON data with coordinates
+    """ Base class for GeoJSON data with coordinates.
     """
     def get_coordinates(self):
         raise NotImplementedError('get_coordinates must be implemented')
@@ -42,7 +42,7 @@ class GeoCoordinates(Geo):
 
 @_geo_type
 class Point(GeoCoordinates):
-    """ Class for GeoJSON Point objects
+    """ Class for GeoJSON Point objects.
 
     See: http://geojson.org/geojson-spec.html#id2
     """
@@ -75,7 +75,7 @@ class Point(GeoCoordinates):
 
 @_geo_type
 class MultiPoint(GeoCoordinates, Sequence):
-    """ Class for GeoJSON MultiPoint objects
+    """ Class for GeoJSON MultiPoint objects.
 
     See: http://geojson.org/geojson-spec.html#id5
     """
@@ -107,7 +107,7 @@ class MultiPoint(GeoCoordinates, Sequence):
 
 
 class GeoField(Field):
-    """ Base field for GeoJSON objects
+    """ Base field for GeoJSON objects.
     """
     def __init__(self, types=TYPES, **kwargs):
         super().__init__(**kwargs)
@@ -129,8 +129,7 @@ class GeoField(Field):
 
 
 class GeoOneTypeField(GeoField):
-    """ Base field for GeoJSON objects
-        with one acceptable type
+    """ Base field for GeoJSON objects with one acceptable type.
     """
     type = None
 
@@ -157,7 +156,7 @@ class GeoOneTypeField(GeoField):
 
 
 class PointField(GeoOneTypeField):
-    """ Field for Point
+    """ Field for Point.
     """
     type = Point
 
@@ -166,7 +165,7 @@ class PointField(GeoOneTypeField):
 
 
 class MultiPointField(GeoOneTypeField):
-    """ Field for MultiPoint
+    """ Field for MultiPoint.
     """
     type = MultiPoint
 

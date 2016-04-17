@@ -1,5 +1,5 @@
 """
-Field for money
+Field for money.
 
 Work with `decimal.Decimal` and store value as integer.
 Use :class:`yadm.fields.money.Money`, as value for money.
@@ -64,7 +64,7 @@ class Money(Decimal):
 
 
 class MoneyField(DefaultMixin, Field):
-    """ Field for work with money
+    """ Field for work with money.
     """
     def get_fake(self, document, faker, depth):
         return Money(faker.pydecimal(
@@ -72,7 +72,7 @@ class MoneyField(DefaultMixin, Field):
 
     @pass_null
     def prepare_value(self, document, value):
-        """ Cast value to :class:`decimal.Decimal`
+        """ Cast value to :class:`decimal.Decimal`.
         """
         if isinstance(value, Money):
             return value

@@ -8,7 +8,7 @@ CACHE_SIZE = 100
 
 
 class QuerySet:
-    """ Query builder
+    """ Query builder.
     """
     _cache = None
 
@@ -50,7 +50,7 @@ class QuerySet:
         return self.find(criteria, projection)
 
     def _from_mongo_one(self, data, projection=None):
-        """ Create document from raw data
+        """ Create document from raw data.
         """
         projection = projection or self._projection
 
@@ -79,20 +79,20 @@ class QuerySet:
         return doc
 
     def _from_mongo_list(self, data):
-        """ Generator for got documents from raw data list (cursor)
+        """ Generator for got documents from raw data list (cursor).
         """
         for d in data:
             yield self._from_mongo_one(d)
 
     @property
     def _collection(self):
-        """ pymongo collection
+        """ pymongo collection.
         """
         return self._db._get_collection(self._document_class)
 
     @property
     def _cursor(self):
-        """ pymongo cursor with parameters from queryset
+        """ pymongo cursor with parameters from queryset.
         """
         cursor = self._collection.find(self._criteria, self._projection or None)
 
@@ -105,7 +105,7 @@ class QuerySet:
         return cursor
 
     def _copy_qs(self):
-        """ Copy queryset instance
+        """ Copy queryset instance.
         """
         qs = self.__class__(self._db, self._document_class)
         qs._criteria = self._criteria.copy()
@@ -118,7 +118,7 @@ class QuerySet:
         return qs
 
     def _update_qs(self, criteria=None, projection=None, sort=None):
-        """ Update queryset parameters in place
+        """ Update queryset parameters in place.
         """
         if criteria:
             if not self._criteria:
@@ -140,7 +140,7 @@ class QuerySet:
 
     @property
     def cache(self):
-        """ Queryset cache object
+        """ Queryset cache object.
         """
         if self._cache is None:
             self._cache = StackCache(size=CACHE_SIZE)
@@ -148,7 +148,7 @@ class QuerySet:
         return self._cache
 
     def copy(self, *args, **kwargs):
-        """ Copy queryset and update it
+        """ Copy queryset and update it.
 
         :param dict criteria:
         :param dict projection:
@@ -160,7 +160,7 @@ class QuerySet:
         return qs
 
     def find(self, criteria=None, projection=None):
-        """ Return queryset copy with new criteria and projection
+        """ Return queryset copy with new criteria and projection.
 
         :param dict criteria: update queryset's criteria
         :param dict projection: update queryset's projection
@@ -173,7 +173,7 @@ class QuerySet:
         return self.copy(criteria=criteria, projection=projection)
 
     def find_one(self, criteria=None, projection=None, *, exc=None):
-        """ Find and return only one document
+        """ Find and return only one document.
 
         :param dict criteria: update queryset's criteria
         :param dict projection: update queryset's projection
@@ -200,7 +200,7 @@ class QuerySet:
         return self._from_mongo_one(data, qs._projection)
 
     def with_id(self, _id):
-        """ Find document with id
+        """ Find document with id.
 
         This method is deprecated. Use find_one.
 
@@ -214,7 +214,7 @@ class QuerySet:
         return self.find_one({'_id': doc._id})
 
     def update(self, update, multi=True):
-        """ Update documents in queryset
+        """ Update documents in queryset.
 
         :param dict update: update query
         :param bool multi: update all matched documents
@@ -232,7 +232,7 @@ class QuerySet:
             self, update=None, upsert=False,
             full_response=False, new=False,
             **kwargs):
-        """ Execute *$findAndModify* query
+        """ Execute *$findAndModify* query.
 
         :param dict update: see second argument to update()
         :param bool upsert: insert if object doesn’t exist
@@ -261,12 +261,12 @@ class QuerySet:
             return result
 
     def remove(self):
-        """ Remove documents in queryset
+        """ Remove documents in queryset.
         """
         return self._collection.remove(self._criteria)
 
     def fields(self, *fields):
-        """ Get only setted fields
+        """ Get only setted fields.
 
         Update projection with fields.
 
@@ -280,14 +280,14 @@ class QuerySet:
         return self.copy(projection=dict.fromkeys(fields, True))
 
     def fields_all(self):
-        """ Clear projection
+        """ Clear projection.
         """
         qs = self.copy()
         qs._projection = None
         return qs
 
     def sort(self, *sort):
-        """ Sort query
+        """ Sort query.
 
         :param tuples sort: tuples with two items:
             `('field_name', sort_order_as_int)`.
@@ -299,7 +299,7 @@ class QuerySet:
         return self.copy(sort=sort)
 
     def distinct(self, field):
-        """ Distinct query
+        """ Distinct query.
 
         :param str field: field for distinct
         :return: list with result data
@@ -307,14 +307,14 @@ class QuerySet:
         return self._cursor.distinct(field)
 
     def count(self):
-        """ Count documents in queryset
+        """ Count documents in queryset.
 
         :return: **int**
         """
         return self._cursor.count()
 
     def bulk(self):
-        """ Return map {id: object}
+        """ Return map {id: object}.
 
         :return: **dict**
         """
@@ -323,7 +323,7 @@ class QuerySet:
         return {obj.id: obj for obj in qs}
 
     def join(self, *field_names):
-        """ Create `yadm.Join` object, join `field_names` and return it
+        """ Create `yadm.Join` object, join `field_names` and return it.
 
         :param str fiels_names: fields for join
         :return: new :class:`yadm.join.Join`

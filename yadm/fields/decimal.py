@@ -28,7 +28,7 @@ from yadm.fields.base import Field, DefaultMixin, pass_null
 
 
 class DecimalField(DefaultMixin, Field):
-    """ Field for work with :class:`decimal.Decimal`
+    """ Field for work with :class:`decimal.Decimal`.
 
     :param decimal.Context context: context for decimal operations
         (default: run :func:`decimal.getcontext` when need)
@@ -44,7 +44,7 @@ class DecimalField(DefaultMixin, Field):
 
     @property
     def context(self):
-        """ Context
+        """ Context.
 
         :return: :class:`decimal.Context` for values
         """
@@ -59,7 +59,7 @@ class DecimalField(DefaultMixin, Field):
 
     @staticmethod
     def _integer_from_digits(digits):
-        """ Make integer from digits
+        """ Make integer from digits.
 
         :param list digits: list of digits as integers
         :return: result integer
@@ -70,7 +70,7 @@ class DecimalField(DefaultMixin, Field):
 
     @pass_null
     def prepare_value(self, document, value):
-        """ Cast value to :class:`decimal.Decimal`
+        """ Cast value to :class:`decimal.Decimal`.
         """
         if isinstance(value, Decimal):
             return value

@@ -1,5 +1,5 @@
 """
-Map
+Map.
 
 .. code-block:: python
 
@@ -47,10 +47,10 @@ from yadm.fields.containers import (
 
 
 class Map(Container, abc.MutableMapping):
-    """ Map
+    """ Map.
     """
     def set(self, key, value, reload=True):
-        """ Set key directly in database
+        """ Set key directly in database.
 
         :param key: key
         :param value: value for `$set`
@@ -67,7 +67,7 @@ class Map(Container, abc.MutableMapping):
             self.reload()
 
     def unset(self, key, reload=True):
-        """ Unset key directly in database
+        """ Unset key directly in database.
 
         :param key: key
 
@@ -83,7 +83,7 @@ class Map(Container, abc.MutableMapping):
 
 
 class MapField(ContainerField):
-    """ Field for maps
+    """ Field for maps.
     """
     container = Map
 
@@ -163,7 +163,7 @@ class MapCustomKeys(Map):
 
 
 class MapCustomKeysField(MapField):
-    """ Field for maps with custom key type
+    """ Field for maps with custom key type.
 
     :param field item_field:
     :param func key_factory: function, who return thue key

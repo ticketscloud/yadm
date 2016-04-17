@@ -7,7 +7,7 @@ from yadm.markers import AttributeNotSet, NotLoaded
 
 
 class NotLoadedError(Exception):
-    """ Raise if value marked as not loaded
+    """ Raise if value marked as not loaded.
 
     .. code:: python
 
@@ -31,7 +31,7 @@ def pass_null(method):
 
 
 class FieldDescriptor:
-    """ Base desctiptor for fields
+    """ Base desctiptor for fields.
 
     .. py:attribute:: name
 
@@ -52,7 +52,7 @@ class FieldDescriptor:
         return '<{} "{}.{}">'.format(class_name, document_class_name, self.name)
 
     def __get__(self, instance, owner):
-        """ Get python value from document
+        """ Get python value from document.
 
         1. Lookup in __changed__;
         2. Lookup in __cache__;
@@ -106,7 +106,7 @@ class FieldDescriptor:
         return value
 
     def __set__(self, instance, value):
-        """ Set value to document
+        """ Set value to document.
 
         1. Call Field.prepare_value for cast value;
         2. Save in Document.__changed__;
@@ -137,14 +137,14 @@ class FieldDescriptor:
             raise TypeError("can't set field directly")  # pragma: no cover
 
     def __delete__(self, instance):
-        """ Mark document's key as not set
+        """ Mark document's key as not set.
         """
         if not isinstance(instance, type):
             setattr(instance, self.name, AttributeNotSet)
 
 
 class Field:
-    """ Base field for all database fields
+    """ Base field for all database fields.
 
     :param bool smart_null:
 
@@ -181,7 +181,7 @@ class Field:
         return '<{} "{}.{}">'.format(class_name, doc_class_name, self.name)
 
     def contribute_to_class(self, document_class, name):
-        """ Add field for document_class
+        """ Add field for document_class.
 
         :param MetaDocument document_class: document class for add
         """
@@ -201,33 +201,32 @@ class Field:
             # TODO: update __changed__ for full path
 
     def copy(self):
-        """ Return copy of field
+        """ Return copy of field.
         """
         return self.__class__(smart_null=self.smart_null)
 
     def get_default(self, document):
-        """ Return default value
+        """ Return default value.
         """
         return AttributeNotSet
 
     def get_if_not_loaded(self, document):
-        """ Call if field data marked as not loaded
+        """ Call if field data marked as not loaded.
         """
         raise NotLoadedError(self, document)
 
     def get_if_attribute_not_set(self, document):
-        """ Call if key not exist in document
+        """ Call if key not exist in document.
         """
         raise AttributeError(self.name)
 
     def get_fake(self, document, faker, deep):  # pragma: no cover
-        """ Return fake data for testing
+        """ Return fake data for testing.
         """
         return self.get_default(document)
 
     def prepare_value(self, document, value):  # pragma: no cover
-        """ The method is called when value is assigned
-            for the attribute
+        """ The method is called when value is assigned for the attribute.
 
         :param BaseDocument document: document
         :param value: raw value
@@ -240,7 +239,7 @@ class Field:
         return value
 
     def to_mongo(self, document, value):  # pragma: no cover
-        """ Convert python value to mongo value
+        """ Convert python value to mongo value.
 
         :param BaseDocument document: document
         :param value: python value
@@ -249,7 +248,7 @@ class Field:
         return value
 
     def from_mongo(self, document, value):  # pragma: no cover
-        """ Convert mongo value to python value
+        """ Convert mongo value to python value.
 
         :param BaseDocument document: document
         :param value: mongo value
@@ -269,6 +268,6 @@ class DefaultMixin:
         return self.default
 
     def copy(self):
-        """ Return copy of field
+        """ Return copy of field.
         """
         return self.__class__(smart_null=self.smart_null, default=self.default)

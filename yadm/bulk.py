@@ -7,7 +7,7 @@ from yadm.serialize import to_mongo, from_mongo
 
 
 class Bulk:
-    """ Bulk object
+    """ Bulk object.
 
     :param Database db: Database instance
     :param MetaDocument document_class: document class for collection
@@ -54,7 +54,7 @@ class Bulk:
             self.execute()
 
     def execute(self):
-        """ Execute the bulk query
+        """ Execute the bulk query.
 
         :return: :py:class:`BulkResult` instance
         """
@@ -72,7 +72,7 @@ class Bulk:
         return self.result
 
     def insert(self, document):
-        """ Add insert document to bulk
+        """ Add insert document to bulk.
 
         :param Document document: document for insert
 
@@ -88,7 +88,7 @@ class Bulk:
 
 
 class BulkResult(BaseResult):
-    """ Object who provide result of `Bulk.execute()`
+    """ Object who provide result of `Bulk.execute()`.
     """
     def __init__(self, bulk, raw):
         super().__init__(raw)
@@ -102,31 +102,31 @@ class BulkResult(BaseResult):
 
     @property
     def n_inserted(self):
-        """ Provide `nInserted` from raw result
+        """ Provide `nInserted` from raw result.
         """
         return self['nInserted']
 
     @property
     def n_upserted(self):
-        """ Provide `nUpserted` from raw result
+        """ Provide `nUpserted` from raw result.
         """
         return self['nUpserted']
 
     @property
     def n_modified(self):
-        """ Provide `nModified` from raw result
+        """ Provide `nModified` from raw result.
         """
         return self['nModified']
 
     @property
     def n_removed(self):
-        """ Provide `nRemoved` from raw result
+        """ Provide `nRemoved` from raw result.
         """
         return self['nRemoved']
 
     @property
     def write_errors(self):
-        """ Provide `writeErrors` from raw result
+        """ Provide `writeErrors` from raw result.
         """
         return _BulkResultWriteErrors(self._bulk, self._raw['writeErrors'])
 

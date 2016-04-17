@@ -7,7 +7,7 @@ from yadm.fields.base import Field, DefaultMixin, pass_null
 
 
 class DatetimeField(DefaultMixin, Field):
-    """ Field for time stamp
+    """ Field for time stamp.
 
     :param bool auto_now: datetime.now as default
         (default: False)

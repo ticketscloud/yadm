@@ -10,7 +10,7 @@ from yadm.fields.list import ListField
 
 
 class Set(Container, abc.MutableSet):
-    """ Container for set
+    """ Container for set.
     """
     def __getitem__(self, item):
         raise TypeError("'{}' object does not support indexing"
@@ -31,7 +31,7 @@ class Set(Container, abc.MutableSet):
             return False
 
     def add(self, item):
-        """ Append item to set
+        """ Append item to set.
 
         :param item: item for add
 
@@ -44,7 +44,7 @@ class Set(Container, abc.MutableSet):
         self._set_changed()
 
     def discard(self, item):
-        """ Remove item from the set if it is present
+        """ Remove item from the set if it is present.
 
         :param item: item for discard
 
@@ -58,7 +58,7 @@ class Set(Container, abc.MutableSet):
         self._set_changed()
 
     def remove(self, item):
-        """ Remove item from set
+        """ Remove item from set.
 
         :param item: item for remove
 
@@ -72,14 +72,13 @@ class Set(Container, abc.MutableSet):
         self._set_changed()
 
     def add_to_set(self, item, reload=True):
-        """ Add item directly to database
+        """ Add item directly to database.
 
         :param item: item for `$addToSet`
         :param bool reload: automatically reload all values from database
 
         See `$addToSet` in MongoDB's `update`.
         """
-
         index = len(self)
         item = self._prepare_item(index, item)
         data = self._field.item_field.to_mongo(self.__document__, item)
@@ -92,7 +91,7 @@ class Set(Container, abc.MutableSet):
             self.reload()
 
     def pull(self, query, reload=True):
-        """ Pull item from database
+        """ Pull item from database.
 
         :param query: query for `$pull` on this field
         :param bool reload: automatically reload all values from database
@@ -107,6 +106,6 @@ class Set(Container, abc.MutableSet):
 
 
 class SetField(ListField):
-    """ Field for set values
+    """ Field for set values.
     """
     container = Set

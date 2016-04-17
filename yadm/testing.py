@@ -17,7 +17,7 @@ def create_fake(__document_class__,
                 __faker__=None,
                 __depth__=DEFAULT_DEPTH,
                 **values):
-    """ Create document with fake data
+    """ Create document with fake data.
 
     :param yadm.documents.BaseDocument __document_class__: document class
         for new instance

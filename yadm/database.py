@@ -28,7 +28,7 @@ from yadm.serialize import to_mongo
 
 
 class Database:
-    """ Main object who provide work with database
+    """ Main object who provide work with database.
 
     :param pymongo.Client client: database connection
     :param str name: database name
@@ -45,12 +45,12 @@ class Database:
         return self.get_queryset(document_class, cache=cache)
 
     def _get_collection(self, document_class):
-        """ Return pymongo collection for document class
+        """ Return pymongo collection for document class.
         """
         return self.db[document_class.__collection__]
 
     def get_queryset(self, document_class, *, cache=None):
-        """ Return queryset for document class
+        """ Return queryset for document class.
 
         :param document_class: :class:`yadm.documents.Document`
 
@@ -60,7 +60,7 @@ class Database:
         return QuerySet(self, document_class, cache=cache)
 
     def insert(self, document):
-        """ Insert document to database
+        """ Insert document to database.
 
         :param Document document: document instance for insert to database
 
@@ -74,7 +74,7 @@ class Database:
         return document
 
     def save(self, document, full=False, upsert=False):
-        """ Save document to database
+        """ Save document to database.
 
         :param Document document: document instance for save
         :param bool full: fully resave document
@@ -115,7 +115,7 @@ class Database:
     def update_one(self, document, reload=True, *,
                    set=None, unset=None, inc=None,
                    push=None, pull=None):  # TODO: extend
-        """ Update one document
+        """ Update one document.
 
         :param Document document: document instance for update
         :param bool reload: if True, reload document
@@ -152,14 +152,14 @@ class Database:
             self.reload(document)
 
     def remove(self, document):
-        """ Remove document from database
+        """ Remove document from database.
 
         :param Document document: instance for remove from database
         """
         return self._get_collection(document.__class__).remove({'_id': document._id})
 
     def reload(self, document, new_instance=False):
-        """ Reload document
+        """ Reload document.
 
         :param Document document: instance for reload
         :param bool new_instance: if `True` return new instance of document,
@@ -177,7 +177,7 @@ class Database:
             return document
 
     def bulk(self, document_class, ordered=False, raise_on_errors=True):
-        """ Return Bulk
+        """ Return Bulk.
 
         :param MetaDocument document_class: class of documents fo bulk
         :param bool ordered: create ordered bulk (default `False`)

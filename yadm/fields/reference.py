@@ -29,7 +29,7 @@ from yadm.testing import create_fake
 
 
 class BrokenReference(Exception):
-    """ Raise if referrenced document is not found
+    """ Raise if referrenced document is not found.
     """
 
 
@@ -40,7 +40,7 @@ class NotBindingToDatabase(Exception):
 
 
 class ReferenceField(Field):
-    """ Field for work with references
+    """ Field for work with references.
 
     :param reference_document_class: class for refered documents
     """
@@ -57,7 +57,7 @@ class ReferenceField(Field):
             return AttributeNotSet
 
     def get_fake(self, document, faker, depth):
-        """ Try create referenced document
+        """ Try create referenced document.
         """
         res = create_fake(
             self.reference_document_class,
