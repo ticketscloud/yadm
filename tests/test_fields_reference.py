@@ -114,3 +114,23 @@ def test_embedded_get(db):
     assert isinstance(doc.emb, TestDocEmb)
     assert isinstance(doc.emb.ref, TestDocRef)
     assert doc.emb.ref._id == id_ref
+
+
+def test_cache(db):
+    ref_one = db.insert(TestDocRef(i=13))
+    ref_two = db.insert(TestDocRef(i=26))
+
+    db.insert(TestDoc(ref=ref_one))
+    db.insert(TestDoc(ref=ref_one))
+    db.insert(TestDoc(ref=ref_two))
+
+    qs = db.get_queryset(TestDoc)
+    assert len(qs.cache) == 0
+    assert len(qs) == 3
+    assert len({d.ref for d in qs}) == 2
+    assert len({id(d.ref) for d in qs}) == 2
+    assert len(qs.cache) == 2
+
+    doc = qs.find_one()
+    assert doc.ref.__qs__ is not doc.__qs__
+    assert doc.ref.__qs__.cache is doc.__qs__.cache

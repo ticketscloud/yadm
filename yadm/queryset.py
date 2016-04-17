@@ -1,15 +1,21 @@
 from bson import ObjectId
 
 from yadm.join import Join
+from yadm.cache import StackCache
 from yadm.serialize import from_mongo
+
+CACHE_SIZE = 100
 
 
 class QuerySet:
     """ Query builder
     """
-    def __init__(self, db, document_class):
+    _cache = None
+
+    def __init__(self, db, document_class, cache=None):
         self._db = db
         self._document_class = document_class
+        self._cache = cache
         self._criteria = {}
         self._projection = None
         self._slice = None
@@ -69,6 +75,7 @@ class QuerySet:
 
         doc = from_mongo(self._document_class, data, not_loaded)
         doc.__db__ = self._db
+        doc.__qs__ = self
         return doc
 
     def _from_mongo_list(self, data):
@@ -130,6 +137,15 @@ class QuerySet:
 
         if sort:
             self._sort.extend(sort)
+
+    @property
+    def cache(self):
+        """ Queryset cache object
+        """
+        if self._cache is None:
+            self._cache = StackCache(size=CACHE_SIZE)
+
+        return self._cache
 
     def copy(self, *args, **kwargs):
         """ Copy queryset and update it

@@ -86,8 +86,15 @@ class ReferenceField(Field):
     @pass_null
     def from_mongo(self, document, value):
         if document.__db__ is not None:
-            qs = document.__db__.get_queryset(self.reference_document_class)
-            return qs.find_one(value, exc=BrokenReference)
+            rdc = self.reference_document_class
+
+            if (rdc, value) in document.__qs__.cache:
+                return document.__qs__.cache[(rdc, value)]
+            else:
+                qs = document.__db__.get_queryset(rdc, cache=document.__qs__.cache)
+                doc = qs.find_one(value, exc=BrokenReference)
+                document.__qs__.cache[(rdc, value)] = doc
+                return doc
 
         else:
             raise NotBindingToDatabase((document, self, value))

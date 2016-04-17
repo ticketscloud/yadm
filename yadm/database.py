@@ -20,7 +20,6 @@ This module for provide work with MongoDB database.
     qs = db.get_queryset(Doc).find({'arg': {'$gt': 10}})
     for doc in qs:
         print(doc)
-
 """
 from yadm.markers import AttributeNotSet
 from yadm.queryset import QuerySet
@@ -42,15 +41,15 @@ class Database:
     def __repr__(self):  # pragma: no cover
         return 'Database({!r})'.format(self.db)
 
-    def __call__(self, *args, **kwargs):
-        return self.get_queryset(*args, **kwargs)
+    def __call__(self, document_class, *, cache=None):
+        return self.get_queryset(document_class, cache=cache)
 
     def _get_collection(self, document_class):
         """ Return pymongo collection for document class
         """
         return self.db[document_class.__collection__]
 
-    def get_queryset(self, document_class):
+    def get_queryset(self, document_class, *, cache=None):
         """ Return queryset for document class
 
         :param document_class: :class:`yadm.documents.Document`
@@ -58,7 +57,7 @@ class Database:
         This create instance of :class:`yadm.queryset.QuerySet`
         with presetted document's collection information.
         """
-        return QuerySet(self, document_class)
+        return QuerySet(self, document_class, cache=cache)
 
     def insert(self, document):
         """ Insert document to database

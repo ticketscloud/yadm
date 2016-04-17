@@ -150,9 +150,14 @@ class Document(BaseDocument):
         Internal attribute contain instance of :py:class:`yadm.database.Database`
         for realize :py:class:`yadm.fields.references.ReferenceField`.
         It bind in :py:class:`yadm.database.Database` or :py:class:`yadm.queryset.QuerySet`.
+
+    .. py:attribute:: __qs__
+
+        Documents gets from this queryset
     """
     __collection__ = None
     __db__ = None
+    __qs__ = None
 
     _id = ObjectIdField()
 
@@ -215,6 +220,7 @@ class DocumentItemMixin:
     """
     __parent__ = None
     __name__ = None
+    __qs__ = None
 
     @property
     def __document__(self):
@@ -240,6 +246,12 @@ class DocumentItemMixin:
             assert doc.f.l[0].__db__ is doc.__db__
         """
         return self.__document__.__db__
+
+    @property
+    def __qs__(self):
+        """ Queryset object
+        """
+        return self.__document__.__qs__
 
     @property
     def __path__(self):
