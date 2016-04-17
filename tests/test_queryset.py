@@ -40,6 +40,14 @@ def test_find_one(qs):
     assert doc.i == 7
 
 
+def test_find_exc(qs):
+    class SimpleException(Exception):
+        pass
+
+    with pytest.raises(SimpleException):
+        qs.find_one({'i': 100500}, exc=SimpleException)
+
+
 def test_find(qs):
     qs = qs.find({'i': {'$gte': 6}})
     assert len([d for d in qs]) == 4

@@ -156,11 +156,12 @@ class QuerySet:
         """
         return self.copy(criteria=criteria, projection=projection)
 
-    def find_one(self, criteria=None, projection=None):
+    def find_one(self, criteria=None, projection=None, *, exc=None):
         """ Find and return only one document
 
         :param dict criteria: update queryset's criteria
         :param dict projection: update queryset's projection
+        :param Exception exc: raise given exception if not found
         :return: :class:`yadm.documents.Document` or **None**
 
         .. code:: python
@@ -173,6 +174,13 @@ class QuerySet:
         qs = self.copy(criteria=criteria, projection=projection)
         collection = qs._db._get_collection(qs._document_class)
         data = collection.find_one(qs._criteria, qs._projection)
+
+        if data is None:
+            if exc is not None:
+                raise exc(criteria)
+            else:
+                return None
+
         return self._from_mongo_one(data, qs._projection)
 
     def with_id(self, _id):
