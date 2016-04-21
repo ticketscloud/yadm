@@ -11,19 +11,20 @@ class QuerySet:
     """ Query builder.
     """
     _cache = None
+    _slice = None
+    _projection = None
 
     def __init__(self, db, document_class, cache=None):
         self._db = db
         self._document_class = document_class
         self._cache = cache
         self._criteria = {}
-        self._projection = None
-        self._slice = None
         self._sort = []
 
-    def __str__(self):
-        return ('QuerySet({s._document_class.__collection__},'
-                ' {s._criteria!r}, {s._projection!r}, {s._sort!r})'.format(s=self))
+    def __repr__(self):
+        return ("{self.__class__.__name__}({s._document_class.__collection__}"
+                " {s._criteria!r} {s._projection!r} {s._sort!r})"
+                "".format(s=self))
 
     def __len__(self):
         return self.count()
