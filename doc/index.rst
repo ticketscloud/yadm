@@ -57,6 +57,20 @@ Quick start
 CHANGES
 =======
 
+1.1 (2016-04-XX)
+----------------
+
+* Add cacheing on queryset level and use it for
+    :py:class:`ReferenceField <yadm.fields.reference.ReferenceField>`;
+
+* Add mongo aggregation framework support;
+
+* Add ``exc`` argument to
+    :py:meth:`QuerySet.find_one <yadm.queryset.QuerySet.find_one>`
+    for raise specified exception if not found;
+
+* Deprecate :py:meth:`QuerySet.find_one <yadm.queryset.QuerySet.with_id>`
+
 1.0 (2015-11-14)
 ----------------
 

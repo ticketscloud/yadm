@@ -12,5 +12,6 @@ API documentation
    serialize
    queryset
    bulk
+   aggregation
    join
    fields/index
