@@ -64,12 +64,14 @@ Quick start
 CHANGES
 =======
 
-1.0.9 (2016-04-XX)
-------------------
-
-* Add ``exc`` argument to ``QuerySet.find_one`` for raise exception if not found;
+1.1 (2016-04-XX)
+----------------
 
 * Add cacheing on queryset level and use it for ``ReferenceField``;
+
+* Add mongo aggregation framework support;
+
+* Add ``exc`` argument to ``QuerySet.find_one`` for raise exception if not found;
 
 * Deprecate ``QuerySet.with_id``.
 
