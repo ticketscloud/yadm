@@ -22,6 +22,7 @@ This module for provide work with MongoDB database.
         print(doc)
 """
 from yadm.markers import AttributeNotSet
+from yadm.aggregation import Aggregator
 from yadm.queryset import QuerySet
 from yadm.bulk import Bulk
 from yadm.serialize import to_mongo
@@ -53,11 +54,20 @@ class Database:
         """ Return queryset for document class.
 
         :param document_class: :class:`yadm.documents.Document`
+        :param cache: cache for share with other querysets
 
         This create instance of :class:`yadm.queryset.QuerySet`
         with presetted document's collection information.
         """
         return QuerySet(self, document_class, cache=cache)
+
+    def aggregate(self, document_class, *, pipeline=None):
+        """ Return aggregator for use aggregation framework.
+
+        :param document_class: :class:`yadm.documents.Document`
+        :param list pipeline: initial pipeline
+        """
+        return Aggregator(self, document_class, pipeline=None)
 
     def insert(self, document):
         """ Insert document to database.
