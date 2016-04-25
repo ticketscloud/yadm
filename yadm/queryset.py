@@ -9,17 +9,26 @@ CACHE_SIZE = 100
 
 class QuerySet:
     """ Query builder.
-    """
-    _cache = None
-    _slice = None
-    _projection = None
 
-    def __init__(self, db, document_class, cache=None):
+    :param cache:
+    :param dict criteria:
+    :param dict projection:
+    :param list sort:
+    :param slice slice:
+    :param int read_preference:
+    """
+    def __init__(self, db, document_class, *,
+                 cache=None, criteria=None, projection=None, sort=None,
+                 slice=None, read_preference=None):
+
         self._db = db
         self._document_class = document_class
         self._cache = cache
-        self._criteria = {}
-        self._sort = []
+        self._criteria = {} if criteria is None else criteria
+        self._projection = projection
+        self._sort = sort
+        self._slice = slice
+        self._read_preference = read_preference
 
     def __repr__(self):
         return ("{self.__class__.__name__}({s._document_class.__collection__}"
@@ -37,20 +46,19 @@ class QuerySet:
 
     def __getitem__(self, item):
         if isinstance(item, slice):
-            qs = self.copy()
-            qs._slice = item
-            return qs
+            return self.copy(slice=item)
 
         elif isinstance(item, int):
             return self._from_mongo_one(self._cursor[item])
 
         else:
-            raise TypeError('Only slice or int accepted')
+            raise TypeError("Only slice or int accepted, but {}"
+                            "".format(item.__class__))
 
     def __call__(self, criteria=None, projection=None):
         return self.find(criteria, projection)
 
-    def _from_mongo_one(self, data, projection=None):
+    def _from_mongo_one(self, data, *, projection=None):
         """ Create document from raw data.
         """
         projection = projection or self._projection
@@ -86,58 +94,25 @@ class QuerySet:
             yield self._from_mongo_one(d)
 
     @property
-    def _collection(self):
+    def _collection(self):  # noqa
         """ pymongo collection.
         """
-        return self._db._get_collection(self._document_class)
+        return self._db._get_collection(self._document_class,
+                                        read_preference=self._read_preference)
 
     @property
-    def _cursor(self):
+    def _cursor(self):  # noqa
         """ pymongo cursor with parameters from queryset.
         """
         cursor = self._collection.find(self._criteria, self._projection or None)
 
-        if self._sort:
+        if self._sort is not None:
             cursor = cursor.sort(self._sort)
 
         if self._slice is not None:
             cursor = cursor[self._slice]
 
         return cursor
-
-    def _copy_qs(self):
-        """ Copy queryset instance.
-        """
-        qs = self.__class__(self._db, self._document_class)
-        qs._criteria = self._criteria.copy()
-
-        if self._projection is not None:
-            qs._projection = self._projection.copy()
-
-        qs._sort = self._sort[:]
-
-        return qs
-
-    def _update_qs(self, criteria=None, projection=None, sort=None):
-        """ Update queryset parameters in place.
-        """
-        if criteria:
-            if not self._criteria:
-                self._criteria = criteria
-
-            elif set(self._criteria) & set(criteria):
-                self._criteria = {'$and': [self._criteria, criteria]}
-            else:
-                self._criteria.update(criteria)
-
-        if projection:
-            if self._projection is None:
-                self._projection = projection
-            else:
-                self._projection.update(projection)
-
-        if sort:
-            self._sort.extend(sort)
 
     @property
     def cache(self):
@@ -148,17 +123,37 @@ class QuerySet:
 
         return self._cache
 
-    def copy(self, *args, **kwargs):
-        """ Copy queryset and update it.
+    def copy(self, *, cache=None, criteria=None, projection=None,
+             sort=None, slice=None, read_preference=None):
+        """ Copy queryset with new parameters.
 
+        Only keywords arguments is alowed.
+        Parameters simply replaced with given arguments.
+
+        :param cache:
         :param dict criteria:
         :param dict projection:
-        :param dict sort:
+        :param list sort:
+        :param slice slice:
+        :param int read_preference:
+
         :return: new :class:`yadm.queryset.QuerySet` object
         """
-        qs = self._copy_qs()
-        qs._update_qs(*args, **kwargs)
-        return qs
+        return QuerySet(self._db, self._document_class,
+                        cache=cache or self._cache,
+                        criteria=criteria or self._criteria,
+                        projection=projection or self._projection,
+                        sort=sort or self._sort,
+                        slice=slice or self._slice,
+                        read_preference=read_preference or self._read_preference,
+                        )
+
+    def read_preference(self, read_preference):
+        """ Setup readPreference.
+
+        Return new QuerySet instance.
+        """
+        return self.copy(read_preference=read_preference)
 
     def find(self, criteria=None, projection=None):
         """ Return queryset copy with new criteria and projection.
@@ -171,7 +166,27 @@ class QuerySet:
 
             qs({'field': {'$gt': 3}}, {'field': True})
         """
-        return self.copy(criteria=criteria, projection=projection)
+        if criteria is not None:
+            if not self._criteria:
+                criteria_new = criteria
+            elif set(self._criteria) & set(criteria):
+                criteria_new = {'$and': [self._criteria, criteria]}
+            else:
+                criteria_new = self._criteria.copy()
+                criteria_new.update(criteria)
+        else:
+            criteria_new = None
+
+        if projection is not None:
+            if self._projection is None:
+                projection_new = projection
+            else:
+                projection_new = self._projection.copy()
+                criteria_new.update(projection)
+        else:
+            projection_new = None
+
+        return self.copy(criteria=criteria_new, projection=projection_new)
 
     def find_one(self, criteria=None, projection=None, *, exc=None):
         """ Find and return only one document.
@@ -188,9 +203,8 @@ class QuerySet:
         if isinstance(criteria, ObjectId):
             criteria = {'_id': criteria}
 
-        qs = self.copy(criteria=criteria, projection=projection)
-        collection = qs._db._get_collection(qs._document_class)
-        data = collection.find_one(qs._criteria, qs._projection)
+        qs = self.find(criteria=criteria, projection=projection)
+        data = self._collection.find_one(qs._criteria, qs._projection)
 
         if data is None:
             if exc is not None:
@@ -198,7 +212,7 @@ class QuerySet:
             else:
                 return None
 
-        return self._from_mongo_one(data, qs._projection)
+        return self._from_mongo_one(data, projection=qs._projection)
 
     def with_id(self, _id):
         """ Find document with id.
@@ -214,23 +228,25 @@ class QuerySet:
         doc._id = _id
         return self.find_one({'_id': doc._id})
 
-    def update(self, update, multi=True):
+    def update(self, update, *, multi=True, upsert=False):
         """ Update documents in queryset.
 
         :param dict update: update query
         :param bool multi: update all matched documents
             *(default True)*
+        :param bool upsert: insert if not found
+            *(default False)*
         :return: update result
         """
         return self._collection.update(
             self._criteria,
             update,
             multi=multi,
-            upsert=False,
+            upsert=upsert,
         )
 
     def find_and_modify(
-            self, update=None, upsert=False,
+            self, update=None, *, upsert=False,
             full_response=False, new=False,
             **kwargs):
         """ Execute *$findAndModify* query.
@@ -250,7 +266,7 @@ class QuerySet:
             query=self._criteria,
             update=update,
             upsert=upsert,
-            sort=self._sort or None,
+            sort=self._sort or [],
             full_response=full_response,
             new=new,
             **kwargs
@@ -278,7 +294,7 @@ class QuerySet:
 
             qs('field', 'field2')
         """
-        return self.copy(projection=dict.fromkeys(fields, True))
+        return self.find(projection=dict.fromkeys(fields, True))
 
     def fields_all(self):
         """ Clear projection.
@@ -288,7 +304,7 @@ class QuerySet:
         return qs
 
     def sort(self, *sort):
-        """ Sort query.
+        """ Return queryset with sorting.
 
         :param tuples sort: tuples with two items:
             `('field_name', sort_order_as_int)`.
@@ -297,7 +313,12 @@ class QuerySet:
 
             qs.sort(('field_1', 1), ('field_2', -1))
         """
-        return self.copy(sort=sort)
+        sort = list(sort)
+
+        if self._sort is None:
+            return self.copy(sort=sort)
+        else:
+            return self.copy(sort=self._sort + sort)
 
     def distinct(self, field):
         """ Distinct query.
@@ -320,7 +341,7 @@ class QuerySet:
         :return: **dict**
         """
         qs = self.copy()
-        qs._sort = []
+        qs._sort = None
         return {obj.id: obj for obj in qs}
 
     def join(self, *field_names):

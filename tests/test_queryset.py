@@ -1,4 +1,5 @@
 import pytest
+import pymongo
 from bson import ObjectId
 
 from yadm.documents import Document
@@ -194,6 +195,12 @@ def test_fields_all(qs):
     assert doc.__data__['i'] is 3
     assert doc.s == 'str(3)'
     assert doc.i == 3
+
+
+def test_read_preference(db):
+    so = pymongo.read_preferences.ReadPreference.SECONDARY_ONLY
+    qs = db(Doc).read_preference(so)
+    assert qs._collection.read_preference == so
 
 
 def test_with_id(db, qs):
