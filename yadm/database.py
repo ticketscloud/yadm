@@ -34,10 +34,13 @@ class Database:
     :param pymongo.Client client: database connection
     :param str name: database name
     """
-    def __init__(self, client, name):
+    def __init__(self, client, name, *, read_preference=None):
         self.client = client
         self.name = name
         self.db = client[name]
+
+        if read_preference is not None:
+            self.db.read_preference = read_preference
 
     def __repr__(self):  # pragma: no cover
         return 'Database({!r})'.format(self.db)
@@ -45,10 +48,13 @@ class Database:
     def __call__(self, document_class, *, cache=None):
         return self.get_queryset(document_class, cache=cache)
 
-    def _get_collection(self, document_class):
+    def _get_collection(self, document_class, *, read_preference=None):
         """ Return pymongo collection for document class.
         """
-        return self.db[document_class.__collection__]
+        collection = self.db[document_class.__collection__]
+        if read_preference is not None:
+            collection.read_preference = read_preference
+        return collection
 
     def get_queryset(self, document_class, *, cache=None):
         """ Return queryset for document class.

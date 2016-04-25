@@ -2,6 +2,7 @@ import pytest
 
 import pymongo
 
+from yadm.database import Database
 from yadm.documents import Document
 from yadm.queryset import QuerySet
 from yadm.serialize import from_mongo
@@ -174,3 +175,17 @@ def test_reload_new_instance(db):
     assert doc.i == 1
     assert doc is not new
     assert new.i == 2
+
+
+def test_read_preference__init(client, mongo_args):
+    host, port, name = mongo_args
+    client.drop_database(name)
+    so = pymongo.read_preferences.ReadPreference.SECONDARY_ONLY
+    db = Database(client, name, read_preference=so)
+    assert db.db.read_preference == so
+
+
+def test_read_preference__get_collection(db):
+    so = pymongo.read_preferences.ReadPreference.SECONDARY_ONLY
+    col = db._get_collection(TestDoc, read_preference=so)
+    assert col.read_preference == so

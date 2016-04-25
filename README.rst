@@ -71,6 +71,8 @@ CHANGES
 
 * Add mongo aggregation framework support;
 
+* Add ``read_preference`` setting;
+
 * Add ``exc`` argument to ``QuerySet.find_one`` for raise exception if not found;
 
 * Deprecate ``QuerySet.with_id``.
