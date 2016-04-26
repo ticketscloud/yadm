@@ -64,7 +64,7 @@ Quick start
 CHANGES
 =======
 
-1.1 (2016-04-XX)
+1.1 (2016-04-26)
 ----------------
 
 * Add cacheing on queryset level and use it for ``ReferenceField``;
@@ -75,7 +75,11 @@ CHANGES
 
 * Add ``exc`` argument to ``QuerySet.find_one`` for raise exception if not found;
 
-* Deprecate ``QuerySet.with_id``.
+* Add ``multi`` argument to ``QuerySet.remove``;
+
+* Deprecate ``QuerySet.with_id``;
+
+* Refactoring.
 
 
 1.0 (2015-11-14)

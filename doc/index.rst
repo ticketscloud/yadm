@@ -57,7 +57,7 @@ Quick start
 CHANGES
 =======
 
-1.1 (2016-04-XX)
+1.1 (2016-04-26)
 ----------------
 
 * Add cacheing on queryset level and use it for
@@ -69,7 +69,13 @@ CHANGES
     :py:meth:`QuerySet.find_one <yadm.queryset.QuerySet.find_one>`
     for raise specified exception if not found;
 
+* Add ``multi`` argument to
+    :py:meth:`QuerySet.remove <yadm.queryset.QuerySet.remove>`;
+
 * Deprecate :py:meth:`QuerySet.find_one <yadm.queryset.QuerySet.with_id>`
+
+* Refactoring.
+
 
 1.0 (2015-11-14)
 ----------------
