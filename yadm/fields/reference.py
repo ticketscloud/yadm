@@ -21,6 +21,9 @@ Work with references.
     assert doc.rdoc.id == rdoc.id
     assert doc.rdoc.i == 13
 """
+from bson import ObjectId
+from bson.errors import InvalidId
+
 from yadm.common import EnclosedDocDescriptor
 from yadm.markers import AttributeNotSet
 from yadm.documents import Document
@@ -81,6 +84,12 @@ class ReferenceField(Field):
         elif value is AttributeNotSet:
             return AttributeNotSet
         else:
+            if isinstance(value, str):
+                try:
+                    value = ObjectId(value)
+                except InvalidId:
+                    pass
+
             return self.from_mongo(document, value)
 
     @pass_null
@@ -88,13 +97,17 @@ class ReferenceField(Field):
         if document.__db__ is not None:
             rdc = self.reference_document_class
 
-            if (rdc, value) in document.__qs__.cache:
-                return document.__qs__.cache[(rdc, value)]
+            if document.__qs__ is not None:
+                if (rdc, value) in document.__qs__.cache:
+                    return document.__qs__.cache[(rdc, value)]
+                else:
+                    qs = document.__db__.get_queryset(rdc, cache=document.__qs__.cache)
+                    doc = qs.find_one(value, exc=BrokenReference)
+                    document.__qs__.cache[(rdc, value)] = doc
+                    return doc
             else:
-                qs = document.__db__.get_queryset(rdc, cache=document.__qs__.cache)
-                doc = qs.find_one(value, exc=BrokenReference)
-                document.__qs__.cache[(rdc, value)] = doc
-                return doc
+                qs = document.__db__.get_queryset(rdc)
+                return qs.find_one(value, exc=BrokenReference)
 
         else:
             raise NotBindingToDatabase((document, self, value))

@@ -43,30 +43,18 @@ def test_get_notbindingtodatabase(db):
         doc.ref
 
 
-def test_set_objectid(db):
+@pytest.mark.parametrize('cast', [
+    lambda d: d,
+    lambda d: d.id,
+    lambda d: str(d.id),
+])
+def test_set(db, cast):
     id = db.db.testdocs.insert({})
     doc = db.get_queryset(TestDoc).find_one(id)
-    doc.ref = db.db.testdocs_ref.insert({})
+    doc.ref = cast(db.insert(TestDocRef()))
 
     assert isinstance(doc.ref, TestDocRef)
 
-    db.save(doc)
-
-    id_ref = db.db.testdocs.find_one({'_id': id})['ref']
-
-    assert isinstance(id_ref, ObjectId)
-    assert isinstance(doc.ref, Document)
-    assert id_ref == doc.ref.id
-
-
-def test_set_doc(db):
-    id = db.db.testdocs.insert({})
-    doc = db.get_queryset(TestDoc).find_one(id)
-
-    doc_ref = TestDocRef()
-    db.save(doc_ref)
-
-    doc.ref = doc_ref
     db.save(doc)
 
     id_ref = db.db.testdocs.find_one({'_id': id})['ref']
