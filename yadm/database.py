@@ -21,11 +21,16 @@ This module for provide work with MongoDB database.
     for doc in qs:
         print(doc)
 """
+import pymongo
+
 from yadm.markers import AttributeNotSet
 from yadm.aggregation import Aggregator
 from yadm.queryset import QuerySet
 from yadm.bulk import Bulk
 from yadm.serialize import to_mongo
+
+
+PYMONGO_VERSION = pymongo.version_tuple
 
 
 class Database:
@@ -37,10 +42,15 @@ class Database:
     def __init__(self, client, name, *, read_preference=None):
         self.client = client
         self.name = name
-        self.db = client[name]
 
-        if read_preference is not None:
-            self.db.read_preference = read_preference
+        if PYMONGO_VERSION < (3, 0):
+            self.db = client[name]
+
+            if read_preference is not None:
+                self.db.read_preference = read_preference
+
+        else:
+            self.db = client.get_database(name, read_preference=read_preference)
 
     def __repr__(self):  # pragma: no cover
         return 'Database({!r})'.format(self.db)
@@ -51,10 +61,17 @@ class Database:
     def _get_collection(self, document_class, *, read_preference=None):
         """ Return pymongo collection for document class.
         """
-        collection = self.db[document_class.__collection__]
-        if read_preference is not None:
-            collection.read_preference = read_preference
-        return collection
+        if PYMONGO_VERSION < (3, 0):
+            collection = self.db[document_class.__collection__]
+
+            if read_preference is not None:
+                collection.read_preference = read_preference
+
+            return collection
+
+        else:
+            return self.db.get_collection(document_class.__collection__,
+                                          read_preference=read_preference)
 
     def get_queryset(self, document_class, *, cache=None):
         """ Return queryset for document class.

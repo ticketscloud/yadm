@@ -198,9 +198,9 @@ def test_fields_all(qs):
 
 
 def test_read_preference(db):
-    so = pymongo.read_preferences.ReadPreference.SECONDARY_ONLY
-    qs = db(Doc).read_preference(so)
-    assert qs._collection.read_preference == so
+    sp = pymongo.read_preferences.ReadPreference.SECONDARY_PREFERRED
+    qs = db(Doc).read_preference(sp)
+    assert qs._collection.read_preference == sp
 
 
 def test_with_id(db, qs):

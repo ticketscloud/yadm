@@ -180,12 +180,12 @@ def test_reload_new_instance(db):
 def test_read_preference__init(client, mongo_args):
     host, port, name = mongo_args
     client.drop_database(name)
-    so = pymongo.read_preferences.ReadPreference.SECONDARY_ONLY
-    db = Database(client, name, read_preference=so)
-    assert db.db.read_preference == so
+    sp = pymongo.read_preferences.ReadPreference.SECONDARY_PREFERRED
+    db = Database(client, name, read_preference=sp)
+    assert db.db.read_preference == sp
 
 
 def test_read_preference__get_collection(db):
-    so = pymongo.read_preferences.ReadPreference.SECONDARY_ONLY
-    col = db._get_collection(TestDoc, read_preference=so)
-    assert col.read_preference == so
+    sp = pymongo.read_preferences.ReadPreference.SECONDARY_PREFERRED
+    col = db._get_collection(TestDoc, read_preference=sp)
+    assert col.read_preference == sp
