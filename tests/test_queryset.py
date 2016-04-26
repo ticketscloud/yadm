@@ -170,6 +170,12 @@ def test_remove(db, qs):
     assert {d['i'] for d in db.db.testdocs.find()} == set(range(6))
 
 
+def test_remove__one(db, qs):
+    qs.find({'i': {'$gte': 6}}).remove(multi=False)
+    assert len([d for d in qs]) == 9
+    assert db.db.testdocs.count() == 9
+
+
 def test_sort(qs):
     qs = qs.find({'i': {'$gte': 6}}).sort(('i', -1))
     assert [d.i for d in qs] == [9, 8, 7, 6]

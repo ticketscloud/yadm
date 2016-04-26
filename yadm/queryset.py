@@ -277,10 +277,13 @@ class QuerySet:
             result['value'] = self._from_mongo_one(result['value'])
             return result
 
-    def remove(self):
+    def remove(self, *, multi=True):
         """ Remove documents in queryset.
+
+        :param bool multi: if False, remove only first finded document
+            *(default True)*
         """
-        return self._collection.remove(self._criteria)
+        return self._collection.remove(self._criteria, multi=multi)
 
     def fields(self, *fields):
         """ Get only setted fields.
