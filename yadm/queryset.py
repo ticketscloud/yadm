@@ -31,7 +31,7 @@ class QuerySet:
         self._read_preference = read_preference
 
     def __repr__(self):
-        return ("{self.__class__.__name__}({s._document_class.__collection__}"
+        return ("{s.__class__.__name__}({s._document_class.__collection__}"
                 " {s._criteria!r} {s._projection!r} {s._sort!r})"
                 "".format(s=self))
 
