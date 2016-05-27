@@ -1,7 +1,7 @@
 import pytest
 
 from yadm.documents import Document
-from yadm.fields.email import EmailField
+from yadm.fields.email import EmailField, BadEmail
 
 
 class TestDoc(Document):
@@ -18,5 +18,5 @@ def test_ok():
 def test_error():
     doc = TestDoc()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(BadEmail):
         doc.e = 'EmA.iL'
