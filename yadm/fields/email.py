@@ -2,6 +2,11 @@ from yadm.fields.base import pass_null
 from yadm.fields.simple import StringField
 
 
+class BadEmail(ValueError):
+    """ Raise if value is not correct email address
+    """
+
+
 class EmailField(StringField):
     def get_fake(self, document, faker, depth):
         return faker.email().lower()
@@ -29,4 +34,4 @@ class EmailField(StringField):
 
     @staticmethod
     def _raise(value):
-        raise ValueError('"{}" is not email'.format(value))
+        raise BadEmail('"{}" is not email'.format(value))
