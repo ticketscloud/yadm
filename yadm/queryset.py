@@ -7,9 +7,11 @@ from yadm.serialize import from_mongo
 CACHE_SIZE = 100
 
 
-class QuerySet:
+class BaseQuerySet:
     """ Query builder.
 
+    :param db:
+    :param document_class:
     :param cache:
     :param dict criteria:
     :param dict projection:
@@ -37,23 +39,6 @@ class QuerySet:
 
     def __len__(self):
         return self.count()
-
-    def __iter__(self):
-        return self._from_mongo_list(self._cursor)
-
-    def __contains__(self, document):
-        return self.find_one(document.id) is not None
-
-    def __getitem__(self, item):
-        if isinstance(item, slice):
-            return self.copy(slice=item)
-
-        elif isinstance(item, int):
-            return self._from_mongo_one(self._cursor[item])
-
-        else:
-            raise TypeError("Only slice or int accepted, but {}"
-                            "".format(item.__class__))
 
     def __call__(self, criteria=None, projection=None):
         return self.find(criteria, projection)
@@ -86,12 +71,6 @@ class QuerySet:
         doc.__db__ = self._db
         doc.__qs__ = self
         return doc
-
-    def _from_mongo_list(self, data):
-        """ Generator for got documents from raw data list (cursor).
-        """
-        for d in data:
-            yield self._from_mongo_one(d)
 
     @property
     def _collection(self):  # noqa
@@ -187,6 +166,105 @@ class QuerySet:
             projection_new = None
 
         return self.copy(criteria=criteria_new, projection=projection_new)
+
+    def fields(self, *fields):
+        """ Get only setted fields.
+
+        Update projection with fields.
+
+        :param str fields:
+        :return: new :class:`yadm.queryset.QuerySet`
+
+        .. code:: python
+
+            qs('field', 'field2')
+        """
+        return self.find(projection=dict.fromkeys(fields, True))
+
+    def fields_all(self):
+        """ Clear projection.
+        """
+        qs = self.copy()
+        qs._projection = None
+        return qs
+
+    def sort(self, *sort):
+        """ Return queryset with sorting.
+
+        :param tuples sort: tuples with two items:
+            `('field_name', sort_order_as_int)`.
+
+        .. code:: python
+
+            qs.sort(('field_1', 1), ('field_2', -1))
+        """
+        sort = list(sort)
+
+        if self._sort is None:
+            return self.copy(sort=sort)
+        else:
+            return self.copy(sort=self._sort + sort)
+
+    def __iter__(self):
+        raise NotImplementedError
+
+    def __contains__(self, document):
+        raise NotImplementedError
+
+    def __getitem__(self, item):
+        raise NotImplementedError
+
+    def find_one(self, criteria=None, projection=None, *, exc=None):
+        raise NotImplementedError
+
+    def update(self, update, *, multi=True, upsert=False):
+        raise NotImplementedError
+
+    def find_and_modify(
+            self, update=None, *, upsert=False,
+            full_response=False, new=False,
+            **kwargs):
+        raise NotImplementedError
+
+    def remove(self, *, multi=True):
+        raise NotImplementedError
+
+    def distinct(self, field):
+        raise NotImplementedError
+
+    def count(self):
+        raise NotImplementedError
+
+    def ids(self):
+        raise NotImplementedError
+
+    def join(self, *field_names):
+        raise NotImplementedError
+
+
+class QuerySet(BaseQuerySet):
+    def __iter__(self):
+        return self._from_mongo_list(self._cursor)
+
+    def __contains__(self, document):
+        return self.find_one(document.id) is not None
+
+    def __getitem__(self, item):
+        if isinstance(item, slice):
+            return self.copy(slice=item)
+
+        elif isinstance(item, int):
+            return self._from_mongo_one(self._cursor[item])
+
+        else:
+            raise TypeError("Only slice or int accepted, but {}"
+                            "".format(item.__class__))
+
+    def _from_mongo_list(self, data):
+        """ Generator for got documents from raw data list (cursor).
+        """
+        for d in data:
+            yield self._from_mongo_one(d)
 
     def find_one(self, criteria=None, projection=None, *, exc=None):
         """ Find and return only one document.
@@ -284,44 +362,6 @@ class QuerySet:
             *(default True)*
         """
         return self._collection.remove(self._criteria, multi=multi)
-
-    def fields(self, *fields):
-        """ Get only setted fields.
-
-        Update projection with fields.
-
-        :param str fields:
-        :return: new :class:`yadm.queryset.QuerySet`
-
-        .. code:: python
-
-            qs('field', 'field2')
-        """
-        return self.find(projection=dict.fromkeys(fields, True))
-
-    def fields_all(self):
-        """ Clear projection.
-        """
-        qs = self.copy()
-        qs._projection = None
-        return qs
-
-    def sort(self, *sort):
-        """ Return queryset with sorting.
-
-        :param tuples sort: tuples with two items:
-            `('field_name', sort_order_as_int)`.
-
-        .. code:: python
-
-            qs.sort(('field_1', 1), ('field_2', -1))
-        """
-        sort = list(sort)
-
-        if self._sort is None:
-            return self.copy(sort=sort)
-        else:
-            return self.copy(sort=self._sort + sort)
 
     def distinct(self, field):
         """ Distinct query.

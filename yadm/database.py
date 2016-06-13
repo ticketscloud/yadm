@@ -33,12 +33,7 @@ from yadm.serialize import to_mongo
 PYMONGO_VERSION = pymongo.version_tuple
 
 
-class Database:
-    """ Main object who provide work with database.
-
-    :param pymongo.Client client: database connection
-    :param str name: database name
-    """
+class BaseDatabase:
     def __init__(self, client, name, *, read_preference=None):
         self.client = client
         self.name = name
@@ -53,7 +48,7 @@ class Database:
             self.db = client.get_database(name, read_preference=read_preference)
 
     def __repr__(self):  # pragma: no cover
-        return 'Database({!r})'.format(self.db)
+        return '{}({!r})'.format(self.__class__.__name__, self.db)
 
     def __call__(self, document_class, *, cache=None):
         return self.get_queryset(document_class, cache=cache)
@@ -73,24 +68,39 @@ class Database:
             return self.db.get_collection(document_class.__collection__,
                                           read_preference=read_preference)
 
+    def insert(self, document):
+        raise NotImplementedError
+
+    def save(self, document, full=False, upsert=False):
+        raise NotImplementedError
+
+    def update_one(self, document, reload=True, *,
+                   set=None, unset=None, inc=None,
+                   push=None, pull=None):
+        raise NotImplementedError
+
+    def remove(self, document):
+        raise NotImplementedError
+
+    def reload(self, document, new_instance=False):
+        raise NotImplementedError
+
     def get_queryset(self, document_class, *, cache=None):
-        """ Return queryset for document class.
-
-        :param document_class: :class:`yadm.documents.Document`
-        :param cache: cache for share with other querysets
-
-        This create instance of :class:`yadm.queryset.QuerySet`
-        with presetted document's collection information.
-        """
-        return QuerySet(self, document_class, cache=cache)
+        raise NotImplementedError
 
     def aggregate(self, document_class, *, pipeline=None):
-        """ Return aggregator for use aggregation framework.
+        raise NotImplementedError
 
-        :param document_class: :class:`yadm.documents.Document`
-        :param list pipeline: initial pipeline
-        """
-        return Aggregator(self, document_class, pipeline=None)
+    def bulk(self, document_class, ordered=False, raise_on_errors=True):
+        raise NotImplementedError
+
+
+class Database(BaseDatabase):
+    """ Main object who provide work with database.
+
+    :param pymongo.Client client: database connection
+    :param str name: database name
+    """
 
     def insert(self, document):
         """ Insert document to database.
@@ -208,6 +218,25 @@ class Database:
             document.__cache__.clear()
             document.__changed__.clear()
             return document
+
+    def get_queryset(self, document_class, *, cache=None):
+        """ Return queryset for document class.
+
+        :param document_class: :class:`yadm.documents.Document`
+        :param cache: cache for share with other querysets
+
+        This create instance of :class:`yadm.queryset.QuerySet`
+        with presetted document's collection information.
+        """
+        return QuerySet(self, document_class, cache=cache)
+
+    def aggregate(self, document_class, *, pipeline=None):
+        """ Return aggregator for use aggregation framework.
+
+        :param document_class: :class:`yadm.documents.Document`
+        :param list pipeline: initial pipeline
+        """
+        return Aggregator(self, document_class, pipeline=None)
 
     def bulk(self, document_class, ordered=False, raise_on_errors=True):
         """ Return Bulk.

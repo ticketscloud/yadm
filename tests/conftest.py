@@ -45,11 +45,11 @@ def client(request, mongo_args):
     try:
         return pymongo.MongoClient(host, port, tz_aware=True)
     except pymongo.errors.ConnectionFailure:
-        raise SkipTest("Can't connect to database (localhost:27017/test)")
+        raise SkipTest("Can't connect to mongodb ({}:{})".format(host, port))
 
 
-@pytest.yield_fixture(scope='function')
+@pytest.fixture(scope='function')
 def db(client, mongo_args):
     host, port, name = mongo_args
     client.drop_database(name)
-    yield Database(client, name)
+    return Database(client, name)
