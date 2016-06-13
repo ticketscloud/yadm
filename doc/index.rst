@@ -57,6 +57,12 @@ Quick start
 CHANGES
 =======
 
+1.2 (2016-XX-XX)
+----------------
+
+* Add ``QuerySet.ids`` method for get only documents id's from queryset;
+
+
 1.1 (2016-04-26)
 ----------------
 

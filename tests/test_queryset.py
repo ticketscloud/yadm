@@ -222,6 +222,19 @@ def test_contains(qs):
     assert doc not in qs.find({'i': {'$ne': 0}})
 
 
+def test_ids(db):
+    qs = db(Doc)
+    assert not list(qs.ids())
+
+    ids = set()
+    ids.add(db.insert(Doc(i=3)))
+    ids.add(db.insert(Doc(i=4)))
+    ids.add(db.insert(Doc(i=10)))
+
+    assert len(list(qs.ids())) == 3
+    assert set(qs.ids()) == ids
+
+
 def test_distinct(db, qs):
     res = qs.distinct('i')
     assert isinstance(res, list)

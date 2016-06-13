@@ -338,6 +338,12 @@ class QuerySet:
         """
         return self._cursor.count()
 
+    def ids(self):
+        """ Return all objects ids from queryset.
+        """
+        for raw in self.copy(projection={'_id': True})._cursor:
+            yield raw['_id']
+
     def bulk(self):
         """ Return map {id: object}.
 
