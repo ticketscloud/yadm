@@ -99,8 +99,8 @@ class BaseQuerySet:
                                         read_preference=self._read_preference)
 
     @property
-    def _cursor(self):  # noqa
-        """ pymongo cursor with parameters from queryset.
+    def _cursor(self):
+        """ Raw cursor with parameters from queryset.
         """
         cursor = self._collection.find(self._criteria, self._projection or None)
 
@@ -108,7 +108,11 @@ class BaseQuerySet:
             cursor = cursor.sort(self._sort)
 
         if self._slice is not None:
-            cursor = cursor[self._slice]
+            if self._slice.start:
+                cursor = cursor.skip(self._slice.start)
+
+            if self._slice.stop:
+                cursor = cursor.limit(self._slice.stop - (self._slice.start or 0))
 
         return cursor
 
