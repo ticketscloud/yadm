@@ -34,6 +34,37 @@ def test_len(qs):
     assert len(qs) == 4
 
 
+@pytest.mark.parametrize('slice, result', [
+    (slice(None, 2), [6, 7]),
+    (slice(2, None), [8, 9]),
+    (slice(1, 3), [7, 8]),
+    (slice(100, 300), []),
+    (slice(None, -3), TypeError),
+    (slice(-3, None), TypeError),
+    (slice(-3, -1), TypeError),
+    (slice(None, None, 2), TypeError),
+])
+def test_slice(qs, slice, result):
+    if isinstance(result, type) and issubclass(result, Exception):
+        with pytest.raises(result):
+            qs = qs.find({'i': {'$gte': 6}}).sort(('i', 1))[slice]
+    else:
+        qs = qs.find({'i': {'$gte': 6}}).sort(('i', 1))[slice]
+        assert [d.i for d in qs] == result
+
+
+def test_get_one(qs):
+    qs = qs.find({'i': {'$gte': 6}}).sort(('i', 1))
+    doc = qs[1]
+    assert doc.i == 7
+
+
+def test_get_one__index_error(qs):
+    qs = qs.find({'i': {'$gte': 6}}).sort(('i', 1))
+    with pytest.raises(IndexError):
+        qs[100]
+
+
 def test_find_one(qs):
     doc = qs.find_one({'i': 7})
     assert isinstance(doc, Doc)
