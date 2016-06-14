@@ -43,6 +43,25 @@ class BaseQuerySet:
     def __call__(self, criteria=None, projection=None):
         return self.find(criteria, projection)
 
+    def __getitem__(self, item):
+        if isinstance(item, slice):
+            if item.step is not None:
+                n = self.__class__.__name__
+                raise TypeError("{} not support slicing with step".format(n))
+
+            elif (item.start and item.start < 0) or (item.stop and item.stop < 0):
+                n = self.__class__.__name__
+                raise TypeError("{} not support negative slicing".format(n))
+
+            return self.copy(slice=item)
+
+        elif isinstance(item, int):
+            return self._get_one(item)
+
+        else:
+            raise TypeError("Only slice or int accepted, but {}"
+                            "".format(item.__class__))
+
     def _from_mongo_one(self, data, *, projection=None):
         """ Create document from raw data.
         """
@@ -211,9 +230,6 @@ class BaseQuerySet:
     def __contains__(self, document):
         raise NotImplementedError
 
-    def __getitem__(self, item):
-        raise NotImplementedError
-
     def find_one(self, criteria=None, projection=None, *, exc=None):
         raise NotImplementedError
 
@@ -249,16 +265,8 @@ class QuerySet(BaseQuerySet):
     def __contains__(self, document):
         return self.find_one(document.id) is not None
 
-    def __getitem__(self, item):
-        if isinstance(item, slice):
-            return self.copy(slice=item)
-
-        elif isinstance(item, int):
-            return self._from_mongo_one(self._cursor[item])
-
-        else:
-            raise TypeError("Only slice or int accepted, but {}"
-                            "".format(item.__class__))
+    def _get_one(self, index):
+        return self._from_mongo_one(self._cursor[index])
 
     def _from_mongo_list(self, data):
         """ Generator for got documents from raw data list (cursor).
