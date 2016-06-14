@@ -118,14 +118,14 @@ class BaseQuerySet:
 
         :return: new :class:`yadm.queryset.QuerySet` object
         """
-        return QuerySet(self._db, self._document_class,
-                        cache=cache or self._cache,
-                        criteria=criteria or self._criteria,
-                        projection=projection or self._projection,
-                        sort=sort or self._sort,
-                        slice=slice or self._slice,
-                        read_preference=read_preference or self._read_preference,
-                        )
+        return self.__class__(self._db, self._document_class,
+                              cache=cache or self._cache,
+                              criteria=criteria or self._criteria,
+                              projection=projection or self._projection,
+                              sort=sort or self._sort,
+                              slice=slice or self._slice,
+                              read_preference=read_preference or self._read_preference,
+                              )
 
     def read_preference(self, read_preference):
         """ Setup readPreference.
