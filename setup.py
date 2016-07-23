@@ -22,7 +22,7 @@ setup(
         'zope.dottedname',
         'python-dateutil',
         'pytz',
-        'fake-factory',
+        'fake-factory >= 0.5.9',
     ],
 
     classifiers=[
