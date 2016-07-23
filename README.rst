@@ -68,6 +68,7 @@ CHANGES
 ----------------
 
 * Add ``QuerySet.ids`` method for get only documents id's from queryset;
+* Add ``Money.total_cents`` method and ``Money.from_cents`` classmethod;
 
 
 1.1 (2016-04-26)

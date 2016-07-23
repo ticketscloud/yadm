@@ -1,21 +1,33 @@
+import pytest
+
 from yadm import fields
 from yadm.documents import Document
 
 
-def test_money_str():
-    assert str(fields.Money('3.14')) == '3.14'
-    assert str(fields.Money('0.14')) == '0.14'
-    assert str(fields.Money('30.14')) == '30.14'
-    assert str(fields.Money('3.1')) == '3.10'
-    assert str(fields.Money('0.1')) == '0.10'
+@pytest.mark.parametrize('input, output', [
+    ('3.14', '3.14'),
+    ('0.14', '0.14'),
+    ('30.14', '30.14'),
+    ('3.1', '3.10'),
+    ('0.1', '0.10'),
+])
+def test_money_str(input, output):
+    assert str(fields.Money(input)) == output
 
 
-def test_money_to_mongo():
-    assert fields.Money('3.14').to_mongo() == 314
-    assert fields.Money('0.14').to_mongo() == 14
-    assert fields.Money('30.14').to_mongo() == 3014
-    assert fields.Money('3.1').to_mongo() == 310
-    assert fields.Money('0.1').to_mongo() == 10
+@pytest.mark.parametrize('input, output', [
+    ('3.14', 314),
+    ('0.14', 14),
+    ('30.14', 3014),
+    ('3.1', 310),
+    ('0.1', 10),
+])
+@pytest.mark.parametrize('func', [
+    lambda money: money.total_cents,
+    lambda money: money.to_mongo(),  # b/c function, for coverage
+])
+def test_money_cents(func, input, output):
+    assert func(fields.Money(input)) == output
 
 
 class TestDoc(Document):

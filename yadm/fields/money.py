@@ -37,11 +37,24 @@ class Money(Decimal):
     def __new__(cls, value):
         return Decimal.__new__(cls, value, cls.context)
 
-    def to_mongo(self):
+    @classmethod
+    def from_cents(cls, cents: int):
+        """ Return new Money object from cents.
+        """
+        return cls(cents / Decimal(100))
+
+    @property
+    def total_cents(self) -> int:
+        """ Return total cents in this object.
+        """
         return int(self.quantize(Decimal('1.00'), ROUND_UP) * 100)
 
+    def to_mongo(self) -> int:
+        # b/c
+        return self.total_cents
+
     def __str__(self):
-        s = str(self.to_mongo()).rjust(3, '0')
+        s = str(self.total_cents).rjust(3, '0')
         return '.'.join((s[:-2], s[-2:]))
 
     def __xor__(self, other):
@@ -86,10 +99,10 @@ class MoneyField(DefaultMixin, Field):
     @pass_null
     def to_mongo(self, document, value):
         if isinstance(value, (str, Decimal)):
-            return Money(value).to_mongo()
+            return Money(value).total_cents
 
         elif isinstance(value, Money):
-            return value.to_mongo()
+            return value.total_cents
 
         elif isinstance(value, int):
             return value
@@ -99,7 +112,7 @@ class MoneyField(DefaultMixin, Field):
 
     def from_mongo(self, document, data):
         if isinstance(data, int):
-            return Money(data / Decimal(100))
+            return Money.from_cents(data)
         elif data is AttributeNotSet:
             return AttributeNotSet
         else:
