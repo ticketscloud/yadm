@@ -57,11 +57,15 @@ Quick start
 CHANGES
 =======
 
-1.2 (2016-XX-XX)
-----------------
+1.1.3 (2016-07-23)
+------------------
 
-* Add ``QuerySet.ids`` method for get only documents id's from queryset;
-* Add ``Money.total_cents`` method and ``Money.from_cents`` classmethod;
+* Add :py:meth:`QuerySet.ids <yadm.queryset.QuerySet.ids>`
+    method for get only documents id's from queryset;
+
+* Add :py:meth:`Money.total_cents <yadm.fields.money.Money.total_cents>`
+    method and :py:meth:`Money.total_cents <yadm.fields.money.Money.from_cents>`
+    classmethod;
 
 
 1.1 (2016-04-26)

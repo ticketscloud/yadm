@@ -64,10 +64,11 @@ Quick start
 CHANGES
 =======
 
-1.2 (2016-XX-XX)
-----------------
+1.1.3 (2016-07-23)
+------------------
 
 * Add ``QuerySet.ids`` method for get only documents id's from queryset;
+
 * Add ``Money.total_cents`` method and ``Money.from_cents`` classmethod;
 
 
