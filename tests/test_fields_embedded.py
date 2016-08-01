@@ -8,6 +8,8 @@ from yadm.documents import Document, EmbeddedDocument
 class ETestDoc(EmbeddedDocument):
     id = fields.ObjectIdField(default_gen=True)
     i = fields.IntegerField()
+    s = fields.StringField(default='default')
+    e = fields.EmbeddedDocumentField('self')
 
 
 class TestDoc(Document):
@@ -51,15 +53,78 @@ def test_default_auto_not_save_empty(db):
     assert raw == {'_id': doc.id, 'e': {'i': 13}}
 
 
-def test_get(db):
-    _id = db.db.testdoc.insert({'e': {'i': 13}})
+@pytest.mark.parametrize('raw', [
+    {'i': 13},
+    {'i': 13, 's': 'defined'},
+    {'s': 'defined'},
+    {},
+    None,
+])
+def test_get(db, raw):
+    if raw is not None:
+        _id = db.db.testdoc.insert({'e': raw})
+    else:
+        _id = db.db.testdoc.insert({})
+
     doc = db.get_queryset(TestDoc).find_one(_id)
 
-    assert hasattr(doc, 'e')
-    assert isinstance(doc.e, ETestDoc)
-    assert hasattr(doc.e, 'i')
-    assert isinstance(doc.e.i, int)
-    assert doc.e.i == 13
+    if raw is None:
+        assert not hasattr(doc, 'e')
+    else:
+        assert hasattr(doc, 'e')
+        assert isinstance(doc.e, ETestDoc)
+
+        if 'i' in raw:
+            assert hasattr(doc.e, 'i')
+            assert isinstance(doc.e.i, int)
+            assert doc.e.i == raw['i']
+        else:
+            assert not hasattr(doc.e, 'i')
+
+        if 's' in raw:
+            assert hasattr(doc.e, 's')
+            assert isinstance(doc.e.s, str)
+            assert doc.e.s == raw['s']
+        else:
+            assert not hasattr(doc.e, 's')
+
+
+@pytest.mark.parametrize('raw', [
+    {'i': 13},
+    {'i': 13, 's': 'defined'},
+    {'s': 'defined'},
+    {},
+    None,
+])
+def test_get_deeper(db, raw):
+    if raw is not None:
+        _id = db.db.testdoc.insert({'e': {'e': raw}})
+    else:
+        _id = db.db.testdoc.insert({'e': {}})
+
+    doc = db.get_queryset(TestDoc).find_one(_id)
+
+    if raw is None:
+        assert hasattr(doc.e, 'e')
+        assert not hasattr(doc.e.e, 'i')
+        assert doc.e.e.s == 'default'
+    else:
+        assert hasattr(doc.e, 'e')
+        assert isinstance(doc.e.e, ETestDoc)
+
+        if 'i' in raw:
+            assert hasattr(doc.e.e, 'i')
+            assert isinstance(doc.e.e.i, int)
+            assert doc.e.e.i == raw['i']
+        else:
+            assert not hasattr(doc.e.e, 'i')
+
+        if 's' in raw:
+            assert hasattr(doc.e.e, 's')
+            assert isinstance(doc.e.e.s, str)
+            assert doc.e.e.s == raw['s']
+        else:
+            assert not hasattr(doc.e.e, 's')
 
 
 def test_set():
