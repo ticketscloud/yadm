@@ -30,13 +30,13 @@ def test_money_cents(func, input, output):
     assert func(fields.Money(input)) == output
 
 
-class TestDoc(Document):
+class Doc(Document):
     __collection__ = 'testdocs'
     money = fields.MoneyField()
 
 
 def test_save(db):  # noqa
-    doc = TestDoc()
+    doc = Doc()
     doc.money = fields.Money('3.14')
     db.save(doc)
 
@@ -50,7 +50,7 @@ def test_save(db):  # noqa
 def test_load(db):
     db.db.testdocs.insert({'money': 314})
 
-    doc = db.get_queryset(TestDoc).find_one()
+    doc = db.get_queryset(Doc).find_one()
 
     assert hasattr(doc, 'money')
     assert isinstance(doc.money, fields.Money)
@@ -60,7 +60,7 @@ def test_load(db):
 def test_load_and_save(db):
     db.db.testdocs.insert({'money': 314})
 
-    doc = db.get_queryset(TestDoc).find_one()
+    doc = db.get_queryset(Doc).find_one()
     doc.money = fields.Money('42.00')
     db.save(doc)
 

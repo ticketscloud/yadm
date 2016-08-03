@@ -9,7 +9,7 @@ from yadm.serialize import from_mongo
 from yadm import fields
 
 
-class TestDoc(Document):
+class Doc(Document):
     __collection__ = 'testdocs'
     b = fields.BooleanField()
     i = fields.IntegerField()
@@ -24,22 +24,22 @@ def test_init(db):
 
 
 def test_get_collection(db):
-    collection = db._get_collection(TestDoc)
+    collection = db._get_collection(Doc)
 
     assert isinstance(collection, pymongo.collection.Collection)
     assert collection.name == 'testdocs'
 
 
 def test_get_queryset(db):
-    queryset = db.get_queryset(TestDoc)
+    queryset = db.get_queryset(Doc)
 
     assert isinstance(queryset, QuerySet)
     assert queryset._db is db
-    assert queryset._document_class is TestDoc
+    assert queryset._document_class is Doc
 
 
 def test_insert(db):
-    doc = TestDoc()
+    doc = Doc()
     doc.i = 13
 
     db.insert(doc)
@@ -51,7 +51,7 @@ def test_insert(db):
 
 
 def test_save_new(db):
-    doc = TestDoc()
+    doc = Doc()
     doc.i = 13
 
     db.save(doc)
@@ -66,7 +66,7 @@ def test_save(db):
     col = db.db.testdocs
     col.insert({'i': 13})
 
-    doc = from_mongo(TestDoc, col.find_one({'i': 13}))
+    doc = from_mongo(Doc, col.find_one({'i': 13}))
     doc.i = 26
 
     col.update({'_id': doc.id}, {'$set': {'b': True}})
@@ -86,7 +86,7 @@ def test_save_full(db):
     col = db.db.testdocs
     col.insert({'i': 13})
 
-    doc = from_mongo(TestDoc, col.find_one({'i': 13}))
+    doc = from_mongo(Doc, col.find_one({'i': 13}))
     doc.i = 26
 
     col.update({'_id': doc.id}, {'$set': {'b': True}})
@@ -107,7 +107,7 @@ def test_update_one(db, unset):
     col = db.db.testdocs
     _id = col.insert({'i': 13})
 
-    doc = from_mongo(TestDoc, col.find_one(_id))
+    doc = from_mongo(Doc, col.find_one(_id))
     db.update_one(doc, set={'b': True}, unset=unset)
 
     assert doc.b
@@ -118,7 +118,7 @@ def test_update_one__inc(db):
     col = db.db.testdocs
     _id = col.insert({'i': 12})
 
-    doc = from_mongo(TestDoc, col.find_one(_id))
+    doc = from_mongo(Doc, col.find_one(_id))
     db.update_one(doc, inc={'i': 1})
 
     assert doc.i == 13
@@ -133,7 +133,7 @@ def test_update_one__push_pull(db, cmd, v, r):
     col = db.db.testdocs
     _id = col.insert({'l': [1, 2, 3]})
 
-    doc = from_mongo(TestDoc, col.find_one(_id))
+    doc = from_mongo(Doc, col.find_one(_id))
     db.update_one(doc, **{cmd: {'l': v}})
 
     assert doc.l == r
@@ -143,7 +143,7 @@ def test_remove(db):
     col = db.db.testdocs
     col.insert({'i': 13})
 
-    doc = from_mongo(TestDoc, col.find_one({'i': 13}))
+    doc = from_mongo(Doc, col.find_one({'i': 13}))
 
     assert col.count() == 1
     db.remove(doc)
@@ -151,7 +151,7 @@ def test_remove(db):
 
 
 def test_reload(db):
-    doc = TestDoc()
+    doc = Doc()
     doc.i = 1
     db.insert(doc)
 
@@ -164,7 +164,7 @@ def test_reload(db):
 
 
 def test_reload_new_instance(db):
-    doc = TestDoc()
+    doc = Doc()
     doc.i = 1
     db.insert(doc)
 
@@ -187,5 +187,5 @@ def test_read_preference__init(client, mongo_args):
 
 def test_read_preference__get_collection(db):
     sp = pymongo.read_preferences.ReadPreference.SECONDARY_PREFERRED
-    col = db._get_collection(TestDoc, read_preference=sp)
+    col = db._get_collection(Doc, read_preference=sp)
     assert col.read_preference == sp

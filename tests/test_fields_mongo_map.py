@@ -2,14 +2,14 @@ from yadm import fields
 from yadm.documents import Document
 
 
-class TestDoc(Document):
+class Doc(Document):
     __collection__ = 'testdoc'
     map = fields.MongoMapField()
 
 
 def test_load(db):
     _id = db.db.testdoc.insert({'map': {'a': 1, 'b': '2', 'c': 'qwerty'}})
-    doc = db.get_queryset(TestDoc).find_one(_id)
+    doc = db.get_queryset(Doc).find_one(_id)
 
     assert hasattr(doc, 'map')
     assert isinstance(doc.map, fields.UnmutableMap)
@@ -19,7 +19,7 @@ def test_load(db):
 
 def test_setattr(db):
     _id = db.db.testdoc.insert({'map': {'a': 1}})
-    doc = db.get_queryset(TestDoc).find_one(_id)
+    doc = db.get_queryset(Doc).find_one(_id)
     doc.map = {'b': 2}
 
     assert isinstance(doc.map, fields.UnmutableMap)
@@ -28,7 +28,7 @@ def test_setattr(db):
 
 def test_setattr_save(db):
     _id = db.db.testdoc.insert({'map': {'a': 1}})
-    doc = db.get_queryset(TestDoc).find_one(_id)
+    doc = db.get_queryset(Doc).find_one(_id)
     doc.map = {'b': 2}
 
     db.save(doc)

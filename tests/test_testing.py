@@ -8,7 +8,7 @@ from yadm.fields import (
 )
 
 
-class SimpleTestDoc(Document):
+class SimpleDoc(Document):
     __collection__ = 'testdocs'
 
     oid = ObjectIdField()
@@ -19,14 +19,14 @@ class SimpleTestDoc(Document):
     email = StringField()
 
 
-class EmbeddedTestDoc(EmbeddedDocument):
+class EmbeddedDoc(EmbeddedDocument):
     __collection__ = 'testdocs'
 
     name = StringField()
 
 
 def test_simple(db):
-    doc = create_fake(SimpleTestDoc)
+    doc = create_fake(SimpleDoc)
 
     assert doc.__db__ is None
 
@@ -48,11 +48,11 @@ def test_simple(db):
     assert '@' in doc.e
     assert '@' in doc.email
 
-    assert db(SimpleTestDoc).count() == 0
+    assert db(SimpleDoc).count() == 0
 
 
 def test_simple_save(db):
-    doc = create_fake(SimpleTestDoc, __db__=db)
+    doc = create_fake(SimpleDoc, __db__=db)
 
     assert doc.__db__ is db
 
@@ -68,69 +68,69 @@ def test_simple_save(db):
 
     assert len(doc.s) > 0
 
-    assert db(SimpleTestDoc).count() == 1
-    assert db(SimpleTestDoc).find_one(doc.id)
+    assert db(SimpleDoc).count() == 1
+    assert db(SimpleDoc).find_one(doc.id)
 
 
-class WithEmbeddedTestDoc(Document):
+class WithEmbeddedDoc(Document):
     __collection__ = 'testdocs'
 
-    emb = EmbeddedDocumentField(EmbeddedTestDoc)
+    emb = EmbeddedDocumentField(EmbeddedDoc)
 
 
 def test_embedded(db):
-    doc = create_fake(WithEmbeddedTestDoc)
+    doc = create_fake(WithEmbeddedDoc)
 
     assert hasattr(doc, 'emb')
-    assert isinstance(doc.emb, EmbeddedTestDoc)
+    assert isinstance(doc.emb, EmbeddedDoc)
     assert isinstance(doc.emb.name, str)
 
 
 def test_embedded_depth_limit(db):
-    doc = create_fake(WithEmbeddedTestDoc, __depth__=0)
+    doc = create_fake(WithEmbeddedDoc, __depth__=0)
 
     assert hasattr(doc, 'emb')
     assert not hasattr(doc.emb, 'name')
 
 
-class WithReferenceTestDoc(Document):
+class WithReferenceDoc(Document):
     __collection__ = 'with_ref_testdocs'
 
-    ref = ReferenceField('tests.test_testing.SimpleTestDoc')
+    ref = ReferenceField('tests.test_testing.SimpleDoc')
 
 
 def test_reference(db):
-    doc = create_fake(WithReferenceTestDoc)
+    doc = create_fake(WithReferenceDoc)
 
     assert hasattr(doc, 'ref')
     assert hasattr(doc.ref, 's')
     assert isinstance(doc.ref.s, str)
 
-    assert db(WithReferenceTestDoc).count() == 0
-    assert db(SimpleTestDoc).count() == 0
+    assert db(WithReferenceDoc).count() == 0
+    assert db(SimpleDoc).count() == 0
 
 
 def test_reference_save(db):
-    doc = create_fake(WithReferenceTestDoc, __db__=db)
+    doc = create_fake(WithReferenceDoc, __db__=db)
 
     assert hasattr(doc, 'ref')
     assert hasattr(doc.ref, 's')
     assert isinstance(doc.ref.s, str)
 
-    assert db(WithReferenceTestDoc).count() == 1
-    assert db(SimpleTestDoc).count() == 1
+    assert db(WithReferenceDoc).count() == 1
+    assert db(SimpleDoc).count() == 1
 
 
-class WithReferenceCircleTestDoc(Document):
+class WithReferenceCircleDoc(Document):
     __collection__ = 'testdocs'
 
-    self = ReferenceField('tests.test_testing.WithReferenceCircleTestDoc')
+    self = ReferenceField('tests.test_testing.WithReferenceCircleDoc')
 
 
 def test_reference_circle(db):
-    doc = create_fake(WithReferenceCircleTestDoc, __db__=db, __depth__=2)
+    doc = create_fake(WithReferenceCircleDoc, __db__=db, __depth__=2)
 
-    assert db(WithReferenceCircleTestDoc).count() == 3
+    assert db(WithReferenceCircleDoc).count() == 3
 
     assert hasattr(doc, 'self')
     assert hasattr(doc.self, 'self')

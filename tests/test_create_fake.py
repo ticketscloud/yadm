@@ -5,19 +5,19 @@ from yadm.documents import Document
 from yadm import fields
 
 
-class TestDocRef(Document):
+class DocRef(Document):
     __collection__ = 'testdocs_ref'
     s = fields.StringField()
 
 
-class TestDoc(Document):
+class Doc(Document):
     __collection__ = 'testdocs'
-    ref = fields.ReferenceField(TestDocRef)
+    ref = fields.ReferenceField(DocRef)
     i = fields.IntegerField()
 
 
 def test_reference(db):
-    doc = create_fake(TestDoc, db)
-    assert isinstance(doc, TestDoc)
-    assert isinstance(doc.ref, TestDocRef)
+    doc = create_fake(Doc, db)
+    assert isinstance(doc, Doc)
+    assert isinstance(doc.ref, DocRef)
     assert doc.ref.id

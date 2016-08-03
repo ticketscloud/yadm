@@ -2,23 +2,23 @@ from yadm import fields
 from yadm.documents import Document, EmbeddedDocument
 
 
-class TestEDoc(EmbeddedDocument):
+class EDoc(EmbeddedDocument):
     i = fields.IntegerField()
 
 
-class TestDoc(Document):
+class Doc(Document):
     __collection__ = 'testdocs'
-    li = fields.SetField(fields.EmbeddedDocumentField(TestEDoc))
+    li = fields.SetField(fields.EmbeddedDocumentField(EDoc))
 
 
 def test_save(db):
-    doc = TestDoc()
+    doc = Doc()
 
-    edoc = TestEDoc()
+    edoc = EDoc()
     edoc.i = 13
     doc.li.add(edoc)
 
-    edoc = TestEDoc()
+    edoc = EDoc()
     edoc.i = 42
     doc.li.add(edoc)
 
@@ -45,7 +45,7 @@ def test_load(db):
     db.db.testdocs.update({'_id': _id}, {'$addToSet': {'li': {'i': 13}}})
     db.db.testdocs.update({'_id': _id}, {'$addToSet': {'li': {'i': 42}}})
 
-    doc = db.get_queryset(TestDoc).find_one()
+    doc = db.get_queryset(Doc).find_one()
 
     assert hasattr(doc, 'li')
     assert len(doc.li) == 2
@@ -53,7 +53,7 @@ def test_load(db):
     res = set()
 
     for item in doc.li:
-        assert isinstance(item, TestEDoc)
+        assert isinstance(item, EDoc)
         assert hasattr(item, 'i')
         assert isinstance(item.i, int)
         res.add(item.i)
@@ -62,14 +62,14 @@ def test_load(db):
 
 
 def test_add_to_set(db):
-    doc = TestDoc()
+    doc = Doc()
     db.insert(doc)
 
-    edoc = TestEDoc()
+    edoc = EDoc()
     edoc.i = 13
     doc.li.add_to_set(edoc)
 
-    edoc = TestEDoc()
+    edoc = EDoc()
     edoc.i = 42
     doc.li.add_to_set(edoc)
 

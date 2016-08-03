@@ -5,32 +5,32 @@ from yadm import fields
 from yadm.documents import Document, EmbeddedDocument
 
 
-class ETestDoc(EmbeddedDocument):
+class EDoc(EmbeddedDocument):
     id = fields.ObjectIdField(default_gen=True)
     i = fields.IntegerField()
     s = fields.StringField(default='default')
     e = fields.EmbeddedDocumentField('self')
 
 
-class TestDoc(Document):
+class Doc(Document):
     __collection__ = 'testdoc'
-    e = fields.EmbeddedDocumentField(ETestDoc, auto_create=False)
+    e = fields.EmbeddedDocumentField(EDoc, auto_create=False)
 
 
-class TestDocAuto(Document):
+class DocAuto(Document):
     __collection__ = 'testdoc'
-    e = fields.EmbeddedDocumentField(ETestDoc)
+    e = fields.EmbeddedDocumentField(EDoc)
 
 
 def test_default():
-    doc = TestDoc()
+    doc = Doc()
     assert not hasattr(doc, 'e')
 
 
 def test_default_auto():
-    doc = TestDocAuto()
+    doc = DocAuto()
     assert hasattr(doc, 'e')
-    assert isinstance(doc.e, ETestDoc)
+    assert isinstance(doc.e, EDoc)
 
 
 def test_default_auto_not_save_empty(db):
@@ -66,13 +66,13 @@ def test_get(db, raw):
     else:
         _id = db.db.testdoc.insert({})
 
-    doc = db.get_queryset(TestDoc).find_one(_id)
+    doc = db.get_queryset(Doc).find_one(_id)
 
     if raw is None:
         assert not hasattr(doc, 'e')
     else:
         assert hasattr(doc, 'e')
-        assert isinstance(doc.e, ETestDoc)
+        assert isinstance(doc.e, EDoc)
 
         if 'i' in raw:
             assert hasattr(doc.e, 'i')
@@ -102,7 +102,7 @@ def test_get_deeper(db, raw):
     else:
         _id = db.db.testdoc.insert({'e': {}})
 
-    doc = db.get_queryset(TestDoc).find_one(_id)
+    doc = db.get_queryset(Doc).find_one(_id)
 
     if raw is None:
         assert hasattr(doc.e, 'e')
@@ -110,7 +110,7 @@ def test_get_deeper(db, raw):
         assert doc.e.e.s == 'default'
     else:
         assert hasattr(doc.e, 'e')
-        assert isinstance(doc.e.e, ETestDoc)
+        assert isinstance(doc.e.e, EDoc)
 
         if 'i' in raw:
             assert hasattr(doc.e.e, 'i')
@@ -128,11 +128,11 @@ def test_get_deeper(db, raw):
 
 
 def test_set():
-    doc = TestDoc()
-    doc.e = ETestDoc()
+    doc = Doc()
+    doc.e = EDoc()
 
     assert hasattr(doc, 'e')
-    assert isinstance(doc.e, ETestDoc)
+    assert isinstance(doc.e, EDoc)
     assert not hasattr(doc.e, 'i')
 
     doc.e.i = 13
@@ -142,17 +142,17 @@ def test_set():
 
 
 def test_set_typeerror():
-    class FailETestDoc(EmbeddedDocument):
+    class FailEDoc(EmbeddedDocument):
         s = fields.StringField
 
-    doc = TestDoc()
+    doc = Doc()
 
     with pytest.raises(TypeError):
-        doc.e = FailETestDoc()
+        doc.e = FailEDoc()
 
 
 def test_set_insert_wo_set(db):
-    doc = TestDoc()
+    doc = Doc()
     db.insert(doc)
 
     data = db.db.testdoc.find_one({'_id': doc.id})
@@ -161,8 +161,8 @@ def test_set_insert_wo_set(db):
 
 
 def test_set_insert(db):
-    doc = TestDoc()
-    doc.e = ETestDoc()
+    doc = Doc()
+    doc.e = EDoc()
     doc.e.i = 13
     db.insert(doc)
 
@@ -174,7 +174,7 @@ def test_set_insert(db):
 
 def test_set_save(db):
     _id = db.db.testdoc.insert({'e': {'i': 13}})
-    doc = db.get_queryset(TestDoc).find_one(_id)
+    doc = db.get_queryset(Doc).find_one(_id)
 
     doc.e.i = 26
     db.save(doc)
@@ -185,7 +185,7 @@ def test_set_save(db):
 
 def test_delete_save(db):
     _id = db.db.testdoc.insert({'e': {'i': 13}})
-    doc = db.get_queryset(TestDoc).find_one(_id)
+    doc = db.get_queryset(Doc).find_one(_id)
 
     del doc.e
     db.save(doc)
@@ -196,7 +196,7 @@ def test_delete_save(db):
 
 def test_delete_deep_save(db):
     _id = db.db.testdoc.insert({'e': {'i': 13, 'id': ObjectId()}})
-    doc = db.get_queryset(TestDoc).find_one(_id)
+    doc = db.get_queryset(Doc).find_one(_id)
 
     del doc.e.i
     db.save(doc)
@@ -206,7 +206,7 @@ def test_delete_deep_save(db):
 
 
 def test_id_load_default():
-    doc = TestDoc({'e': {'i': 13}})
+    doc = Doc({'e': {'i': 13}})
     assert hasattr(doc, 'e')
     assert hasattr(doc.e, 'i')
     assert hasattr(doc.e, 'id')
@@ -216,7 +216,7 @@ def test_id_load_default():
 
 
 def test_id_insert(db):
-    doc = TestDoc({'e': {'i': 13}})
+    doc = Doc({'e': {'i': 13}})
 
     # eid = doc.e.id
     db.insert(doc)

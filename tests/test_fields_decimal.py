@@ -57,13 +57,13 @@ def test_context_init():
     assert field.context == context
 
 
-class TestDoc(Document):
+class Doc(Document):
     __collection__ = 'testdocs'
     dec = fields.DecimalField()
 
 
 def test_save(db):
-    doc = TestDoc()
+    doc = Doc()
     doc.dec = Decimal('3.14')
     db.save(doc)
 
@@ -78,7 +78,7 @@ def test_save(db):
 def test_load(db):
     db.db.testdocs.insert({'dec': {'i': 314, 'e': -2}})
 
-    doc = db.get_queryset(TestDoc).find_one()
+    doc = db.get_queryset(Doc).find_one()
 
     assert hasattr(doc, 'dec')
     assert isinstance(doc.dec, Decimal)

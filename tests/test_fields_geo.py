@@ -59,13 +59,13 @@ def test_multipoint_from_mongo():
     assert mpoint[1].latitude == 4
 
 
-class TestDoc(Document):
+class Doc(Document):
     __collection__ = 'testdoc'
     point = fields.PointField()
 
 
 def test_doc_insert(db):
-    doc = TestDoc()
+    doc = Doc()
     doc.point = fields.Point(1, 2)
     db.insert(doc)
 
@@ -78,7 +78,7 @@ def test_doc_get(db):
     _id = db.db.testdoc.insert(
         {'point': {'type': 'Point', 'coordinates': [1, 2]}}
     )
-    doc = db(TestDoc).find_one(_id)
+    doc = db(Doc).find_one(_id)
 
     assert hasattr(doc, 'point')
     assert isinstance(doc.point, fields.Point)
@@ -87,7 +87,7 @@ def test_doc_get(db):
 
 
 def test_doc_set_object():
-    doc = TestDoc()
+    doc = Doc()
     doc.point = fields.Point(1, 2)
     assert isinstance(doc.point, fields.Point)
     assert doc.point.longitude == 1
@@ -95,7 +95,7 @@ def test_doc_set_object():
 
 
 def test_doc_set_geojson():
-    doc = TestDoc()
+    doc = Doc()
     doc.point = {'type': 'Point', 'coordinates': [1, 2]}
     assert isinstance(doc.point, fields.Point)
     assert doc.point.longitude == 1

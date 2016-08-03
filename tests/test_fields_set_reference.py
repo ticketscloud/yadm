@@ -4,25 +4,25 @@ from yadm import fields
 from yadm.documents import Document
 
 
-class TestRDoc(Document):
+class RDoc(Document):
     __collection__ = 'testrdocs'
     i = fields.IntegerField()
 
 
-class TestDoc(Document):
+class Doc(Document):
     __collection__ = 'testdocs'
-    li = fields.SetField(fields.ReferenceField(TestRDoc))
+    li = fields.SetField(fields.ReferenceField(RDoc))
 
 
 def test_save(db):
-    doc = TestDoc()
+    doc = Doc()
 
-    ref_one = TestRDoc()
+    ref_one = RDoc()
     ref_one.i = 13
     db.insert(ref_one)
     doc.li.add(ref_one)
 
-    ref_two = TestRDoc()
+    ref_two = RDoc()
     ref_two.i = 42
     db.insert(ref_two)
     doc.li.add(ref_two)
@@ -51,18 +51,18 @@ def test_load(db):
         ]}
     )
 
-    doc = db.get_queryset(TestDoc).find_one()
+    doc = db.get_queryset(Doc).find_one()
 
     assert hasattr(doc, 'li')
     assert len(doc.li) == 2
 
     for item in doc.li:
-        assert isinstance(item, TestRDoc)
+        assert isinstance(item, RDoc)
 
     res = set()
 
     for item in doc.li:
-        assert isinstance(item, TestRDoc)
+        assert isinstance(item, RDoc)
         assert hasattr(item, 'i')
         assert isinstance(item.i, int)
         res.add(item.i)

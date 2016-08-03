@@ -6,7 +6,7 @@ from yadm.markers import AttributeNotSet
 from yadm import fields
 
 
-class TestDoc(Document):
+class Doc(Document):
     __collection__ = 'testdocs'
     i = fields.IntegerField()
     b = fields.BooleanField()
@@ -14,7 +14,7 @@ class TestDoc(Document):
 
 @pytest.fixture
 def doc():
-    return TestDoc()
+    return Doc()
 
 
 def test__db(doc):
@@ -22,18 +22,18 @@ def test__db(doc):
 
 
 def test_fields():
-    assert set(TestDoc.__fields__) == {'_id', 'i', 'b'}
+    assert set(Doc.__fields__) == {'_id', 'i', 'b'}
 
 
 def test_inheritance_fields():
-    class InhTestDoc(TestDoc):
+    class InhDoc(Doc):
         d = fields.DecimalField
 
-    assert set(InhTestDoc.__fields__) == {'_id', 'i', 'b', 'd'}
-    assert set(TestDoc.__fields__) == {'_id', 'i', 'b'}
-    assert TestDoc.__fields__['i'] is not InhTestDoc.__fields__['i']
-    assert TestDoc.__fields__['i'].document_class is TestDoc
-    assert InhTestDoc.__fields__['i'].document_class is InhTestDoc
+    assert set(InhDoc.__fields__) == {'_id', 'i', 'b', 'd'}
+    assert set(Doc.__fields__) == {'_id', 'i', 'b'}
+    assert Doc.__fields__['i'] is not InhDoc.__fields__['i']
+    assert Doc.__fields__['i'].document_class is Doc
+    assert InhDoc.__fields__['i'].document_class is InhDoc
 
 
 def test_changed(doc):
@@ -103,13 +103,13 @@ def test_raw_cache_changed(db, doc):
 
 
 def test_eq():
-    doc_a = TestDoc()
+    doc_a = Doc()
     doc_a.id = ObjectId()
 
-    doc_b = TestDoc()
+    doc_b = Doc()
     doc_b.id = ObjectId()
 
-    doc_c = TestDoc()
+    doc_c = Doc()
     doc_c.id = doc_a.id
 
     assert doc_a != doc_b
@@ -123,7 +123,7 @@ def test_id(doc):
 
 def test_attributeerror(db):
     _id = db.db.testdocs.insert({'i': 13})
-    doc = db(TestDoc).find_one(_id)
+    doc = db(Doc).find_one(_id)
 
     assert doc.i == 13
 
@@ -133,7 +133,7 @@ def test_attributeerror(db):
 
 def test_notloaded(db):
     _id = db.db.testdocs.insert({'i': 13, 'b': False})
-    doc = db(TestDoc).fields('i').find_one(_id)
+    doc = db(Doc).fields('i').find_one(_id)
 
     assert doc.i == 13
 

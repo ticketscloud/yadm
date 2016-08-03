@@ -4,19 +4,19 @@ from yadm.documents import Document
 from yadm.fields.email import EmailField, InvalidEmail
 
 
-class TestDoc(Document):
+class Doc(Document):
     e = EmailField()
 
 
 def test_ok():
-    doc = TestDoc()
+    doc = Doc()
     doc.e = 'E@mA.iL'
 
     assert doc.e == 'e@ma.il'
 
 
 def test_error():
-    doc = TestDoc()
+    doc = Doc()
 
     with pytest.raises(InvalidEmail):
         doc.e = 'EmA.iL'

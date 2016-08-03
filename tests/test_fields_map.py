@@ -6,13 +6,13 @@ from yadm import fields
 from yadm.documents import Document
 
 
-class TestDoc(Document):
+class Doc(Document):
     __collection__ = 'testdoc'
     map = fields.MapField(fields.IntegerField())
 
 
 def test_default():
-    doc = TestDoc()
+    doc = Doc()
     assert isinstance(doc.map, fields.map.Map)
     assert not doc.map
     assert len(doc.map) == 0
@@ -22,7 +22,7 @@ def test_default():
 
 def test_load(db):
     _id = db.db.testdoc.insert({'map': {'a': 1, 'b': 2, 'c': 3}})
-    doc = db.get_queryset(TestDoc).find_one(_id)
+    doc = db.get_queryset(Doc).find_one(_id)
 
     assert doc.map
     assert len(doc.map) == 3
@@ -33,28 +33,28 @@ def test_load(db):
 
 
 def test_getitem_keyerror():
-    doc = TestDoc()
+    doc = Doc()
     with pytest.raises(KeyError):
         doc.map['not exist']
 
 
 def test_setitem(db):
     _id = db.db.testdoc.insert({'map': {'a': 1, 'b': 2, 'c': 3}})
-    doc = db.get_queryset(TestDoc).find_one(_id)
+    doc = db.get_queryset(Doc).find_one(_id)
     doc.map['d'] = 4
 
     assert doc.map == {'a': 1, 'b': 2, 'c': 3, 'd': 4}
 
 
 def test_setitem_valueerror():
-    doc = TestDoc()
+    doc = Doc()
     with pytest.raises(ValueError):
         doc.map['d'] = 'not a number'
 
 
 def test_setattr_save(db):
     _id = db.db.testdoc.insert({'map': {'a': 1, 'b': 2, 'c': 3}})
-    doc = db.get_queryset(TestDoc).find_one(_id)
+    doc = db.get_queryset(Doc).find_one(_id)
     doc.map['d'] = 4
     db.save(doc)
 
@@ -65,7 +65,7 @@ def test_setattr_save(db):
 
 def test_remove(db):
     _id = db.db.testdoc.insert({'map': {'a': 1, 'b': 2, 'c': 3}})
-    doc = db.get_queryset(TestDoc).find_one(_id)
+    doc = db.get_queryset(Doc).find_one(_id)
     del doc.map['b']
 
     assert doc.map == {'a': 1, 'c': 3}
@@ -73,7 +73,7 @@ def test_remove(db):
 
 def test_remove_save(db):
     _id = db.db.testdoc.insert({'map': {'a': 1, 'b': 2, 'c': 3}})
-    doc = db.get_queryset(TestDoc).find_one(_id)
+    doc = db.get_queryset(Doc).find_one(_id)
     del doc.map['b']
     db.save(doc)
 
@@ -83,7 +83,7 @@ def test_remove_save(db):
 
 def test_set(db):
     _id = db.db.testdoc.insert({'map': {'a': 1, 'b': 2, 'c': 3}})
-    doc = db.get_queryset(TestDoc).find_one(_id)
+    doc = db.get_queryset(Doc).find_one(_id)
     doc.map.set('d', 4)
 
     assert doc.map == {'a': 1, 'b': 2, 'c': 3, 'd': 4}
@@ -93,13 +93,13 @@ def test_set(db):
 
 
 def test_set_runtimeerror():
-    doc = TestDoc()
+    doc = Doc()
     with pytest.raises(RuntimeError):
         doc.map.set('key', 1)
 
 
 def test_set_valueerror(db):
-    doc = TestDoc()
+    doc = Doc()
     db.save(doc)
     with pytest.raises(ValueError):
         doc.map.set('key', 'not a number')
@@ -107,7 +107,7 @@ def test_set_valueerror(db):
 
 def test_unset(db):
     _id = db.db.testdoc.insert({'map': {'a': 1, 'b': 2, 'c': 3}})
-    doc = db.get_queryset(TestDoc).find_one(_id)
+    doc = db.get_queryset(Doc).find_one(_id)
     doc.map.unset('b')
 
     assert doc.map == {'a': 1, 'c': 3}
@@ -116,7 +116,7 @@ def test_unset(db):
     assert data['map'] == {'a': 1, 'c': 3}
 
 
-class TestDocCustom(Document):
+class DocCustom(Document):
     __collection__ = 'testdoc'
     map = fields.MapCustomKeysField(fields.IntegerField(), ObjectId)
 
@@ -126,7 +126,7 @@ def test_custom_load(db):
     two = ObjectId()
 
     _id = db.db.testdoc.insert({'map': {str(one): 1, str(two): 2}})
-    doc = db.get_queryset(TestDocCustom).find_one(_id)
+    doc = db.get_queryset(DocCustom).find_one(_id)
 
     assert doc.map
     assert len(doc.map) == 2
@@ -142,7 +142,7 @@ def test_custom_setitem(db):
     two = ObjectId()
 
     _id = db.db.testdoc.insert({'map': {str(one): 1}})
-    doc = db.get_queryset(TestDocCustom).find_one(_id)
+    doc = db.get_queryset(DocCustom).find_one(_id)
 
     doc.map[two] = 3
     assert doc.map == {one: 1, two: 3}

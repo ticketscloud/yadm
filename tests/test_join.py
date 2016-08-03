@@ -6,15 +6,15 @@ from yadm.documents import Document
 from yadm import fields
 
 
-class TestDocRef(Document):
+class DocRef(Document):
     __collection__ = 'testdocs_ref'
-    i = fields.IntegerField
+    i = fields.IntegerField()
 
 
-class TestDoc(Document):
+class Doc(Document):
     __collection__ = 'testdocs'
-    i = fields.IntegerField
-    ref = fields.ReferenceField(TestDocRef)
+    i = fields.IntegerField()
+    ref = fields.ReferenceField(DocRef)
 
 
 @pytest.fixture
@@ -35,7 +35,7 @@ def qs(db, id_ref_1, id_ref_2):
             'ref': id_ref_1 if n % 2 else id_ref_2,
         })
 
-    return db(TestDoc)
+    return db(Doc)
 
 
 @pytest.fixture
