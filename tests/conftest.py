@@ -1,5 +1,6 @@
-from unittest import SkipTest
 import re
+import sys
+from unittest import SkipTest
 
 import pytest
 import pymongo
@@ -15,6 +16,11 @@ def pytest_addoption(parser):
         help='MongoDB connection uri',
         metavar='"localhost:27017/test"',
     )
+
+
+def pytest_ignore_collect(path, config):
+    if '/tests_aio' in str(path) and sys.version_info < (3, 5):
+        return True
 
 
 @pytest.fixture(scope='session')

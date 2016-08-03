@@ -4,7 +4,7 @@ Work with references.
 .. code-block:: python
 
     class RDoc(Document):
-        i = fields.IntegerField
+        i = fields.IntegerField()
 
     class Doc(Document):
         rdoc = fields.ReferenceField(RDoc)
@@ -20,13 +20,24 @@ Work with references.
     doc = db.get_queryset(Doc).find_one(doc.id)  # reload doc
     assert doc.rdoc.id == rdoc.id
     assert doc.rdoc.i == 13
+
+Or asynchronous:
+
+.. code-block:: python
+
+    rdoc = await doc.rdoc
+    assert rdoc.id == rdoc.id
+    assert rdoc.i == 13
+    assert doc.rdoc == rdoc.id
 """
+import asyncio
+
 from bson import ObjectId
 from bson.errors import InvalidId
 
 from yadm.common import EnclosedDocDescriptor
 from yadm.markers import AttributeNotSet
-from yadm.documents import Document
+from yadm.documents import Document, DocumentItemMixin
 from yadm.fields.base import Field, pass_null
 from yadm.testing import create_fake
 
@@ -36,7 +47,7 @@ class BrokenReference(Exception):
     """
 
 
-class NotBindingToDatabase(Exception):
+class NotBindingToDatabase(Exception):  # noqa
     """ Raise if set ObjectId insted referenced document
     to new document, who not binded to database.
     """
@@ -98,25 +109,26 @@ class ReferenceField(Field):
             rdc = self.reference_document_class
 
             if document.__qs__ is not None:
-                if (rdc, value) in document.__qs__.cache:
-                    return document.__qs__.cache[(rdc, value)]
-                else:
-                    qs = document.__db__.get_queryset(rdc, cache=document.__qs__.cache)
+                cache = document.__qs__.cache
+            else:
+                cache = {}  # fake cache
 
-                    doc = qs.find_one(value)
+            if (rdc, value) in document.__qs__.cache:
+                return cache[(rdc, value)]
+            else:
+                qs = document.__db__.get_queryset(rdc, cache=cache)
+
+                doc = qs.find_one(value)
+                if not asyncio.iscoroutine(doc):
                     if doc is None:  # pragma: no cover
                         doc = qs.read_primary().find_one(value, exc=BrokenReference)
 
-                    document.__qs__.cache[(rdc, value)] = doc
+                    cache[(rdc, value)] = doc
                     return doc
-            else:
-                qs = document.__db__.get_queryset(rdc)
 
-                doc = qs.find_one(value)
-                if doc is None:  # pragma: no cover
-                    return qs.read_primary().find_one(value, exc=BrokenReference)
                 else:
-                    return doc
+                    cache[(rdc, value)] = ref = Reference(value, document, self)
+                    return ref
 
         else:
             raise NotBindingToDatabase((document, self, value))
@@ -124,3 +136,42 @@ class ReferenceField(Field):
     @pass_null
     def to_mongo(self, document, value):
         return value.id
+
+
+class Reference(ObjectId):
+    """ Reference object.
+
+    This is awaitable:
+
+        doc = await reference
+    """
+    document = None
+
+    def __init__(self,
+                 _id: ObjectId,
+                 parent: DocumentItemMixin,
+                 field: ReferenceField):
+        super().__init__(_id)
+        self.parent = parent
+        self.field = field
+        self.db = parent.__db__
+        self.document_class = field.reference_document_class
+
+    def __repr__(self):
+        n = self.__class__.__name__
+        collection = self.document_class.__collection__
+
+        status = '+' if self.document is None else '-'
+
+        return "{}({}:{} {})".format(n, collection, str(self), status)
+
+    async def __await__(self):
+        return await self.get()
+
+    async def get(self, force: bool=False):
+        if self.document is None or force:
+            self.document = await self.db(self.document_class).find_one(self)
+            if self.document is None:
+                self.document = await self.db.get_document(self.document_class, self)
+
+        return self.document
