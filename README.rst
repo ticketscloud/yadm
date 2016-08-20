@@ -64,7 +64,7 @@ Quick start
 CHANGES
 =======
 
-1.1.4 (2016-08-XX)
+1.1.4 (2016-08-20)
 ------------------
 
 * Add some features to ``Bulk``:
