@@ -1,4 +1,4 @@
-""" Common part for working with imports, documents and so on
+""" Common part for working with imports, documents and so on.
 """
 from collections.abc import Mapping
 
@@ -46,7 +46,7 @@ class EnclosedDocDescriptor:
 
 
 class BaseResult(Mapping):
-    """ Base class for operations results
+    """ Base class for operations results.
     """
     def __init__(self, raw):
         self._raw = raw
@@ -59,3 +59,29 @@ class BaseResult(Mapping):
 
     def __len__(self):  # pragma: no cover
         return len(self._raw)
+
+
+def build_update_query(set=None, unset=None, inc=None, push=None, pull=None):
+    """ Helper for build update-queries.
+    """
+    query = {}
+
+    if set:
+        query['$set'] = set
+
+    if unset:
+        if isinstance(unset, dict):
+            query['$unset'] = unset
+        else:
+            query['$unset'] = {f: True for f in unset}
+
+    if inc:
+        query['$inc'] = inc
+
+    if push:
+        query['$push'] = push
+
+    if pull:
+        query['$pull'] = pull
+
+    return query or None

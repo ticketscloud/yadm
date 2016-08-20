@@ -45,14 +45,14 @@ Quick start
     db.insert(post)
 
     # Query posts
-    qs = db.get_queryset(BlogPost).find({'title': {'$regex': '^S'}})
+    qs = db(BlogPost).find({'title': {'$regex': '^S'}})
     assert qs.count() > 0
 
     for post in qs:
         assert post.title.startswith('S')
 
     # Query one post
-    post = db.get_queryset(BlogPost).find_one({'title': 'Small post'})
+    post = db(BlogPost).find_one({'title': 'Small post'})
 
     # Change post
     post.title = 'Bla-bla-bla title'
@@ -63,6 +63,17 @@ Quick start
 
 CHANGES
 =======
+
+1.1.4 (2016-08-XX)
+------------------
+
+* Add some features to ``Bulk``:
+
+  - ``Bulk.update_one(document, **kw)``: method for add update one document in bulk;
+  - ``Bulk.find(query).update(**kw)``: update many documents by query;
+  - ``Bulk.find(query).upsert().update(**kw)``: upsert document;
+  - ``Bulk.find(query).remove(**kw)``: remove documents;
+
 
 1.1.3 (2016-07-23)
 ------------------

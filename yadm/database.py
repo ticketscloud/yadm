@@ -28,6 +28,7 @@ from yadm.aggregation import Aggregator
 from yadm.queryset import QuerySet
 from yadm.bulk import Bulk
 from yadm.serialize import to_mongo
+from yadm.common import build_update_query
 
 
 PYMONGO_VERSION = pymongo.version_tuple
@@ -163,25 +164,8 @@ class Database(BaseDatabase):
         :param Document document: document instance for update
         :param bool reload: if True, reload document
         """
-        update_data = {}
-
-        if set:
-            update_data['$set'] = set
-
-        if unset:
-            if isinstance(unset, dict):
-                update_data['$unset'] = unset
-            else:
-                update_data['$unset'] = {f: True for f in unset}
-
-        if inc:
-            update_data['$inc'] = inc
-
-        if push:
-            update_data['$push'] = push
-
-        if pull:
-            update_data['$pull'] = pull
+        update_data = build_update_query(set=set, unset=unset, inc=inc,
+                                         push=push, pull=pull)
 
         if update_data:
             self._get_collection(document).update(

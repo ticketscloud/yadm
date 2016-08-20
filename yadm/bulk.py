@@ -2,7 +2,7 @@ from collections.abc import Sequence
 
 from pymongo.errors import BulkWriteError
 
-from yadm.common import BaseResult
+from yadm.common import BaseResult, build_update_query
 from yadm.serialize import to_mongo, from_mongo
 
 
@@ -17,12 +17,15 @@ class Bulk:
 
     Context manager example:
 
-        with db.bulk(Doc) as bulk:
+        with db.bulk(Doc, ordered=True) as bulk:
             bulk.insert(doc_1)
             bulk.insert(doc_2)
+            bulk.update_one(doc_3, inc={'incr_key': 1})
+            bulk.find({'key': 'value'}).update(set={'key': 'new_value'})
+            bulk.find({'key': 'new_value'}).remove()
     """
-    result = None
-    error = False
+    _result = None
+    _error = False
 
     def __init__(self, db, document_class,
                  ordered=False, raise_on_errors=True):
@@ -53,6 +56,21 @@ class Bulk:
         if exc_type is None:
             self.execute()
 
+    @property
+    def result(self):
+        """ A BulkResult instance or rise RuntimeError if not executed.
+        """
+        if self._result is not None:
+            return self._result
+        else:
+            raise RuntimeError("The bulk was not executed.")
+
+    @property
+    def error(self):
+        """ True for executed errors.
+        """
+        return self._error
+
     def execute(self):
         """ Execute the bulk query.
 
@@ -61,15 +79,15 @@ class Bulk:
         try:
             raw_data = self._bulk_mongo.execute()
         except BulkWriteError as exc:
-            self.error = True
+            self._error = True
             raw_data = exc.details
 
-        self.result = BulkResult(self, raw_data)
+        self._result = BulkResult(self, raw_data)
 
-        if self.error and self._raise_on_errors:
+        if self._error and self._raise_on_errors:
             raise BulkWriteError(raw_data)
 
-        return self.result
+        return self._result
 
     def insert(self, document):
         """ Add insert document to bulk.
@@ -85,6 +103,58 @@ class Bulk:
                             "".format(self._document_class, document.__class__))
 
         self._bulk_mongo.insert(to_mongo(document))
+
+    def find(self, query):
+        """ Start "find" query in bulk.
+
+        :param dict query:
+        :return: BulkQuery instance
+        """
+        return BulkQuery(self._bulk_mongo, query)
+
+    def update_one(self, document, *,
+                   set=None, unset=None, inc=None,
+                   push=None, pull=None):
+        """ Add update one document to bulk.
+        """
+        if not isinstance(document, self._document_class):
+            raise TypeError("Bulk.update_one() first argument must be a {}, not '{}'"
+                            "".format(self._document_class, document.__class__))
+
+        self.find({'_id': document.id}).update(set=set, unset=unset, inc=inc,
+                                               push=push, pull=pull)
+
+
+class BulkQuery:
+    def __init__(self, bulk_mongo, query, *, upsert=False):
+        self._bulk_mongo = bulk_mongo
+        self._query = query
+        self._upsert = upsert
+
+    def __repr__(self):
+        if not self._upsert:
+            return "{s.__class__.__name__}({s._query!r})".format(s=self)
+        else:
+            return "{s.__class__.__name__}({s._query!r} upsertable)".format(s=self)
+
+    def upsert(self):
+        return self.__class__(self._bulk_mongo, self._query, upsert=True)
+
+    def update(self, *,
+               set=None, unset=None, inc=None,
+               push=None, pull=None):
+        """ Updale documents finded in query.
+        """
+        update_query = build_update_query(set=set, unset=unset, inc=inc,
+                                          push=push, pull=pull)
+
+        if self._upsert:
+            self._bulk_mongo.find(self._query).upsert().update(update_query)
+        else:
+            self._bulk_mongo.find(self._query).update(update_query)
+
+    def remove(self):
+        self._bulk_mongo.find(self._query).remove()
 
 
 class BulkResult(BaseResult):
