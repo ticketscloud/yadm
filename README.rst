@@ -68,11 +68,10 @@ CHANGES
 ------------------
 
 * Add some features to ``Bulk``:
-
-  - ``Bulk.update_one(document, **kw)``: method for add update one document in bulk;
-  - ``Bulk.find(query).update(**kw)``: update many documents by query;
-  - ``Bulk.find(query).upsert().update(**kw)``: upsert document;
-  - ``Bulk.find(query).remove(**kw)``: remove documents;
+    - ``Bulk.update_one(document, **kw)``: method for add update one document in bulk;
+    - ``Bulk.find(query).update(**kw)``: update many documents by query;
+    - ``Bulk.find(query).upsert().update(**kw)``: upsert document;
+    - ``Bulk.find(query).remove(**kw)``: remove documents;
 
 
 1.1.3 (2016-07-23)
