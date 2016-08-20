@@ -1,5 +1,6 @@
-""" YADM with faker integration
+""" YADM with faker integration.
 """
+from types import GeneratorType
 
 from faker import Faker
 
@@ -51,8 +52,10 @@ def create_fake(__document_class__,
     doc_fake_proc = document.__fake__(values, __faker__, __depth__ - 1)
 
     # extend values from __fake__ method
-    if doc_fake_proc is not None:
+    if isinstance(doc_fake_proc, GeneratorType):
         values = next(doc_fake_proc)
+    elif isinstance(doc_fake_proc, dict):
+        values = doc_fake_proc
 
     # first: set values
     for name, fake in values.items():
@@ -75,7 +78,8 @@ def create_fake(__document_class__,
             if fake is not AttributeNotSet:
                 setattr(document, name, fake)
 
-    if doc_fake_proc is not None:
+    if isinstance(doc_fake_proc, GeneratorType):
+        # pre save processor
         try:
             next(doc_fake_proc)
         except StopIteration:
@@ -84,7 +88,8 @@ def create_fake(__document_class__,
     if __db__ is not None:
         __db__.insert(document)
 
-        if doc_fake_proc is not None:
+        # post save processor
+        if isinstance(doc_fake_proc, GeneratorType):
             try:
                 next(doc_fake_proc)
             except StopIteration:
