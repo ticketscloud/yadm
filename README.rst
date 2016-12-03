@@ -14,6 +14,15 @@ It's small and simple ODM for use with MongoDB.
 Full documentation: http://yadm.readthedocs.org
 
 
+------------
+Requirements
+------------
+
+YAMD support MongoDB version 3.x only. MongoDB 2.x is not supported.
+
+Minimal version of python is 3.4.
+
+
 -----------
 Quick start
 -----------
