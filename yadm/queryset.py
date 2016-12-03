@@ -2,6 +2,7 @@ from bson import ObjectId
 
 from yadm.join import Join
 from yadm.cache import StackCache
+from yadm.results import UpdateResult, RemoveResult
 from yadm.serialize import from_mongo
 
 CACHE_SIZE = 100
@@ -328,12 +329,13 @@ class QuerySet(BaseQuerySet):
             *(default False)*
         :return: update result
         """
-        return self._collection.update(
+        raw_result = self._collection.update(
             self._criteria,
             update,
             multi=multi,
             upsert=upsert,
         )
+        return UpdateResult(raw_result)
 
     def find_and_modify(
             self, update=None, *, upsert=False,
@@ -373,7 +375,8 @@ class QuerySet(BaseQuerySet):
         :param bool multi: if False, remove only first finded document
             *(default True)*
         """
-        return self._collection.remove(self._criteria, multi=multi)
+        raw_result = self._collection.remove(self._criteria, multi=multi)
+        return RemoveResult(raw_result)
 
     def distinct(self, field):
         """ Distinct query.

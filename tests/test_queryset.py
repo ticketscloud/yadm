@@ -5,6 +5,7 @@ from bson import ObjectId
 from yadm.documents import Document
 from yadm import fields
 from yadm.markers import NotLoaded
+from yadm.results import UpdateResult, RemoveResult
 
 
 class Doc(Document):
@@ -94,7 +95,12 @@ def test_find_with_collisium(qs):
 
 
 def test_update(db, qs):
-    qs.find({'i': {'$gte': 6}}).update({'$set': {'s': 'test'}})
+    result = qs.find({'i': {'$gte': 6}}).update({'$set': {'s': 'test'}})
+
+    assert isinstance(result, UpdateResult)
+    assert result
+    assert result.matched == result.modified == int(result) == 4
+    assert result.upserted == 0
 
     assert db.db.testdocs.count() == 10
     assert {d['i'] for d in db.db.testdocs.find()} == set(range(10))
@@ -109,7 +115,12 @@ def test_update(db, qs):
 
 
 def test_update_not_multi(db, qs):
-    qs.find({'i': {'$gte': 6}}).update({'$set': {'s': 'test'}}, multi=False)
+    result = qs.find({'i': {'$gte': 6}}).update({'$set': {'s': 'test'}}, multi=False)
+
+    assert isinstance(result, UpdateResult)
+    assert result
+    assert result.matched == result.modified == int(result) == 1
+    assert result.upserted == 0
 
     assert db.db.testdocs.count() == 10
     assert {d['i'] for d in db.db.testdocs.find()} == set(range(10))
@@ -193,7 +204,12 @@ def test_find_and_modify_not_found(qs):
 
 
 def test_remove(db, qs):
-    qs.find({'i': {'$gte': 6}}).remove()
+    result = qs.find({'i': {'$gte': 6}}).remove()
+
+    assert isinstance(result, RemoveResult)
+    assert result
+    assert result.removed == int(result) == 4
+
     assert len([d for d in qs]) == 6
     assert {d.i for d in qs} == set(range(6))
 
@@ -202,7 +218,12 @@ def test_remove(db, qs):
 
 
 def test_remove__one(db, qs):
-    qs.find({'i': {'$gte': 6}}).remove(multi=False)
+    result = qs.find({'i': {'$gte': 6}}).remove(multi=False)
+
+    assert isinstance(result, RemoveResult)
+    assert result
+    assert result.removed == int(result) == 1
+
     assert len([d for d in qs]) == 9
     assert db.db.testdocs.count() == 9
 
