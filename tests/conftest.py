@@ -8,6 +8,13 @@ import pymongo
 from yadm.database import Database
 
 
+try:
+    import motor  # noqa
+    WITH_MOTOR = True
+except ImportError:
+    WITH_MOTOR = False
+
+
 def pytest_addoption(parser):
     parser.addoption(
         '--mongo',
@@ -19,8 +26,8 @@ def pytest_addoption(parser):
 
 
 def pytest_ignore_collect(path, config):
-    if '/tests_aio' in str(path) and sys.version_info < (3, 5):
-        return True
+    if '/tests_aio' in str(path):
+        return not WITH_MOTOR or sys.version_info < (3, 5)
 
 
 @pytest.fixture(scope='session')

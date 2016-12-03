@@ -11,17 +11,19 @@ env:
     - MONGO=3.0 PYMONGO=">=3.0,<3.1"
     - MONGO=3.0 PYMONGO=">=3.1,<3.2"
     - MONGO=3.0 PYMONGO=">=3.2,<3.4"
-    - MONGO=3.0 PYMONGO=">=3.4"
+    - MONGO=3.0 PYMONGO=">=3.4,<4"
+    - MONGO=3.0 MOTOR=">=0.7,<1.0"
 
     - MONGO=3.2 PYMONGO=">=3.0,<3.1"
     - MONGO=3.2 PYMONGO=">=3.1,<3.2"
     - MONGO=3.2 PYMONGO=">=3.2,<3.4"
-    - MONGO=3.2 PYMONGO=">=3.4"
+    - MONGO=3.2 PYMONGO=">=3.4,<4"
+    - MONGO=3.2 MOTOR=">=1.0,<1.1"
 
     - MONGO=3.4 PYMONGO=">=3.1,<3.2"
     - MONGO=3.4 PYMONGO=">=3.2,<3.4"
-    - MONGO=3.4 PYMONGO=">=3.4"
-
+    - MONGO=3.4 PYMONGO=">=3.4,<4"
+    - MONGO=3.4 MOTOR=">=1.1,<2"
 
 before_install:
     - docker run -d -p 127.0.0.1:27017:27017 mongo:$MONGO
@@ -29,7 +31,9 @@ before_install:
 install:
     - travis_retry pip install --retries=30 --timeout=5 --no-cache-dir --disable-pip-version-check -U setuptools
     - travis_retry pip install --retries=30 --timeout=5 --no-cache-dir --disable-pip-version-check -U pip
-    - travis_retry pip install --retries=30 --timeout=5 --no-cache-dir --disable-pip-version-check -U pytest pytest-cov coveralls pymongo$PYMONGO
+    - travis_retry pip install --retries=30 --timeout=5 --no-cache-dir --disable-pip-version-check -U pytest pytest-cov coveralls
+    - test $PYMONGO && travis_retry pip install --retries=30 --timeout=5 --no-cache-dir --disable-pip-version-check pymongo$PYMONGO || true
+    - test $MOTOR && travis_retry pip install --retries=30 --timeout=5 --no-cache-dir --disable-pip-version-check motor$MOTOR || true
     - travis_retry pip install --retries=30 --timeout=5 --no-cache-dir --disable-pip-version-check .
 
 script:
