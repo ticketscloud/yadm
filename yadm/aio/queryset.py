@@ -1,6 +1,7 @@
 from bson import ObjectId
 
 from yadm.queryset import BaseQuerySet
+from yadm.results import UpdateResult, RemoveResult
 
 
 class _AioQuerySetCursor:
@@ -52,12 +53,13 @@ class AioQuerySet(BaseQuerySet):
         return self._from_mongo_one(data, projection=qs._projection)
 
     async def update(self, update, *, multi=True, upsert=False):
-        return await self._collection.update(
+        raw_result = await self._collection.update(
             self._criteria,
             update,
             multi=multi,
             upsert=upsert,
         )
+        return UpdateResult(raw_result)
 
     async def find_and_modify(
             self, update=None, *, upsert=False,
@@ -79,7 +81,8 @@ class AioQuerySet(BaseQuerySet):
             return result
 
     async def remove(self, *, multi=True):
-        return await self._collection.remove(self._criteria, multi=multi)
+        raw_result = await self._collection.remove(self._criteria, multi=multi)
+        return RemoveResult(raw_result)
 
     async def distinct(self, field):
         return await self._cursor.distinct(field)
