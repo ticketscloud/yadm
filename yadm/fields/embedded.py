@@ -98,5 +98,4 @@ class EmbeddedDocumentField(Field):
         """ Return copy of field.
         """
         return self.__class__(self.embedded_document_class,
-                              smart_null=self.smart_null,
-                              default=self.default)
+                              smart_null=self.smart_null)
