@@ -22,7 +22,7 @@ setup(
         'zope.dottedname',
         'python-dateutil',
         'pytz',
-        'Faker < 0.8',
+        'Faker<0.8',
     ],
 
     classifiers=[
