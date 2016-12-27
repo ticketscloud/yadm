@@ -57,6 +57,24 @@ Quick start
 CHANGES
 =======
 
+1.2.0 (2016-12-27)
+------------------
+
+* Drop MongoDB 2.X support;
+* Objects for update and remove results;
+* Use Faker instead fake-factory;
+
+
+1.1.4 (2016-08-20)
+------------------
+
+* Add some features to :py:module:`Bulk <yadm.bulk>`:
+    - :py:meth:`Bulk.update_one(document, **kw) <yadm.bulk.Bulk.update_one>`: method for add update one document in bulk;
+    - :py:meth:`Bulk.find(query).update(**kw) <yadm.bulk.BulkQuery.update>`: update many documents by query;
+    - :py:meth:`Bulk.find(query).upsert().update(**kw) <yadm.bulk.BulkQuery.upsert>`: upsert document;
+    - :py:meth:`Bulk.find(query).remove(**kw) <yadm.bulk.BulkQuery.remove>`: remove documents;
+
+
 1.1.3 (2016-07-23)
 ------------------
 

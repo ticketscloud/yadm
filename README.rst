@@ -73,6 +73,14 @@ Quick start
 CHANGES
 =======
 
+1.2.0 (2016-12-27)
+------------------
+
+* Drop MongoDB 2.X suport;
+* Objects for update and remove results;
+* Use Faker instead fake-factory.
+
+
 1.1.4 (2016-08-20)
 ------------------
 
