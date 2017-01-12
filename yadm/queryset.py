@@ -1,3 +1,4 @@
+from enum import Enum
 from bson import ObjectId
 
 from yadm.join import Join
@@ -7,6 +8,13 @@ from yadm.serialize import from_mongo
 
 CACHE_SIZE = 100
 
+class NotFoudBehavior(Enum):
+    NONE = 'none'
+    SKIP = 'skip'
+    ERROR = 'error'
+
+class NotFoundError(Exception):
+    pass
 
 class BaseQuerySet:
     """ Query builder.
@@ -428,3 +436,46 @@ class QuerySet(BaseQuerySet):
             join.join(*field_names)
 
         return join
+
+    def find_in(self, comparable, field='_id', *, not_found=NotFoudBehavior.SKIP):
+        """ Creates a query of the form {field: {'$ in': comparable}} and
+        returns the generator of documents with the same order as an elements
+        in the argument 'comparable'.
+
+        :param list comparable: values for compare in a request
+        :param str field: field name of the document for comparison
+        :param not_found: flag determines the behavior if the document
+        with the specified value is not found
+        :return: list generator of docs
+
+        not_found argument can take the following values:
+            'none': If a document can not be found then a generator
+            will return `None`.
+            'skip': if a document can not be found then a generator
+            will pass element.
+            'error': if a document can not be found then a generator
+            raise :class:`yadm.queryset.DocNotFoundError` exception.
+        """
+        not_found = NotFoudBehavior(not_found)
+        hash_docs = {}
+
+        for doc in self.find({field: {'$in': comparable}}):
+            key = getattr(doc, field)
+            if key not in hash_docs:
+                hash_docs[key] = doc
+
+        for cmp_item in comparable:
+            value = hash_docs.get(cmp_item)
+
+            if not_found is NotFoudBehavior.NONE:
+                yield value
+
+            elif not_found is NotFoudBehavior.SKIP:
+                if value:
+                    yield value
+
+            elif not_found is NotFoudBehavior.ERROR:
+                if not value:
+                    error_txt = 'Could not find a document with the field "{}" equal "{}"'
+                    raise NotFoundError(error_txt.format(field, cmp_item))
+                yield value

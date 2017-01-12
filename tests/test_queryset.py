@@ -1,11 +1,13 @@
 import pytest
 import pymongo
 from bson import ObjectId
+from random import shuffle
 
 from yadm.documents import Document
 from yadm import fields
 from yadm.markers import NotLoaded
 from yadm.results import UpdateResult, RemoveResult
+from yadm.queryset import NotFoundError
 
 
 class Doc(Document):
@@ -309,3 +311,60 @@ def test_bulk(qs):
     _id = list(bulk)[0]
     assert bulk[_id].id == _id
     assert {d.i for d in bulk.values()} == {6, 7, 8, 9}
+
+
+class TestFindIn:
+    @pytest.fixture(autouse=True)
+    def ids(self, qs):
+        return [doc.id for doc in qs]
+
+    def test_simple(self, qs, ids):
+        shuffle(ids)
+        result = [getattr(doc, 'id', doc)
+                  for doc in qs.find_in(ids)]
+        assert result == ids
+
+        shuffle(ids)
+        assert result != ids
+
+    def test_skip(self, qs, ids):
+        ids.append('NotExistId')
+        result = [getattr(doc, 'id', doc)
+                  for doc in qs.find_in(ids)]
+
+        assert len(result) < len(ids)
+        assert result[-1] is not None
+
+    def test_none_last(self, qs, ids):
+        ids.append('NotExistId')
+        result = [getattr(doc, 'id', doc)
+                  for doc in qs.find_in(ids, not_found='none')]
+
+        assert len(result) == len(ids)
+        assert result[-1] is None
+
+    def test_none_middle(self, qs, ids):
+        ids[4] = 'NotExistId'
+        result = [getattr(doc, 'id', doc)
+                  for doc in qs.find_in(ids, not_found='none')]
+        assert len(result) == len(ids)
+        assert result[4] is None
+
+    def test_exception(self, qs, ids):
+        try:
+            ids.append('NotExistId')
+            [getattr(doc, 'id', doc)
+             for doc in qs.find_in(ids, not_found='error')]
+
+        except NotFoundError:
+            return
+
+        assert False
+
+    def test_copy_id(self, qs, ids):
+        ids.append(ids[0])
+        result = [getattr(doc, 'id', doc)
+                  for doc in qs.find_in(ids)]
+
+        assert len(result) == len(ids)
+        assert result == ids
