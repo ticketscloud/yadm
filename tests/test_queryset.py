@@ -1,7 +1,7 @@
+import random
 import pytest
 import pymongo
 from bson import ObjectId
-from random import shuffle
 
 from yadm.documents import Document
 from yadm import fields
@@ -317,7 +317,7 @@ class TestFindIn:
     @pytest.fixture(autouse=True)
     def ids(self, qs):
         ids = [doc.id for doc in qs]
-        shuffle(ids)
+        random.shuffle(ids)
         return ids
 
     def test_simple(self, qs, ids):
