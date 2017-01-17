@@ -324,9 +324,6 @@ class TestFindIn:
                   for doc in qs.find_in(ids)]
         assert result == ids
 
-        shuffle(ids)
-        assert result != ids
-
     def test_skip(self, qs, ids):
         ids.append('NotExistId')
         result = [getattr(doc, 'id', doc)
