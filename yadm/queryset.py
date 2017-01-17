@@ -8,13 +8,16 @@ from yadm.serialize import from_mongo
 
 CACHE_SIZE = 100
 
+
 class NotFoudBehavior(Enum):
     NONE = 'none'
     SKIP = 'skip'
     ERROR = 'error'
 
+
 class NotFoundError(Exception):
     pass
+
 
 class BaseQuerySet:
     """ Query builder.
