@@ -316,10 +316,11 @@ def test_bulk(qs):
 class TestFindIn:
     @pytest.fixture(autouse=True)
     def ids(self, qs):
-        return [doc.id for doc in qs]
+        ids = [doc.id for doc in qs]
+        shuffle(ids)
+        return ids
 
     def test_simple(self, qs, ids):
-        shuffle(ids)
         result = [getattr(doc, 'id', doc)
                   for doc in qs.find_in(ids)]
         assert result == ids
