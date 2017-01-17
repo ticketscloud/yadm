@@ -441,7 +441,7 @@ class QuerySet(BaseQuerySet):
         return join
 
     def find_in(self, comparable, field='_id', *, not_found=NotFoudBehavior.SKIP):
-        """ Creates a query of the form {field: {'$ in': comparable}} and
+        """ Creates a query of the form {field: {'$in': comparable}} and
         returns the generator of documents with the same order as an elements
         in the argument 'comparable'.
 
