@@ -449,7 +449,7 @@ class QuerySet(BaseQuerySet):
         :param str field: field name of the document for comparison
         :param not_found: flag determines the behavior if the document
         with the specified value is not found
-        :return: list generator of docs
+        :return: generator of docs
 
         not_found argument can take the following values:
             'none': If a document can not be found then a generator
