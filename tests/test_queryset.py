@@ -323,30 +323,22 @@ class TestFindIn:
     def test_simple(self, qs, ids):
         result = [getattr(doc, 'id', doc)
                   for doc in qs.find_in(ids)]
+
         assert result == ids
 
     def test_skip(self, qs, ids):
         ids.append('NotExistId')
-        result = [getattr(doc, 'id', doc)
-                  for doc in qs.find_in(ids)]
+        result = [doc.id for doc in qs.find_in(ids)]
+        assert result == ids[:-1]
 
-        assert len(result) < len(ids)
-        assert result[-1] is not None
-
-    def test_none_last(self, qs, ids):
-        ids.append('NotExistId')
+    def test_none(self, qs, ids):
+        index = random.randrange(len(ids))
+        ids[index] = 'NotExistId'
         result = [getattr(doc, 'id', doc)
                   for doc in qs.find_in(ids, not_found='none')]
 
         assert len(result) == len(ids)
-        assert result[-1] is None
-
-    def test_none_middle(self, qs, ids):
-        ids[4] = 'NotExistId'
-        result = [getattr(doc, 'id', doc)
-                  for doc in qs.find_in(ids, not_found='none')]
-        assert len(result) == len(ids)
-        assert result[4] is None
+        assert result[index] is None
 
     def test_exception(self, qs, ids):
         [getattr(doc, 'id', doc)
@@ -362,5 +354,4 @@ class TestFindIn:
         result = [getattr(doc, 'id', doc)
                   for doc in qs.find_in(ids)]
 
-        assert len(result) == len(ids)
         assert result == ids
