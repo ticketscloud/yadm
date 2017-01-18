@@ -481,5 +481,5 @@ class QuerySet(BaseQuerySet):
                 if value is not None:
                     yield value
                 else:
-                    error_txt = 'Could not find a document with the field "{}" equal "{}"'
+                    error_txt = "Could not find a document with the field '{}' equal '{}'"
                     raise NotFoundError(error_txt.format(field, cmp_item))
