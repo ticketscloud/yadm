@@ -474,11 +474,12 @@ class QuerySet(BaseQuerySet):
                 yield value
 
             elif not_found is NotFoudBehavior.SKIP:
-                if value:
+                if value is not None:
                     yield value
 
             elif not_found is NotFoudBehavior.ERROR:
-                if not value:
+                if value is not None:
+                    yield value
+                else:
                     error_txt = 'Could not find a document with the field "{}" equal "{}"'
                     raise NotFoundError(error_txt.format(field, cmp_item))
-                yield value
