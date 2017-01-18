@@ -349,6 +349,9 @@ class TestFindIn:
         assert result[4] is None
 
     def test_exception(self, qs, ids):
+        [getattr(doc, 'id', doc)
+         for doc in qs.find_in(ids, not_found='error')]
+
         with pytest.raises(NotFoundError):
             ids.append('NotExistId')
             [getattr(doc, 'id', doc)
