@@ -337,8 +337,8 @@ class TestFindIn:
         result = [getattr(doc, 'id', doc)
                   for doc in qs.find_in(ids, not_found='none')]
 
-        assert len(result) == len(ids)
-        assert result[index] is None
+        ids[index] = None
+        assert result == ids
 
     def test_exception(self, qs, ids):
         [getattr(doc, 'id', doc)
