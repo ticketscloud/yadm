@@ -1,3 +1,4 @@
+import random
 import pytest
 import pymongo
 from bson import ObjectId
@@ -6,6 +7,7 @@ from yadm.documents import Document
 from yadm import fields
 from yadm.markers import NotLoaded
 from yadm.results import UpdateResult, RemoveResult
+from yadm.queryset import NotFoundError
 
 
 class Doc(Document):
@@ -309,3 +311,47 @@ def test_bulk(qs):
     _id = list(bulk)[0]
     assert bulk[_id].id == _id
     assert {d.i for d in bulk.values()} == {6, 7, 8, 9}
+
+
+class TestFindIn:
+    @pytest.fixture(autouse=True)
+    def ids(self, qs):
+        ids = [doc.id for doc in qs]
+        random.shuffle(ids)
+        return ids
+
+    def test_simple(self, qs, ids):
+        result = [getattr(doc, 'id', doc)
+                  for doc in qs.find_in(ids)]
+
+        assert result == ids
+
+    def test_skip(self, qs, ids):
+        ids.append('NotExistId')
+        result = [doc.id for doc in qs.find_in(ids)]
+        assert result == ids[:-1]
+
+    def test_none(self, qs, ids):
+        index = random.randrange(len(ids))
+        ids[index] = 'NotExistId'
+        result = [getattr(doc, 'id', doc)
+                  for doc in qs.find_in(ids, not_found='none')]
+
+        ids[index] = None
+        assert result == ids
+
+    def test_exception(self, qs, ids):
+        [getattr(doc, 'id', doc)
+         for doc in qs.find_in(ids, not_found='error')]
+
+        with pytest.raises(NotFoundError):
+            ids.append('NotExistId')
+            [getattr(doc, 'id', doc)
+             for doc in qs.find_in(ids, not_found='error')]
+
+    def test_copy_id(self, qs, ids):
+        ids.append(ids[0])
+        result = [getattr(doc, 'id', doc)
+                  for doc in qs.find_in(ids)]
+
+        assert result == ids
