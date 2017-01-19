@@ -67,6 +67,12 @@ Quick start
 CHANGES
 =======
 
+1.2.1 (2017-01-19)
+------------------
+
+* Add :py:meth:`QuerySet.find_in <yadm.queryset.QuerySet.find_in>` for ``$in`` queries with specified order;
+
+
 1.2.0 (2016-12-27)
 ------------------
 
