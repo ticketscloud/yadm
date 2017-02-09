@@ -2,6 +2,10 @@
 """
 from collections import namedtuple
 
+from yadm.markers import AttributeNotSet
+from yadm.fields.base import Field, DefaultMixin, pass_null
+
+
 Currency = namedtuple('Currency', ['code', 'string', 'precision'])
 
 DEFAULT_CURRENCIES_LIST = [
@@ -198,13 +202,51 @@ class CurrencyStorage(dict):
             if item in self:
                 return super().__getitem__(item)
             else:
-                raise KeyError('"{}" is invalid value of CurrencyStorage'.format(item))
+                raise KeyError("{!r} is invalid value of CurrencyStorage."
+                               "".format(item))
 
         elif isinstance(item, Currency):
             return self[item.code]
 
         else:
-            raise TypeError('"{}" is invalid type value of CurrencyStorage'.format(type(item)))
+            raise TypeError("{!r} is invalid type value of CurrencyStorage."
+                            "".format(type(item)))
 
 
 DEFAULT_CURRENCY_STORAGE = CurrencyStorage(DEFAULT_CURRENCIES_LIST)
+
+
+class CurrencyField(DefaultMixin, Field):
+    def __init__(self, *,
+                 default=AttributeNotSet,
+                 currency_storage=DEFAULT_CURRENCY_STORAGE):
+        self._currency_storage = currency_storage
+
+        if default is AttributeNotSet:
+            pass
+        elif isinstance(default, (Currency, str, int)):
+            default = self._currency_storage[default]
+        else:
+            raise TypeError("Bad type for default.")
+
+        super().__init__(default=default)
+
+    @pass_null
+    def prepare_value(self, document, value):
+        if isinstance(value, Currency):
+            return value
+        elif isinstance(value, (str, int)):
+            if value in self._currency_storage:
+                return self._currency_storage[value]
+            else:
+                raise ValueError("Invalid value for CurrencyField.")
+        else:
+            raise TypeError("Only Currency or None is allowed for CurrencyField.")
+
+    @pass_null
+    def to_mongo(self, document, value):
+        return value.string
+
+    @pass_null
+    def from_mongo(self, document, value):
+        return self._currency_storage[value]

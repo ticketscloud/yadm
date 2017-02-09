@@ -237,3 +237,42 @@ class TestMoneyField:
         assert hasattr(doc, 'money')
         assert isinstance(doc.money, fields.Money)
         assert doc.money == fields.Money('12.34', 'RUB')
+
+
+class TestCurrencyField:
+    class Doc(Document):
+        __collection__ = 'testdocs'
+        currency = fields.CurrencyField(default='EUR')
+
+    def test_bad_type(self):
+        doc = self.Doc()
+        with pytest.raises(TypeError):
+            doc.currency = object()
+
+    @pytest.mark.parametrize('value', ['ERROR', 100500])
+    def test_bad_value(self, value):
+        doc = self.Doc()
+        with pytest.raises(ValueError):
+            doc.currency = value
+
+    @pytest.mark.parametrize('currency', ['USD', 'RUB', 'IQD'])
+    def test_save(self, db, currency):
+        doc = self.Doc()
+        doc.currency = DEFAULT_CURRENCY_STORAGE[currency]
+        db.save(doc)
+
+        data = db.db.testdocs.find_one()
+
+        assert 'currency' in data
+        assert isinstance(data['currency'], str)
+        assert data['currency'] == currency
+
+    @pytest.mark.parametrize('currency', ['USD', 'RUB', 'IQD'])
+    def test_load(self, db, currency):
+        db.db.testdocs.insert({'currency': currency})
+
+        doc = db(self.Doc).find_one()
+
+        assert hasattr(doc, 'currency')
+        assert isinstance(doc.currency, fields.Currency)
+        assert doc.currency is DEFAULT_CURRENCY_STORAGE[currency]
