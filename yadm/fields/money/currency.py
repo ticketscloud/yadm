@@ -1,6 +1,7 @@
 """ Currencies for Money.
 """
 from collections import namedtuple
+import random
 
 from yadm.markers import AttributeNotSet
 from yadm.fields.base import Field, DefaultMixin, pass_null
@@ -230,6 +231,9 @@ class CurrencyField(DefaultMixin, Field):
             raise TypeError("Bad type for default.")
 
         super().__init__(default=default)
+
+    def get_fake(self, document, faker, depth):
+        return random.choice(DEFAULT_CURRENCY_STORAGE.values())
 
     @pass_null
     def prepare_value(self, document, value):

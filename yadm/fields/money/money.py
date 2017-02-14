@@ -21,9 +21,9 @@ This code save to MongoDB document:
         money: {v: 314, c: 840}
     }
 """
-
 from decimal import Decimal, Context, ROUND_UP
 from functools import wraps
+import random
 
 from yadm.fields.base import Field, DefaultMixin, pass_null
 from .currency import DEFAULT_CURRENCY_STORAGE
@@ -215,7 +215,8 @@ class MoneyField(DefaultMixin, Field):
 
     def get_fake(self, document, faker, depth):
         value = faker.pydecimal(left_digits=5, right_digits=2, positive=True)
-        return Money(value, 'USD')
+        currency = random.choice(list(DEFAULT_CURRENCY_STORAGE.values()))
+        return Money(value, currency)
 
     @pass_null
     def to_mongo(self, document, value):
