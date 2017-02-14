@@ -172,6 +172,18 @@ class TestMoney:
     def tests_hash(self, first, seccond, equal):
         assert (hash(first) == hash(seccond)) is equal
 
+    @pytest.mark.parametrize('first, seccond, result', [
+        (fields.Money('10', 'RUB'), fields.Money('2', 'RUB'), decimal.Decimal('5.00')),
+        (fields.Money('2', 'RUB'), fields.Money('10', 'RUB'), decimal.Decimal('0.20')),
+    ])
+    def test_truediv(self, first, seccond, result):
+            assert first / seccond == result
+            assert isinstance(first / seccond, result.__class__)
+
+    def test_truediv__error(self):
+            with pytest.raises(ValueError):
+                fields.Money('10', 'RUB') / fields.Money('2', 'EUR')
+
 
 class TestCurrencyStorage:
     @pytest.mark.parametrize('key, code, string, precision', [

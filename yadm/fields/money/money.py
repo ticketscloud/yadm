@@ -61,7 +61,7 @@ def _special_comparison(method):
         elif isinstance(value, Money):
             if self.currency != value.currency:
                 raise ValueError("Money {!r} and {!r} must be with"
-                                 "the same currencies".format(self, value))
+                                 " the same currencies".format(self, value))
             else:
                 return method(self.value, value.value)
 
@@ -153,7 +153,14 @@ class Money:
         return self.__mul__(target)
 
     def __truediv__(self, target):
-        return self.__class__(self.value / target, self.currency)
+        if isinstance(target, self.__class__):
+            if self.currency == target.currency:
+                return self.value / target.value
+            else:
+                raise ValueError("Money {!r} and {!r} must be with"
+                                 " the same currencies".format(self, target))
+        else:
+            return self.__class__(self.value / target, self.currency)
 
     def __eq__(self, target):
         if target is 0:
