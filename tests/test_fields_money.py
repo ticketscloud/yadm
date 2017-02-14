@@ -156,6 +156,22 @@ class TestMoney:
     def test_money_cents(self, func, iv, cur, ov):
         assert func(fields.Money(iv, cur)) == ov
 
+    def tests_abs(self):
+        value = abs(fields.Money('-3.14', 'RUB'))
+        assert isinstance(value, fields.Money)
+        assert value.currency.string == 'RUB'
+        assert value > 0
+        assert value.total_cents > 0
+
+    @pytest.mark.parametrize('first, seccond, equal', [
+        (fields.Money('3.14', 'RUB'), fields.Money('3.14', 'RUB'), True),
+        (fields.Money('3.14', 'RUB'), fields.Money('2.48', 'RUB'), False),
+        (fields.Money('3.14', 'RUB'), fields.Money('-3.14', 'RUB'), False),
+        (fields.Money('3.14', 'RUB'), fields.Money('3.14', 'EUR'), False),
+    ])
+    def tests_hash(self, first, seccond, equal):
+        assert (hash(first) == hash(seccond)) is equal
+
 
 class TestCurrencyStorage:
     @pytest.mark.parametrize('key, code, string, precision', [

@@ -18,7 +18,7 @@ This code save to MongoDB document:
 
     {
         id: ObjectId('534272984c78591787e1a964'),
-        money: {v: 314, c: 840}
+        money: {v: 314, c: 'USD'}
     }
 """
 from decimal import Decimal, Context, ROUND_UP
@@ -132,6 +132,9 @@ class Money:
         quantized = self.value.quantize(precision_decimal, ROUND_UP)
         return int(quantized * 10 ** precision)
 
+    def __abs__(self):
+        return self.__class__(abs(self._value), self.currency)
+
     @_checker
     def __add__(self, target):
         return self.__class__(self.value + target.value, self.currency)
@@ -178,6 +181,9 @@ class Money:
 
     def __bool__(self):
         return bool(self.value)
+
+    def __hash__(self):
+        return hash(str(self))
 
     def __str__(self):
         precision = self.currency.precision
