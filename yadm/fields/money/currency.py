@@ -233,7 +233,7 @@ class CurrencyField(DefaultMixin, Field):
         super().__init__(default=default)
 
     def get_fake(self, document, faker, depth):
-        return random.choice(DEFAULT_CURRENCY_STORAGE.values())
+        return random.choice(list(DEFAULT_CURRENCY_STORAGE.values()))
 
     @pass_null
     def prepare_value(self, document, value):
