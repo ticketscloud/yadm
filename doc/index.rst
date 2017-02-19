@@ -67,6 +67,14 @@ Quick start
 CHANGES
 =======
 
+1.3.0 (2017-02-19)
+------------------
+
+* Add currency support to :py:class:`Money <yadm.fields.money.money.Money>`:
+    - Totaly rewrite :py:class:`Money <yadm.fields.money.money.Money>` type. Now it is not subclass of :py:class:`Decimal`;
+    - Add storage for currencies: :py:class:`yadm.fields.money.currency.DEFAULT_CURRENCY_STORAGE`;
+
+
 1.2.1 (2017-01-19)
 ------------------
 
