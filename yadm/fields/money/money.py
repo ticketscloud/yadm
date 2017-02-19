@@ -232,6 +232,13 @@ class MoneyField(DefaultMixin, Field):
         return Money(value, currency)
 
     @pass_null
+    def prepare_value(self, document, value):
+        if isinstance(value, Money):
+            return value
+        else:
+            raise TypeError("Only money is allowed for asigment to MoneyField.")
+
+    @pass_null
     def to_mongo(self, document, value):
         return {'v': value.total_cents,
                 'c': value.currency.code}
