@@ -73,6 +73,14 @@ Quick start
 CHANGES
 =======
 
+1.3.0 (2017-02-19)
+------------------
+
+* Add currency support to ``Money``:
+    - Totaly rewrite ``Money`` type. Now it is not subclass of ``Decimal``;
+    - Add storage for currencies: ``yadm.fields.money.currency.DEFAULT_CURRENCY_STORAGE``;
+
+
 1.2.1 (2017-01-19)
 ------------------
 
