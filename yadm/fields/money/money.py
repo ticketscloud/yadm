@@ -240,8 +240,7 @@ class MoneyField(DefaultMixin, Field):
 
     @pass_null
     def to_mongo(self, document, value):
-        return {'v': value.total_cents,
-                'c': value.currency.code}
+        return [value.total_cents, value.currency.code]
 
     @pass_null
     def from_mongo(self, document, data):
@@ -255,7 +254,10 @@ class MoneyField(DefaultMixin, Field):
                 currency_key = self._bcc
                 value = data
 
-        elif isinstance(data, dict):
+        elif isinstance(data, list):
+            value, currency_key = data
+
+        elif isinstance(data, dict):  # b/c for version 1.3.0
             currency_key = data['c']
             value = data['v']
 

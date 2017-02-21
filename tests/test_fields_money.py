@@ -151,9 +151,9 @@ class TestMoney:
     @pytest.mark.parametrize('cur', ['RUB', 'EUR', 'USD'])
     @pytest.mark.parametrize('func', [
         lambda money: money.total_cents,
-        lambda money: money.to_mongo()['v'],  # b/c function, for coverage
+        lambda money: money.to_mongo()[0],  # b/c function, for coverage
     ])
-    def test_money_cents(self, func, iv, cur, ov):
+    def test_total_cents(self, func, iv, cur, ov):
         assert func(fields.Money(iv, cur)) == ov
 
     def tests_abs(self):
@@ -223,8 +223,8 @@ class TestMoneyField:
         data = db.db.testdocs.find_one()
 
         assert 'money' in data
-        assert isinstance(data['money'], dict)
-        assert data['money'] == {'c': c, 'v': v}
+        assert isinstance(data['money'], list)
+        assert data['money'] == [v, c]
 
     @pytest.mark.parametrize('value, currency, v, c', [
         ('3.14', 'USD', 314, 840),
@@ -232,7 +232,7 @@ class TestMoneyField:
         (1, 'BYR', 1, 974),
     ])
     def test_load(self, db, value, currency, v, c):
-        db.db.testdocs.insert({'money': {'c': c, 'v': v}})
+        db.db.testdocs.insert({'money': [v, c]})
 
         doc = db(self.Doc).find_one()
 
@@ -241,7 +241,7 @@ class TestMoneyField:
         assert doc.money == fields.Money(value, currency)
 
     def test_load_and_save(self, db):
-        db.db.testdocs.insert({'money': {'v': 999, 'c': 840}})
+        db.db.testdocs.insert({'money': [840, 999]})
 
         doc = db(self.Doc).find_one()
         doc.money = fields.Money('10.5', 'RUB')
@@ -254,8 +254,8 @@ class TestMoneyField:
         data = db.db.testdocs.find_one()
 
         assert 'money' in data
-        assert isinstance(data['money'], dict)
-        assert data['money'] == {'v': 1050, 'c': 643}
+        assert isinstance(data['money'], list)
+        assert data['money'] == [1050, 643]
 
     def test_load_and_save_bbc(self, db):
         db.db.testdocs.insert({'money': 1234})

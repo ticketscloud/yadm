@@ -67,6 +67,12 @@ Quick start
 CHANGES
 =======
 
+1.3.1 (2017-02-21)
+------------------
+
+* Change raw data for :py:class:`Money <yadm.fields.money.money.Money>`;
+
+
 1.3.0 (2017-02-19)
 ------------------
 
