@@ -156,6 +156,15 @@ class TestMoney:
     def test_total_cents(self, func, iv, cur, ov):
         assert func(fields.Money(iv, cur)) == ov
 
+    @pytest.mark.parametrize('iv, ov', [
+        ((1000, 'RUB'), fields.Money(10, 'RUB')),
+        ((1000, 'JPY'), fields.Money(1000, 'JPY')),
+        ((1000, 'MGA'), fields.Money(100, 'MGA')),
+        ((1000, DEFAULT_CURRENCY_STORAGE['MRO']), fields.Money(100, 'MRO')),
+    ])
+    def test_from_cents(self, iv, ov):
+        assert fields.Money.from_cents(iv[0], iv[1]) == ov
+
     def tests_abs(self):
         value = abs(fields.Money('-3.14', 'RUB'))
         assert isinstance(value, fields.Money)

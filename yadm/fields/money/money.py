@@ -99,7 +99,9 @@ class Money:
     def from_cents(cls, cents: int, currency) -> 'Money':
         """ Return new Money object from cents.
         """
-        return cls(cents / Decimal(100), currency)
+        _currency = DEFAULT_CURRENCY_STORAGE[currency]
+        delimiter = Decimal(10 ** _currency.precision)
+        return cls(cents / delimiter, _currency)
 
     @classmethod
     def from_string(cls, s):
