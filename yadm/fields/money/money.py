@@ -131,7 +131,7 @@ class Money:
         """
         precision = self.currency.precision
         precision_decimal = Decimal('1.' + '0' * precision)
-        quantized = self.value.quantize(precision_decimal, ROUND_UP)
+        quantized = self.value.quantize(precision_decimal, self._context.rounding)
         return int(quantized * 10 ** precision)
 
     def __abs__(self):
@@ -197,7 +197,7 @@ class Money:
     def __str__(self):
         precision = self.currency.precision
         precision_decimal = Decimal('1.' + '0' * precision)
-        quantized = self.value.quantize(precision_decimal, ROUND_UP)
+        quantized = self.value.quantize(precision_decimal, self._context.rounding)
         return '{} {}'.format(quantized, self._currency.string)
 
     def __repr__(self):

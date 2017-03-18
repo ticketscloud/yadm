@@ -156,6 +156,17 @@ class TestMoney:
     def test_total_cents(self, func, iv, cur, ov):
         assert func(fields.Money(iv, cur)) == ov
 
+    def test_total_cents_rounding(self):
+        money = fields.Money(decimal.Decimal('1.235'), 'RUB')
+        assert id(money._context) == id(fields.Money._context)
+        assert money.total_cents == 124
+
+        fields.Money._context.rounding = decimal.ROUND_DOWN
+        assert money.total_cents == 123
+
+        money._context.rounding = decimal.ROUND_HALF_UP
+        assert money.total_cents == 124
+
     @pytest.mark.parametrize('iv, ov', [
         ((1000, 'RUB'), fields.Money(10, 'RUB')),
         ((1000, 'JPY'), fields.Money(1000, 'JPY')),
