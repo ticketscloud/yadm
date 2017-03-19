@@ -3,6 +3,7 @@ from bson import ObjectId
 
 from yadm import fields
 from yadm.documents import Document, EmbeddedDocument
+from yadm.testing import create_fake
 
 
 class EDoc(EmbeddedDocument):
@@ -225,3 +226,11 @@ def test_id_insert(db):
 
     data = db.db.testdoc.find_one({'_id': doc.id})
     assert data['e']['id'] == doc.e.id
+
+
+def test_fake():
+    doc = create_fake(Doc)
+    assert isinstance(doc.e, EDoc)
+    assert isinstance(doc.e.i, int)
+    assert isinstance(doc.e.s, str)
+    assert isinstance(doc.e.e, EDoc)
