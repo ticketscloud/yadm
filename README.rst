@@ -73,6 +73,12 @@ Quick start
 CHANGES
 =======
 
+1.3.2 (2017-03-XX)
+------------------
+
+* Add ``TypedEmbeddedDocumentField``;
+
+
 1.3.1 (2017-02-21)
 ------------------
 

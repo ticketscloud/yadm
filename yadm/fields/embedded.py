@@ -15,15 +15,48 @@ Work with embedded documents.
     doc.edoc.i = 13
     db.insert(doc)
 """
+import random
 
 from yadm.common import EnclosedDocDescriptor
+from yadm.documents import EmbeddedDocument
 from yadm.markers import AttributeNotSet
 from yadm.fields.base import Field, pass_null
 from yadm.serialize import to_mongo, from_mongo
 from yadm.testing import create_fake
 
 
-class EmbeddedDocumentField(Field):
+class BaseEmbeddedDocumentField(Field):
+    def get_embedded_document_class(self, document, value):
+        """ Return class of embedded document for field.
+        """
+        raise NotImplementedError()
+
+    @pass_null
+    def prepare_value(self, document, value):
+        if value is AttributeNotSet:
+            return value
+
+        elif isinstance(value, EmbeddedDocument):
+            value.__parent__ = document
+            value.__name__ = self.name
+
+        else:
+            raise TypeError("Only EmbeddedDocument is allowed, but {!r} given"
+                            "".format(type(value)))
+
+        return value
+
+    @pass_null
+    def to_mongo(self, document, value):
+        return to_mongo(value)
+
+    @pass_null
+    def from_mongo(self, document, value):
+        ed_class = self.get_embedded_document_class(document, value)
+        return from_mongo(ed_class, value, parent=document, name=self.name)
+
+
+class EmbeddedDocumentField(BaseEmbeddedDocumentField):
     """ Field for embedded objects.
 
     :param EmbeddedDocument embedded_document_class:
@@ -40,6 +73,9 @@ class EmbeddedDocumentField(Field):
         self.embedded_document_class = embedded_document_class
         self.auto_create = auto_create
 
+    def get_embedded_document_class(self, document=None, value=None):
+        return self.embedded_document_class
+
     def get_if_attribute_not_set(self, document):
         """ Call if key not exist in document.
 
@@ -47,55 +83,90 @@ class EmbeddedDocumentField(Field):
         embedded document. Else AttributeError is raised.
         """
         if self.auto_create:
-            return self.embedded_document_class(
-                __parent__=document,
-                __name__=self.name,
-            )
+            ed_class = self.get_embedded_document_class(document)
+            return ed_class(__parent__=document, __name__=self.name)
         else:
             raise AttributeError(self.name)
 
     def get_fake(self, document, faker, depth):
         return create_fake(
-            self.embedded_document_class,
+            self.get_embedded_document_class(document),
             __parent__=document,
             __name__=self.name,
             __faker__=faker,
-            __depth__=depth)
+            __depth__=depth,
+        )
 
     @pass_null
     def prepare_value(self, document, value):
         if value is AttributeNotSet:
             return value
 
-        elif isinstance(value, dict):
-            value = self.embedded_document_class(
-                __parent__=document,
-                __name__=self.name,
-                **value)
+        ed_class = self.get_embedded_document_class(document, value)
 
-        elif isinstance(value, self.embedded_document_class):
+        if isinstance(value, dict):
+            value = ed_class(__parent__=document, __name__=self.name, **value)
+
+        elif isinstance(value, ed_class):
             value.__parent__ = document
             value.__name__ = self.name
 
-        elif not isinstance(value, self.embedded_document_class):
-            raise TypeError('Only {!r}, dict or None is alowed, but {!r} given'
-                            ''.format(self.embedded_document_class, type(value)))
-
-        return value
-
-    @pass_null
-    def to_mongo(self, document, value):
-        return to_mongo(value)
-
-    @pass_null
-    def from_mongo(self, document, value):
-        value = from_mongo(self.embedded_document_class, value,
-                           parent=document, name=self.name)
+        else:
+            raise TypeError("Only {!r}, dict or None is allowed, but {!r} given"
+                            "".format(ed_class, type(value)))
 
         return value
 
     def copy(self):
         """ Return copy of field.
         """
-        return self.__class__(self.embedded_document_class,
-                              smart_null=self.smart_null)
+        ed_class = self.get_embedded_document_class()
+        return self.__class__(ed_class, smart_null=self.smart_null)
+
+
+class TypedEmbeddedDocumentField(BaseEmbeddedDocumentField):
+    """ Field for embedded document with variable types.
+
+    :param str type_field: name of field in embedded document
+        for select type
+    :param dict types: map of type names to embedded document classes
+    """
+    type_field = None
+    types = None
+
+    def __init__(self, type_field=None, types=None, **kwargs):
+        super().__init__(**kwargs)
+
+        self.type_field = type_field
+        self.types = types
+
+        if self.types is None:
+            raise TypeError("type attribute is not set")
+        elif self.type_field is None:
+            raise TypeError("type_field attribute is not set")
+
+    def get_embedded_document_class(self, document, value):
+        type_name = value.get(self.type_field, AttributeNotSet)
+        ed_class = self.types.get(type_name, None)
+
+        if ed_class is None:
+            raise ValueError("Not found document type for {!r}"
+                             "".format(type_name))
+        else:
+            return ed_class
+
+    def get_fake(self, document, faker, depth):
+        type_name = random.choice(list(self.types))
+        ed_class = self.get_embedded_document_class(
+            document=document,
+            value={self.type_field: type_name},
+        )
+
+        return create_fake(
+            ed_class,
+            __parent__=document,
+            __name__=self.name,
+            __faker__=faker,
+            __depth__=depth,
+            **{self.type_field: type_name},
+        )

@@ -24,6 +24,7 @@ from yadm.fields.money import (  # noqa
 )
 
 from yadm.fields.embedded import EmbeddedDocumentField  # noqa
+from yadm.fields.embedded import TypedEmbeddedDocumentField  # noqa
 
 from yadm.fields.list import ListField  # noqa
 from yadm.fields.set import SetField  # noqa
