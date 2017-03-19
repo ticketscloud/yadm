@@ -168,5 +168,5 @@ class TypedEmbeddedDocumentField(BaseEmbeddedDocumentField):
             __name__=self.name,
             __faker__=faker,
             __depth__=depth,
-            **{self.type_field: type_name},
+            **{self.type_field: type_name}
         )
