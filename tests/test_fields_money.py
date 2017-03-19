@@ -158,7 +158,7 @@ class TestMoney:
 
     def test_total_cents_rounding(self):
         money = fields.Money(decimal.Decimal('1.235'), 'RUB')
-        assert id(money._context) == id(fields.Money._context)
+        assert money._context is fields.Money._context
         assert money.total_cents == 124
 
         fields.Money._context.rounding = decimal.ROUND_DOWN
