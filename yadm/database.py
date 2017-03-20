@@ -75,7 +75,7 @@ class BaseDatabase:
     def save(self, document, full=False, upsert=False):
         raise NotImplementedError
 
-    def update_one(self, document, reload=True, *,
+    def update_one(self, document, *, reload=True,
                    set=None, unset=None, inc=None,
                    push=None, pull=None):
         raise NotImplementedError
@@ -156,7 +156,7 @@ class Database(BaseDatabase):
         else:
             return self.insert(document)
 
-    def update_one(self, document, reload=True, *,
+    def update_one(self, document, *, reload=True,
                    set=None, unset=None, inc=None,
                    push=None, pull=None):  # TODO: extend
         """ Update one document.
