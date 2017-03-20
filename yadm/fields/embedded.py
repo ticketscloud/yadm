@@ -137,8 +137,8 @@ class TypedEmbeddedDocumentField(BaseEmbeddedDocumentField):
     def __init__(self, type_field=None, types=None, **kwargs):
         super().__init__(**kwargs)
 
-        self.type_field = type_field
-        self.types = types
+        self.type_field = type_field or self.type_field
+        self.types = types or self.types
 
         if self.types is None:
             raise TypeError("type attribute is not set")
