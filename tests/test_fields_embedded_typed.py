@@ -82,4 +82,4 @@ def test_fake():
     elif isinstance(doc.e, EDocTwo):
         assert isinstance(doc.e.s, str)
     else:
-        raise RuntimeError()
+        raise AssertionError(doc.e, type(doc.e))
