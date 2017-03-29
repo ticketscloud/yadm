@@ -148,7 +148,10 @@ class Money:
         return self._add_money(target)
 
     def __radd__(self, target):
-        return self.__add__(target)
+        if target == 0:
+            return self
+
+        return NotImplemented
 
     @_checker
     def _sub_money(self, target):
