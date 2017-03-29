@@ -68,7 +68,14 @@ class TestMoney:
         assert 0 - r1 == -r1
         assert r1 - 0 == r1
 
+    def test_sum(self):
+        r10 = fields.Money(10, 'RUB')
+        r1 = fields.Money('1', 'RUB')
+
         assert sum([r1, r1, r10, r1, r1]) == fields.Money(14, 'RUB')
+
+    def test_exceptions_with_not_zero_numbers(self):
+        r1 = fields.Money(1, 'RUB')
 
         with pytest.raises(TypeError):
             1 + r1
