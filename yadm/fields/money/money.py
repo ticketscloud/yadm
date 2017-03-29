@@ -151,8 +151,23 @@ class Money:
         return self.__add__(target)
 
     @_checker
-    def __sub__(self, target):
+    def _sub_money(self, target):
         return self.__class__(self.value - target.value, self.currency)
+
+    def __sub__(self, target):
+        if target == 0:
+            return self
+
+        return self._sub_money(target)
+
+    def __rsub__(self, target):
+        if target == 0:
+            return -self
+
+        return NotImplemented
+
+    def __neg__(self):
+        return Money(-self.value, self.currency)
 
     def __mul__(self, target):
         if isinstance(target, int):
