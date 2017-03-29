@@ -61,12 +61,17 @@ class TestMoney:
 
         assert 0 + r1 == r1
         assert r1 + 0 == r1
+        assert 0 - r1 == -r1
+        assert r1 - 0 == r1
 
         assert sum([r1, r1, r10, r1, r1]) == fields.Money(14, 'RUB')
 
         with pytest.raises(TypeError):
             1 + r1
             r1 + 1
+            1 - r1
+            r1 - 1
+
     def test_is_methods(self):
         r0 = fields.Money(0, 'RUB')
         r1 = fields.Money(1, 'RUB')
