@@ -142,13 +142,13 @@ class Money:
         return self.__class__(self.value + target.value, self.currency)
 
     def __add__(self, target):
-        if target == 0:
+        if target is 0:
             return self
 
         return self._add_money(target)
 
     def __radd__(self, target):
-        if target == 0:
+        if target is 0:
             return self
 
         return NotImplemented
@@ -158,13 +158,13 @@ class Money:
         return self.__class__(self.value - target.value, self.currency)
 
     def __sub__(self, target):
-        if target == 0:
+        if target is 0:
             return self
 
         return self._sub_money(target)
 
     def __rsub__(self, target):
-        if target == 0:
+        if target is 0:
             return -self
 
         return NotImplemented
