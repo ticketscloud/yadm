@@ -60,8 +60,7 @@ class TestMoney:
         assert u1 / 10 == fields.Money('0.1', 'USD')
 
     def test_arithmetic_operations_with_zero(self):
-        r10 = fields.Money(10, 'RUB')
-        r1 = fields.Money('1', 'RUB')
+        r1 = fields.Money(1, 'RUB')
 
         assert 0 + r1 == r1
         assert r1 + 0 == r1
