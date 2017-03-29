@@ -88,6 +88,22 @@ class TestMoney:
         with pytest.raises(TypeError):
             r1 - 1
 
+    def test_exceptions_on_zero_value_with_diff_currency(self):
+        r1 = fields.Money('1', 'RUB')
+        e0 = fields.Money('0.00', 'EUR')
+
+        with pytest.raises(ValueError):
+            r1 + e0
+
+        with pytest.raises(ValueError):
+            e0 + r1
+
+        with pytest.raises(ValueError):
+            r1 - e0
+
+        with pytest.raises(ValueError):
+            e0 - r1
+
     def test_is_methods(self):
         r0 = fields.Money(0, 'RUB')
         r1 = fields.Money(1, 'RUB')
