@@ -72,8 +72,14 @@ class TestMoney:
 
         with pytest.raises(TypeError):
             1 + r1
+
+        with pytest.raises(TypeError):
             r1 + 1
+
+        with pytest.raises(TypeError):
             1 - r1
+
+        with pytest.raises(TypeError):
             r1 - 1
 
     def test_is_methods(self):
