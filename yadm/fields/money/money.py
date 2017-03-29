@@ -138,8 +138,17 @@ class Money:
         return self.__class__(abs(self._value), self.currency)
 
     @_checker
-    def __add__(self, target):
+    def _add_money(self, target):
         return self.__class__(self.value + target.value, self.currency)
+
+    def __add__(self, target):
+        if target == 0:
+            return self
+
+        return self._add_money(target)
+
+    def __radd__(self, target):
+        return self.__add__(target)
 
     @_checker
     def __sub__(self, target):
