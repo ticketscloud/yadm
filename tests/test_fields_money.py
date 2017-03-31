@@ -59,6 +59,12 @@ class TestMoney:
         assert 10 * u1 == fields.Money(10, 'USD')
         assert u1 / 10 == fields.Money('0.1', 'USD')
 
+    def test_negative_unary_operations(self):
+        u1 = fields.Money('1.01', 'USD')
+
+        assert -u1 == fields.Money('-1.01', 'USD')
+        assert -(-u1) == u1
+
     def test_is_methods(self):
         r0 = fields.Money(0, 'RUB')
         r1 = fields.Money(1, 'RUB')
