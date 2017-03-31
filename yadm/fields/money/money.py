@@ -145,6 +145,9 @@ class Money:
     def __sub__(self, target):
         return self.__class__(self.value - target.value, self.currency)
 
+    def __neg__(self):
+        return Money(-self.value, self.currency)
+
     def __mul__(self, target):
         if isinstance(target, int):
             return self.__class__(self.value * target, self.currency)
