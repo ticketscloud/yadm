@@ -106,7 +106,6 @@ class TestMoney:
 
         with pytest.raises(TypeError) as e:
             r0 > 1
-        assert 'unorderable types: Money() > int()' in str(e.value)
 
     def test_forbidden_operations(self):
         r1 = fields.Money('1', 'RUB')
