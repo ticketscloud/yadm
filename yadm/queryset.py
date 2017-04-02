@@ -9,7 +9,7 @@ from yadm.serialize import from_mongo
 CACHE_SIZE = 100
 
 
-class NotFoudBehavior(Enum):
+class NotFoundBehavior(Enum):
     NONE = 'none'
     SKIP = 'skip'
     ERROR = 'error'
@@ -422,7 +422,7 @@ class QuerySet(BaseQuerySet):
     def join(self, *field_names):
         """ Create `yadm.Join` object, join `field_names` and return it.
 
-        :param str fiels_names: fields for join
+        :param str fields_names: fields for join
         :return: new :class:`yadm.join.Join`
 
         Next algorithm for join:
@@ -440,26 +440,29 @@ class QuerySet(BaseQuerySet):
 
         return join
 
-    def find_in(self, comparable, field='_id', *, not_found=NotFoudBehavior.SKIP):
-        """ Creates a query of the form {field: {'$in': comparable}} and
+    def find_in(self, comparable, field='_id', *,
+                not_found=NotFoundBehavior.SKIP):
+        """ Build ordered $in-query.
+
+        Creates a query of the form {field: {'$in': comparable}} and
         returns the generator of documents with the same order as an elements
         in the argument 'comparable'.
 
-        :param list comparable: values for compare in a request
+        :param list comparable: values for compare in a query
         :param str field: field name of the document for comparison
         :param not_found: flag determines the behavior if the document
-        with the specified value is not found
+            with the specified value is not found
         :return: generator of docs
 
         not_found argument can take the following values:
             'none': If a document can not be found then a generator
-            will return `None`.
+                will return `None`.
             'skip': if a document can not be found then a generator
-            will pass element.
+                will pass element.
             'error': if a document can not be found then a generator
-            raise :class:`yadm.queryset.DocNotFoundError` exception.
+                raise :class:`yadm.queryset.DocNotFoundError` exception.
         """
-        not_found = NotFoudBehavior(not_found)
+        not_found = NotFoundBehavior(not_found)
         hash_docs = {}
 
         for doc in self.find({field: {'$in': comparable}}):
@@ -470,16 +473,17 @@ class QuerySet(BaseQuerySet):
         for cmp_item in comparable:
             value = hash_docs.get(cmp_item)
 
-            if not_found is NotFoudBehavior.NONE:
+            if not_found is NotFoundBehavior.NONE:
                 yield value
 
-            elif not_found is NotFoudBehavior.SKIP:
+            elif not_found is NotFoundBehavior.SKIP:
                 if value is not None:
                     yield value
 
-            elif not_found is NotFoudBehavior.ERROR:
+            elif not_found is NotFoundBehavior.ERROR:
                 if value is not None:
                     yield value
                 else:
-                    error_txt = "Could not find a document with the field '{}' equal '{}'"
-                    raise NotFoundError(error_txt.format(field, cmp_item))
+                    raise NotFoundError("Could not find a document with"
+                                        " the field '{}' equal '{}'"
+                                        "".format(field, cmp_item))
