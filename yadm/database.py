@@ -76,7 +76,9 @@ class BaseDatabase:
                      cache=None, **collection_params):
         raise NotImplementedError
 
-    def get_queryset(self, document_class, *, cache=None):
+    def get_document(self, document_class, _id, *,
+                     read_preference=RPS.PrimaryPreferred(),
+                     **collection_params):
         raise NotImplementedError
 
     def aggregate(self, document_class, *,
@@ -213,6 +215,21 @@ class Database(BaseDatabase):
         """
         return QuerySet(self, document_class, cache=cache,
                         collection_params=collection_params)
+
+    def get_document(self, document_class, _id, *,
+                     read_preference=RPS.PrimaryPreferred(),
+                     **collection_params):
+        """ Get document for it _id.
+
+        :param document_class: :class:`yadm.documents.Document`
+        :param _id: document's _id
+        :param **collection_params: params for get_collection
+
+        Default ReadPreference is PrimaryPreferred.
+        """
+        collection_params['read_preference'] = read_preference
+        qs = self.get_queryset(document_class, **collection_params)
+        return qs.find_one({'_id': _id})
 
     def aggregate(self, document_class, *,
                   pipeline=None,

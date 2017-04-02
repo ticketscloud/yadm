@@ -78,6 +78,7 @@ CHANGES
 
 * Drop pymongo 2 support;
 * Additional options for databases and collections;
+* Add ``Database.get_document``;
 * Add ``TypedEmbeddedDocumentField``;
 * ``reload`` argument of ``Database.update_one`` must be keyword
     (may be backward incompotable).
