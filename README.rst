@@ -73,9 +73,10 @@ Quick start
 CHANGES
 =======
 
-1.3.2 (2017-03-XX)
+1.4.0 (2017-03-XX)
 ------------------
 
+* Drop pymongo 2 support;
 * Add ``TypedEmbeddedDocumentField``;
 
 
