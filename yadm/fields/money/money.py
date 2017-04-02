@@ -223,13 +223,13 @@ class Money:
 class MoneyField(DefaultMixin, Field):
     """ Field to storage money values.
     """
-    def __init__(self, bbc=None, **kwargs):
+    def __init__(self, bcc=None, **kwargs):
         """ Field for save Money.
 
-        bbc - str,int or Currency value to backward compatibility.
+        bcc - str,int or Currency value to backward compatibility.
         """
         super().__init__(**kwargs)
-        self._bcc = bbc
+        self._bcc = bcc
 
     def get_fake(self, document, faker, depth):
         value = faker.pydecimal(left_digits=5, right_digits=2, positive=True)

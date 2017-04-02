@@ -233,7 +233,7 @@ class TestCurrencyStorage:
 class TestMoneyField:
     class Doc(Document):
         __collection__ = 'testdocs'
-        money = fields.MoneyField(bbc='RUB')
+        money = fields.MoneyField(bcc='RUB')
 
     @pytest.mark.parametrize('value, currency, v, c', [
         ('3.14', 'USD', 314, 840),
