@@ -175,17 +175,3 @@ def test_reload_new_instance(db):
     assert doc.i == 1
     assert doc is not new
     assert new.i == 2
-
-
-def test_read_preference__init(client, mongo_args):
-    host, port, name = mongo_args
-    client.drop_database(name)
-    sp = pymongo.read_preferences.ReadPreference.SECONDARY_PREFERRED
-    db = Database(client, name, read_preference=sp)
-    assert db.db.read_preference == sp
-
-
-def test_read_preference__get_collection(db):
-    sp = pymongo.read_preferences.ReadPreference.SECONDARY_PREFERRED
-    col = db._get_collection(Doc, read_preference=sp)
-    assert col.read_preference == sp

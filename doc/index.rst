@@ -72,6 +72,8 @@ CHANGES
 
 * Drop pymongo 2 support;
 * Add :py:class:`TypedEmbeddedDocumentField <yadm.fields.embedded.TypedEmbeddedDocumentField>`;
+* ``reload`` argument of ``Database.update_one <yadm.database.Database.update_one>``
+    must be keyword (may be backward incompotable).
 
 
 1.3.1 (2017-02-21)

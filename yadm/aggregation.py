@@ -12,10 +12,12 @@ PYMONGO_VERSION = pymongo.version_tuple
 
 
 class Aggregator:
-    def __init__(self, db, document_class, *, pipeline=None):
+    def __init__(self, db, document_class, *,
+                 pipeline=None, collection_params=None):
         self._db = db
         self._document_class = document_class
         self._pipeline = [] if pipeline is None else pipeline
+        self._collection_params = collection_params
 
     def __getattr__(self, op):
         return AgOperator(self, op)

@@ -33,41 +33,27 @@ from yadm.common import build_update_query
 
 PYMONGO_VERSION = pymongo.version_tuple
 
+RPS = pymongo.read_preferences
+
 
 class BaseDatabase:
-    def __init__(self, client, name, *, read_preference=None):
+    def __init__(self, client, name, **database_params):
         self.client = client
         self.name = name
-
-        if PYMONGO_VERSION < (3, 0):
-            self.db = client[name]
-
-            if read_preference is not None:
-                self.db.read_preference = read_preference
-
-        else:
-            self.db = client.get_database(name, read_preference=read_preference)
+        self.database_params = database_params
+        self.db = client.get_database(name, **database_params)
 
     def __repr__(self):  # pragma: no cover
         return '{}({!r})'.format(self.__class__.__name__, self.db)
 
-    def __call__(self, document_class, *, cache=None):
-        return self.get_queryset(document_class, cache=cache)
+    def __call__(self, document_class, **params):
+        return self.get_queryset(document_class, **params)
 
-    def _get_collection(self, document_class, *, read_preference=None):
+    def _get_collection(self, document_class, params=None):
         """ Return pymongo collection for document class.
         """
-        if PYMONGO_VERSION < (3, 0):
-            collection = self.db[document_class.__collection__]
-
-            if read_preference is not None:
-                collection.read_preference = read_preference
-
-            return collection
-
-        else:
-            return self.db.get_collection(document_class.__collection__,
-                                          read_preference=read_preference)
+        return self.db.get_collection(document_class.__collection__,
+                                      **(params or {}))
 
     def insert(self, document):
         raise NotImplementedError
@@ -83,16 +69,22 @@ class BaseDatabase:
     def remove(self, document):
         raise NotImplementedError
 
-    def reload(self, document, new_instance=False):
+    def reload(self, document, new_instance=False, **params):
+        raise NotImplementedError
+
+    def get_queryset(self, document_class, *,
+                     cache=None, **collection_params):
         raise NotImplementedError
 
     def get_queryset(self, document_class, *, cache=None):
         raise NotImplementedError
 
-    def aggregate(self, document_class, *, pipeline=None):
+    def aggregate(self, document_class, *,
+                  pipeline=None, **collection_params):
         raise NotImplementedError
 
-    def bulk(self, document_class, ordered=False, raise_on_errors=True):
+    def bulk(self, document_class, *,
+             ordered=False, raise_on_errors=True, **collection_params):
         raise NotImplementedError
 
 
@@ -113,7 +105,7 @@ class Database(BaseDatabase):
         """
         document.__db__ = self
         collection = self._get_collection(document.__class__)
-        document._id = collection.insert(to_mongo(document))
+        document._id = collection.insert_one(to_mongo(document)).inserted_id
         document.__changed_clear__()
         return document
 
@@ -185,14 +177,18 @@ class Database(BaseDatabase):
         """
         return self._get_collection(document.__class__).remove({'_id': document._id})
 
-    def reload(self, document, new_instance=False):
+    def reload(self, document, new_instance=False,
+               read_preference=RPS.PrimaryPreferred(),
+               **collection_params):
         """ Reload document.
 
         :param Document document: instance for reload
         :param bool new_instance: if `True` return new instance of document,
             else change data in given document (default: `False`)
         """
-        new = self.get_queryset(document.__class__).find_one(document.id)
+        collection_params['read_preference'] = read_preference
+        qs = self.get_queryset(document.__class__, **collection_params)
+        new = qs.find_one(document.id)
 
         if new_instance:
             return new
@@ -203,32 +199,43 @@ class Database(BaseDatabase):
             document.__changed__.clear()
             return document
 
-    def get_queryset(self, document_class, *, cache=None):
+    def get_queryset(self, document_class, *,
+                     cache=None,
+                     **collection_params):
         """ Return queryset for document class.
 
         :param document_class: :class:`yadm.documents.Document`
         :param cache: cache for share with other querysets
+        :param **collection_params: params for get_collection
 
         This create instance of :class:`yadm.queryset.QuerySet`
         with presetted document's collection information.
         """
-        return QuerySet(self, document_class, cache=cache)
+        return QuerySet(self, document_class, cache=cache,
+                        collection_params=collection_params)
 
-    def aggregate(self, document_class, *, pipeline=None):
+    def aggregate(self, document_class, *,
+                  pipeline=None,
+                  **collection_params):
         """ Return aggregator for use aggregation framework.
 
         :param document_class: :class:`yadm.documents.Document`
         :param list pipeline: initial pipeline
+        :param **collection_params: params for get_collection
         """
-        return Aggregator(self, document_class, pipeline=None)
+        return Aggregator(self, document_class, pipeline=None,
+                          collection_params=collection_params)
 
-    def bulk(self, document_class, ordered=False, raise_on_errors=True):
+    def bulk(self, document_class, *,
+             ordered=False, raise_on_errors=True,
+             **collection_params):
         """ Return Bulk.
 
         :param MetaDocument document_class: class of documents fo bulk
         :param bool ordered: create ordered bulk (default `False`)
         :param bool raise_on_errors: raise BulkWriteError exception
             if write errors (default `True`)
+        :param **collection_params: params for get_collection
 
         Context manager:
 
@@ -236,4 +243,5 @@ class Database(BaseDatabase):
                 bulk.insert(doc_1)
                 bulk.insert(doc_2)
         """
-        return Bulk(self, document_class, ordered, raise_on_errors)
+        return Bulk(self, document_class, ordered,
+                    raise_on_errors, collection_params)

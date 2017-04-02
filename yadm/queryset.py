@@ -29,11 +29,11 @@ class BaseQuerySet:
     :param dict projection:
     :param list sort:
     :param slice slice:
-    :param int read_preference:
+    :param dict collection_params:
     """
     def __init__(self, db, document_class, *,
                  cache=None, criteria=None, projection=None, sort=None,
-                 slice=None, read_preference=None):
+                 slice=None, collection_params=None):
 
         self._db = db
         self._document_class = document_class
@@ -42,7 +42,7 @@ class BaseQuerySet:
         self._projection = projection
         self._sort = sort
         self._slice = slice
-        self._read_preference = read_preference
+        self._collection_params = collection_params or {}
 
     def __repr__(self):
         return ("{s.__class__.__name__}({s._document_class.__collection__}"
@@ -108,7 +108,7 @@ class BaseQuerySet:
         """ pymongo collection.
         """
         return self._db._get_collection(self._document_class,
-                                        read_preference=self._read_preference)
+                                        params=self._collection_params)
 
     @property
     def _cursor(self):
@@ -138,7 +138,7 @@ class BaseQuerySet:
         return self._cache
 
     def copy(self, *, cache=None, criteria=None, projection=None,
-             sort=None, slice=None, read_preference=None):
+             sort=None, slice=None, collection_params=None):
         """ Copy queryset with new parameters.
 
         Only keywords arguments is alowed.
@@ -149,25 +149,31 @@ class BaseQuerySet:
         :param dict projection:
         :param list sort:
         :param slice slice:
-        :param int read_preference:
+        :param dict collection_params:
 
         :return: new :class:`yadm.queryset.QuerySet` object
         """
-        return self.__class__(self._db, self._document_class,
-                              cache=cache or self._cache,
-                              criteria=criteria or self._criteria,
-                              projection=projection or self._projection,
-                              sort=sort or self._sort,
-                              slice=slice or self._slice,
-                              read_preference=read_preference or self._read_preference,
-                              )
+        return self.__class__(
+            self._db, self._document_class,
+            cache=cache or self._cache,
+            criteria=criteria or self._criteria,
+            projection=projection or self._projection,
+            sort=sort or self._sort,
+            slice=slice or self._slice,
+            collection_params=collection_params or self._collection_params,
+        )
 
     def read_preference(self, read_preference):
         """ Setup readPreference.
 
         Return new QuerySet instance.
+
+        Deprecated since 1.4.0.
+        Use `collection_params` argument in `copy`.
         """
-        return self.copy(read_preference=read_preference)
+        collection_params = (self._collection_params or {}).copy()
+        collection_params['read_preference'] = read_preference
+        return self.copy(collection_params=collection_params)
 
     def find(self, criteria=None, projection=None):
         """ Return queryset copy with new criteria and projection.
