@@ -27,7 +27,7 @@ from yadm.markers import AttributeNotSet
 from yadm.aggregation import Aggregator
 from yadm.queryset import QuerySet
 from yadm.bulk import Bulk
-from yadm.serialize import to_mongo
+from yadm.serialize import to_mongo, from_mongo
 from yadm.common import build_update_query
 
 
@@ -77,6 +77,7 @@ class BaseDatabase:
         raise NotImplementedError
 
     def get_document(self, document_class, _id, *,
+                     exc=None,
                      read_preference=RPS.PrimaryPreferred(),
                      **collection_params):
         raise NotImplementedError
@@ -217,19 +218,34 @@ class Database(BaseDatabase):
                         collection_params=collection_params)
 
     def get_document(self, document_class, _id, *,
+                     exc=None,
                      read_preference=RPS.PrimaryPreferred(),
                      **collection_params):
         """ Get document for it _id.
 
         :param document_class: :class:`yadm.documents.Document`
         :param _id: document's _id
+        :param Exception exc: raise given exception if not found
         :param **collection_params: params for get_collection
 
         Default ReadPreference is PrimaryPreferred.
         """
         collection_params['read_preference'] = read_preference
-        qs = self.get_queryset(document_class, **collection_params)
-        return qs.find_one({'_id': _id})
+        col = self.db.get_collection(document_class.__collection__,
+                                     **collection_params)
+
+        raw = col.find_one({'_id': _id})
+
+        if raw:
+            doc = from_mongo(document_class, raw)
+            doc.__db__ = self
+            return doc
+
+        elif exc is not None:
+            raise exc((document_class, _id, collection_params))
+
+        else:
+            return None
 
     def aggregate(self, document_class, *,
                   pipeline=None,

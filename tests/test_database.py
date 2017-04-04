@@ -1,8 +1,8 @@
 import pytest
 
+from bson import ObjectId
 import pymongo
 
-from yadm.database import Database
 from yadm.documents import Document
 from yadm.queryset import QuerySet
 from yadm.serialize import from_mongo
@@ -36,6 +36,39 @@ def test_get_queryset(db):
     assert isinstance(queryset, QuerySet)
     assert queryset._db is db
     assert queryset._document_class is Doc
+
+
+def test_get_document(db):
+    col = db.db.testdocs
+    ids = [col.insert_one({'i': i}).inserted_id for i in range(10)]
+
+    _id = ids[5]
+    doc = db.get_document(Doc, _id)
+
+    assert doc is not None
+    assert doc._id == _id
+    assert doc.i == 5
+    assert doc.__db__ is db
+
+
+def test_get_document__not_found(db):
+    col = db.db.testdocs
+    [col.insert_one({'i': i}).inserted_id for i in range(10)]
+
+    doc = db.get_document(Doc, ObjectId())
+
+    assert doc is None
+
+
+def test_get_document__not_found_exc(db):
+    col = db.db.testdocs
+    [col.insert_one({'i': i}).inserted_id for i in range(10)]
+
+    class Exc(Exception):
+        pass
+
+    with pytest.raises(Exc):
+        db.get_document(Doc, ObjectId(), exc=Exc)
 
 
 def test_insert(db):
