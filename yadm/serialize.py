@@ -74,21 +74,21 @@ def from_mongo(document_class, data, not_loaded=(), parent=None, name=None):
     """
     document = document_class()
 
-    for name, field in document_class.__fields__.items():
-        if name in data:
-            document.__raw__[name] = data[name]
+    for field_name, field in document_class.__fields__.items():
+        if field_name in data:
+            document.__raw__[field_name] = data[field_name]
 
-        elif name in not_loaded:
-            document.__raw__[name] = NotLoaded
+        elif field_name in not_loaded:
+            document.__raw__[field_name] = NotLoaded
 
         elif field.smart_null:
-            document.__raw__[name] = None
+            document.__raw__[field_name] = None
 
         else:
-            document.__raw__[name] = AttributeNotSet
+            document.__raw__[field_name] = AttributeNotSet
 
     if parent is not None:
-        document.__parent__ = document
+        document.__parent__ = parent
         document.__name__ = name
 
     return document
