@@ -67,7 +67,7 @@ Quick start
 CHANGES
 =======
 
-1.4.0 (2017-03-XX)
+1.4.0 (2017-04-05)
 ------------------
 
 * Drop pymongo 2 support;
