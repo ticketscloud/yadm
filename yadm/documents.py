@@ -235,7 +235,10 @@ class DocumentItemMixin:
         while getattr(obj, '__parent__', None) is not None:
             obj = obj.__parent__
 
-        return obj
+        if obj is not self:
+            return obj
+        else:
+            return None
 
     @property
     def __db__(self):
@@ -245,13 +248,21 @@ class DocumentItemMixin:
 
             assert doc.f.l[0].__db__ is doc.__db__
         """
-        return self.__document__.__db__
+        document = self.__document__
+        if document is not None:
+            return document.__db__
+        else:
+            return None
 
     @property
     def __qs__(self):
         """ Queryset object.
         """
-        return self.__document__.__qs__
+        document = self.__document__
+        if document is not None:
+            return document.__qs__
+        else:
+            return None
 
     @property
     def __path__(self):
