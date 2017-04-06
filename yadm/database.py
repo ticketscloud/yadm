@@ -55,21 +55,22 @@ class BaseDatabase:
         return self.db.get_collection(document_class.__collection__,
                                       **(params or {}))
 
-    def insert(self, document):
+    def insert(self, document, **collection_params):
         raise NotImplementedError
 
-    def save(self, document, full=False, upsert=False):
+    def save(self, document, full=False, upsert=False, **collection_params):
         raise NotImplementedError
 
     def update_one(self, document, *, reload=True,
                    set=None, unset=None, inc=None,
-                   push=None, pull=None):
+                   push=None, pull=None,
+                   **collection_params):
         raise NotImplementedError
 
-    def remove(self, document):
+    def remove(self, document, **collection_params):
         raise NotImplementedError
 
-    def reload(self, document, new_instance=False, **params):
+    def reload(self, document, new_instance=False, **collection_params):
         raise NotImplementedError
 
     def get_queryset(self, document_class, *,
@@ -98,21 +99,23 @@ class Database(BaseDatabase):
     :param str name: database name
     """
 
-    def insert(self, document):
+    def insert(self, document, **collection_params):
         """ Insert document to database.
 
         :param Document document: document instance for insert to database
 
         It's bind new document to database set
         :py:attr:`_id <yadm.documents.Document._id>`.
+        :param **collection_params: params for get_collection
         """
         document.__db__ = self
-        collection = self._get_collection(document.__class__)
+        collection = self._get_collection(document.__class__, collection_params)
+
         document._id = collection.insert_one(to_mongo(document)).inserted_id
         document.__changed_clear__()
         return document
 
-    def save(self, document, full=False, upsert=False):
+    def save(self, document, full=False, upsert=False, **collection_params):
         """ Save document to database.
 
         :param Document document: document instance for save
@@ -120,6 +123,7 @@ class Database(BaseDatabase):
             (default: `False`)
         :param bool upsert: see documentation for MongoDB's `update`
             (default: `False`)
+        :param **collection_params: params for get_collection
 
         If document has no `_id`
         :py:meth:`insert <Database.insert>` new document.
@@ -128,7 +132,7 @@ class Database(BaseDatabase):
             document.__db__ = self
 
             if full:
-                self._get_collection(document).update(
+                self._get_collection(document, collection_params).update(
                     {'_id': document.id},
                     to_mongo(document),
                     upsert=upsert,
@@ -145,25 +149,28 @@ class Database(BaseDatabase):
                 unset_data = [f for f, v in document.__changed__.items()
                               if v is AttributeNotSet]
 
-                self.update_one(document, set=set_data, unset=unset_data)
+                self.update_one(document, set=set_data, unset=unset_data,
+                                **collection_params)
 
             return document
         else:
-            return self.insert(document)
+            return self.insert(document, **collection_params)
 
     def update_one(self, document, *, reload=True,
                    set=None, unset=None, inc=None,
-                   push=None, pull=None):  # TODO: extend
+                   push=None, pull=None,
+                   **collection_params):  # TODO: extend
         """ Update one document.
 
         :param Document document: document instance for update
         :param bool reload: if True, reload document
+        :param **collection_params: params for get_collection
         """
         update_data = build_update_query(set=set, unset=unset, inc=inc,
                                          push=push, pull=pull)
 
         if update_data:
-            self._get_collection(document).update(
+            self._get_collection(document, collection_params).update(
                 {'_id': document.id},
                 update_data,
                 upsert=False,
@@ -171,14 +178,16 @@ class Database(BaseDatabase):
             )
 
         if reload:
-            self.reload(document)
+            self.reload(document, **collection_params)
 
-    def remove(self, document):
+    def remove(self, document, **collection_params):
         """ Remove document from database.
 
         :param Document document: instance for remove from database
+        :param **collection_params: params for get_collection
         """
-        return self._get_collection(document.__class__).remove({'_id': document._id})
+        col = self._get_collection(document.__class__, collection_params)
+        return col.remove({'_id': document._id})
 
     def reload(self, document, new_instance=False,
                read_preference=RPS.PrimaryPreferred(),
@@ -188,6 +197,7 @@ class Database(BaseDatabase):
         :param Document document: instance for reload
         :param bool new_instance: if `True` return new instance of document,
             else change data in given document (default: `False`)
+        :param **collection_params: params for get_collection
         """
         collection_params['read_preference'] = read_preference
         qs = self.get_queryset(document.__class__, **collection_params)
