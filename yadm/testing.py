@@ -2,6 +2,7 @@
 """
 from types import GeneratorType
 
+import pymongo
 from faker import Faker
 
 from yadm.documents import BaseDocument, Document, EmbeddedDocument
@@ -9,6 +10,7 @@ from yadm.markers import AttributeNotSet
 
 
 DEFAULT_DEPTH = 4  # <=450
+WC_MAJORITY = pymongo.WriteConcern(w='majority')
 
 
 def create_fake(__document_class__,
@@ -86,7 +88,7 @@ def create_fake(__document_class__,
             doc_fake_proc = None
 
     if __db__ is not None:
-        __db__.insert(document)
+        __db__.insert(document, write_concern=WC_MAJORITY)
 
         # post save processor
         if isinstance(doc_fake_proc, GeneratorType):
