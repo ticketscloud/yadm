@@ -10,7 +10,6 @@ from yadm.markers import AttributeNotSet
 
 
 DEFAULT_DEPTH = 4  # <=450
-WC_MAJORITY = pymongo.WriteConcern(w='majority')
 
 
 def create_fake(__document_class__,
@@ -19,6 +18,7 @@ def create_fake(__document_class__,
                 __name__=None,
                 __faker__=None,
                 __depth__=DEFAULT_DEPTH,
+                __write_concern__=pymongo.WriteConcern(w='majority'),
                 **values):
     """ Create document with fake data.
 
@@ -88,7 +88,7 @@ def create_fake(__document_class__,
             doc_fake_proc = None
 
     if __db__ is not None:
-        __db__.insert(document, write_concern=WC_MAJORITY)
+        __db__.insert(document, write_concern=__write_concern__)
 
         # post save processor
         if isinstance(doc_fake_proc, GeneratorType):
