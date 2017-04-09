@@ -67,6 +67,13 @@ Quick start
 CHANGES
 =======
 
+1.4.2 (2017-04-09)
+------------------
+
+* Additional arguments (like ``write_concern``) for write operations;
+* :py:func:`create_fake <yadm.testing.create_fake>` save the documents with write concern "majority" by default.
+
+
 1.4.0 (2017-04-05)
 ------------------
 
