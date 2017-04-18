@@ -3,6 +3,7 @@ import decimal
 import pytest
 
 from yadm import fields
+from yadm.serialize import to_mongo, from_mongo
 from yadm.fields.money import DEFAULT_CURRENCY_STORAGE
 from yadm.documents import Document
 
@@ -290,6 +291,20 @@ class TestMoneyField:
         assert hasattr(doc, 'money')
         assert isinstance(doc.money, fields.Money)
         assert doc.money == fields.Money('12.34', 'RUB')
+
+    def test_serialize_cycle(self, db):
+        doc = self.Doc()
+        doc.money = fields.Money(1, 'RUB')
+        db.save(doc)
+
+        data = db(self.Doc).find_one()
+
+        data_tm = to_mongo(data)
+        assert data_tm['money'][0] == 100
+        assert data_tm['money'][1] == 643
+
+        data_fm = from_mongo(self.Doc, data_tm)
+        assert data_fm.money == fields.Money(1, 'RUB')
 
 
 class TestCurrencyField:
