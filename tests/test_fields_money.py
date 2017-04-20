@@ -200,7 +200,9 @@ class TestMoney:
 
     @pytest.mark.parametrize('first, seccond, result', [
         (fields.Money('10', 'RUB'), fields.Money('2', 'RUB'), decimal.Decimal('5.00')),
+        (fields.Money('10', 'RUB'), fields.Money('0.5', 'RUB'), decimal.Decimal('20')),
         (fields.Money('2', 'RUB'), fields.Money('10', 'RUB'), decimal.Decimal('0.20')),
+        (fields.Money('2', 'RUB'), 10, fields.Money('0.20', 'RUB')),
     ])
     def test_truediv(self, first, seccond, result):
             assert first / seccond == result
