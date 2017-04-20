@@ -149,7 +149,7 @@ class Money:
         return Money(-self.value, self.currency)
 
     def __mul__(self, target):
-        if isinstance(target, int):
+        if isinstance(target, (int, Decimal)):
             return self.__class__(self.value * target, self.currency)
         else:
             return NotImplemented
