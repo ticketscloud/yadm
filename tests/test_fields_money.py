@@ -212,6 +212,19 @@ class TestMoney:
             with pytest.raises(ValueError):
                 fields.Money('10', 'RUB') / fields.Money('2', 'EUR')
 
+    @pytest.mark.parametrize('first, seccond, result', [
+        (fields.Money('5', 'RUB'), 2, fields.Money('10.00', 'RUB')),
+        (fields.Money('2', 'RUB'), decimal.Decimal('5.5'), fields.Money('11', 'RUB')),
+        (fields.Money('10', 'RUB'), decimal.Decimal('0.3'), fields.Money('3', 'RUB')),
+    ])
+    def test_mul(self, first, seccond, result):
+            assert first * seccond == result
+            assert isinstance(first / seccond, result.__class__)
+
+    def test_mul__error(self):
+            with pytest.raises(TypeError):
+                fields.Money('10', 'RUB') * 1.2
+
 
 class TestCurrencyStorage:
     @pytest.mark.parametrize('key, code, string, precision', [
