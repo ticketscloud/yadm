@@ -9,6 +9,44 @@ from yadm.fields.base import Field, DefaultMixin, pass_null
 from yadm.markers import AttributeNotSet
 
 
+class StaticField(Field):
+    """ Field for static data.
+    """
+    def __init__(self, data):
+        self.data = data
+
+    def get_default(self, document):
+        return self.data
+
+    def get_if_attribute_not_set(self, document):
+        raise RuntimeError("value for {} not exist in database"
+                           "".format(self.__class__.__name__))
+
+    def copy(self):
+        return self.__class__(self.data)
+
+    def prepare_value(self, document, value):
+        raise AttributeError("'{}' object has no attribute '{}'"
+                             "".format(document.__class__.__name__,
+                                       self.name))
+
+    def to_mongo(self, document, value):
+        if value != self.data:
+            raise RuntimeError("bad value for {}: {!r} != {!r}"
+                               "".format(self.__class__.__name__,
+                                         value, self.data))
+        else:
+            return self.data
+
+    def from_mongo(self, document, value):
+        if value != self.data:
+            raise RuntimeError("bad value in database for {}: {!r} != {!r}"
+                               "".format(self.__class__.__name__,
+                                         value, self.data))
+        else:
+            return self.data
+
+
 class SimpleField(DefaultMixin, Field):
     """ Base field for simple types.
 
