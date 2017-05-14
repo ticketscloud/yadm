@@ -67,6 +67,13 @@ Quick start
 CHANGES
 =======
 
+
+1.4.3 (2017-05-14)
+------------------
+
+* Add :py:class:`StaticField <yadm.fields.symple.StaticField>` for static data.
+
+
 1.4.2 (2017-04-09)
 ------------------
 
