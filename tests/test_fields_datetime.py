@@ -1,86 +1,126 @@
-from datetime import datetime
+from datetime import datetime, timedelta
+
+import pytest
 
 import pytz
 
 from yadm import fields
 from yadm.documents import Document
+from yadm.testing import create_fake
 
 
-class Doc(Document):
-    __collection__ = 'testdocs'
-    dt = fields.DatetimeField()
-    now = fields.DatetimeField(auto_now=True)
+class TestDatetimeField:
+    class Doc(Document):
+        __collection__ = 'testdocs'
+        dt = fields.DatetimeField()
+        now = fields.DatetimeField(auto_now=True)
+
+    def test_cast(self):
+        doc = self.Doc()
+        doc.dt = datetime(1970, 1, 1, tzinfo=pytz.utc).isoformat()
+        assert isinstance(doc.dt, datetime)
+
+    def test_default_none(self):
+        doc = self.Doc()
+        assert not hasattr(doc, 'dt')
+
+    def test_save(self, db):
+        doc = self.Doc()
+        doc.dt = datetime(1970, 1, 1, tzinfo=pytz.utc)
+        db.insert(doc)
+
+        doc = db.get_queryset(self.Doc).find_one(doc.id)
+        data = db.db.testdocs.find_one()
+
+        assert isinstance(data['dt'], datetime)
+        assert data['dt'] == doc.dt
+
+    def test_load(self, db):
+        epoch = datetime(1970, 1, 1, tzinfo=pytz.utc)
+        _id = db.db.testdocs.insert({'dt': epoch})
+
+        doc = db.get_queryset(self.Doc).find_one(_id)
+
+        assert isinstance(doc.dt, datetime)
+        assert doc.dt == epoch
+
+    def test_default_auto_now(self):
+        doc = self.Doc()
+        assert hasattr(doc, 'now')
+        assert isinstance(doc.now, datetime)
+
+    def test_default_now_save(self, db):
+        doc = self.Doc()
+        db.insert(doc)
+
+        doc = db.get_queryset(self.Doc).find_one(doc.id)
+        data = db.db.testdocs.find_one()
+
+        assert isinstance(data['now'], datetime)
+        assert data['now'] == doc.now
+
+    def test_now_save(self, db):
+        epoch = datetime(1970, 1, 1, tzinfo=pytz.utc)
+
+        doc = self.Doc()
+        doc.now = epoch
+        db.insert(doc)
+
+        doc = db.get_queryset(self.Doc).find_one(doc.id)
+        data = db.db.testdocs.find_one()
+
+        assert isinstance(data['now'], datetime)
+        assert data['now'] == epoch
+
+    def test_now_load(self, db):
+        epoch = datetime(1970, 1, 1, tzinfo=pytz.utc)
+        _id = db.db.testdocs.insert({'now': epoch})
+
+        doc = db.get_queryset(self.Doc).find_one(_id)
+
+        assert isinstance(doc.now, datetime)
+        assert doc.now == epoch
 
 
-def test_cast():
-    doc = Doc()
-    doc.dt = datetime(1970, 1, 1, tzinfo=pytz.utc).isoformat()
-    assert isinstance(doc.dt, datetime)
+class TestTimedeltaField:
+    class Doc(Document):
+        __collection__ = 'testdocs'
+        td = fields.TimedeltaField()
+        tdd = fields.TimedeltaField(default=timedelta(seconds=13))
 
+    def test_init(self):
+        doc = self.Doc()
 
-def test_default_none():
-    doc = Doc()
-    assert not hasattr(doc, 'dt')
+        assert not hasattr(doc, 'td')
+        assert doc.tdd == timedelta(seconds=13)
 
+    def test_save(self, db):
+        doc = self.Doc()
 
-def test_save(db):
-    doc = Doc()
-    doc.dt = datetime(1970, 1, 1, tzinfo=pytz.utc)
-    db.insert(doc)
+        doc.td = timedelta(seconds=26)
+        db.save(doc)
 
-    doc = db.get_queryset(Doc).find_one(doc.id)
-    data = db.db.testdocs.find_one()
+        raw = db.db['testdocs'].find_one()
 
-    assert isinstance(data['dt'], datetime)
-    assert data['dt'] == doc.dt
+        assert raw['td'] == 26
+        assert raw['tdd'] == 13
 
+    def test_load(self, db):
+        db.db['testdocs'].insert_one({'td': 26})
 
-def test_load(db):
-    epoch = datetime(1970, 1, 1, tzinfo=pytz.utc)
-    _id = db.db.testdocs.insert({'dt': epoch})
+        doc = db(self.Doc).find_one()
 
-    doc = db.get_queryset(Doc).find_one(_id)
+        assert doc.td == timedelta(seconds=26)
+        assert not hasattr(doc, 'tdd')
 
-    assert isinstance(doc.dt, datetime)
-    assert doc.dt == epoch
+    def test_set__type_error(self):
+        doc = self.Doc()
 
+        with pytest.raises(TypeError):
+            doc.td = 'string is wrong type'
 
-def test_default_auto_now():
-    doc = Doc()
-    assert hasattr(doc, 'now')
-    assert isinstance(doc.now, datetime)
+    def test_faker(self):
+        doc = create_fake(self.Doc)
 
-
-def test_default_now_save(db):
-    doc = Doc()
-    db.insert(doc)
-
-    doc = db.get_queryset(Doc).find_one(doc.id)
-    data = db.db.testdocs.find_one()
-
-    assert isinstance(data['now'], datetime)
-    assert data['now'] == doc.now
-
-
-def test_now_save(db):
-    epoch = datetime(1970, 1, 1, tzinfo=pytz.utc)
-
-    doc = Doc()
-    doc.now = epoch
-    db.insert(doc)
-
-    doc = db.get_queryset(Doc).find_one(doc.id)
-    data = db.db.testdocs.find_one()
-
-    assert isinstance(data['now'], datetime)
-    assert data['now'] == epoch
-
-
-def test_now_load(db):
-    epoch = datetime(1970, 1, 1, tzinfo=pytz.utc)
-    _id = db.db.testdocs.insert({'now': epoch})
-
-    doc = db.get_queryset(Doc).find_one(_id)
-
-    assert isinstance(doc.now, datetime)
-    assert doc.now == epoch
+        assert isinstance(doc.td, timedelta)
+        assert isinstance(doc.tdd, timedelta)

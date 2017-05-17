@@ -1,9 +1,9 @@
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
-import pytz
 import dateutil.parser
+import pytz
 
-from yadm.fields.base import Field, DefaultMixin, pass_null
+from yadm.fields.base import DefaultMixin, Field, pass_null
 
 
 class DatetimeField(DefaultMixin, Field):
@@ -52,15 +52,39 @@ class DatetimeField(DefaultMixin, Field):
             return cls._fix_timezone(value)
 
         else:
-            raise TypeError('First value must be datetime,'
-                            ' date or string, but {!r}'.format(type(value)))
+            raise TypeError("First value must be datetime,"
+                            " date or string, but {!r}".format(type(value)))
+
+    @classmethod
+    @pass_null
+    def to_mongo(cls, document, value):
+        return cls._fix_timezone(value)
 
     @classmethod
     @pass_null
     def from_mongo(cls, document, value):
         return cls._fix_timezone(value)
 
+
+class TimedeltaField(DefaultMixin, Field):
+    def get_fake(self, document, faker, depth):
+        return faker.time_delta()
+
+    @classmethod
+    @pass_null
+    def prepare_value(cls, document, value):
+        if isinstance(value, timedelta):
+            return value
+        else:
+            raise TypeError("Only timedelta is allowed, but {} given"
+                            "".format(type(value)))
+
     @classmethod
     @pass_null
     def to_mongo(cls, document, value):
-        return cls._fix_timezone(value)
+        return value.total_seconds()
+
+    @classmethod
+    @pass_null
+    def from_mongo(cls, document, value):
+        return timedelta(seconds=value)

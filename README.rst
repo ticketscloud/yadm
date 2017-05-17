@@ -73,6 +73,12 @@ Quick start
 CHANGES
 =======
 
+1.4.4 (2017-05-XX)
+------------------
+
+* Add ``TimedeltaField`` for stores durations.
+
+
 1.4.3 (2017-05-14)
 ------------------
 

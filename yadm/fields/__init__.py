@@ -14,7 +14,10 @@ from yadm.fields.simple import (  # noqa
 
 from yadm.fields.email import EmailField  # noqa
 
-from yadm.fields.datetime import DatetimeField  # noqa
+from yadm.fields.datetime import (  # noqa
+    DatetimeField,
+    TimedeltaField,
+)
 from yadm.fields.decimal import DecimalField  # noqa
 from yadm.fields.money import (  # noqa
     Money,
