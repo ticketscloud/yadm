@@ -70,7 +70,17 @@ CHANGES
 1.4.4 (2017-05-XX)
 ------------------
 
-* Add :py:class:`TimedeltaField <yadm.fields.datetime.TimedeltaField>` for stores durations.
+* Add :py:class:`TimedeltaField <yadm.fields.datetime.TimedeltaField>` for stores durations;
+* Add :py:class:`SimpleEmbeddedDocumentField <yadm.fields.embedded.SimpleEmbeddedDocumentField>`
+    for simply create embedded documents.
+
+.. code:: python
+
+    class Doc(Document):
+        embedded = SimpleEmbeddedDocumentField({
+            'i': IntegerField(),
+            's': StringField(),
+        })
 
 
 1.4.3 (2017-05-14)

@@ -170,3 +170,37 @@ class TypedEmbeddedDocumentField(BaseEmbeddedDocumentField):
             __depth__=depth,
             **{self.type_field: type_name}
         )
+
+
+class SimpleEmbeddedDocumentField(EmbeddedDocumentField):
+    """ Field for simply create embedded documents.
+
+    Usage:
+
+        class Doc(Document):
+            embedded = SimpleEmbeddedDocumentField({
+                'i': IntegerField(),
+                's': StringField(),
+            })
+    """
+    embedded_document_class = None
+
+    def __init__(self, fields, *, auto_create=True, **kwargs):
+        if not isinstance(fields, dict):
+            raise TypeError("First argument must be a dict, not {}"
+                            "".format(type(fields)))
+        elif not fields:
+            raise ValueError("fields is empty")
+
+        self.fields = fields
+
+        super().__init__(None, auto_create=auto_create, **kwargs)
+
+    def contribute_to_class(self, document_class, name):
+        super().contribute_to_class(document_class, name)
+
+        self.embedded_document_class = type(
+            '{}__{}'.format(document_class.__name__, name),
+            (EmbeddedDocument,),
+            self.fields,
+        )

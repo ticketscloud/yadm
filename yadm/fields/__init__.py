@@ -27,8 +27,11 @@ from yadm.fields.money import (  # noqa
     DEFAULT_CURRENCY_STORAGE
 )
 
-from yadm.fields.embedded import EmbeddedDocumentField  # noqa
-from yadm.fields.embedded import TypedEmbeddedDocumentField  # noqa
+from yadm.fields.embedded import (   # noqa
+    EmbeddedDocumentField,
+    TypedEmbeddedDocumentField,
+    SimpleEmbeddedDocumentField,
+)
 
 from yadm.fields.list import ListField  # noqa
 from yadm.fields.set import SetField  # noqa
