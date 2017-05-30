@@ -23,6 +23,32 @@ class DocAuto(Document):
     e = fields.EmbeddedDocumentField(EDoc)
 
 
+def test_deep_embedded_changes_loop():
+    doc = DocAuto()
+
+    embedded_doc = doc.e
+    for i in range(10):
+        embedded_doc.i = 1
+        assert embedded_doc.i == 1
+        embedded_doc = embedded_doc.e
+
+
+def test_deep_embedded_changes_sequential():
+    doc = DocAuto()
+
+    doc.e.i = 1
+    assert doc.e.i == 1
+
+    doc.e.e.i = 1
+    assert doc.e.e.i == 1
+
+    doc.e.e.e.e.e.i = 1
+    assert doc.e.e.e.e.e.i == 1
+
+    doc.e.e.e.e.e.e.e.e.e.e.i = 1
+    assert doc.e.e.e.e.e.e.e.e.e.e.i == 1
+
+
 def test_default():
     doc = Doc()
     assert not hasattr(doc, 'e')
