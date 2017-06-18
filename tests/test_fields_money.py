@@ -167,12 +167,6 @@ class TestMoney:
         assert money._context is fields.Money._context
         assert money.total_cents == 124
 
-        fields.Money._context.rounding = decimal.ROUND_DOWN
-        assert money.total_cents == 123
-
-        money._context.rounding = decimal.ROUND_HALF_UP
-        assert money.total_cents == 124
-
     @pytest.mark.parametrize('iv, ov', [
         ((1000, 'RUB'), fields.Money(10, 'RUB')),
         ((1000, 'JPY'), fields.Money(1000, 'JPY')),
@@ -224,6 +218,11 @@ class TestMoney:
     def test_mul__error(self):
             with pytest.raises(TypeError):
                 fields.Money('10', 'RUB') * 1.2
+
+    def test_rounding(self):
+        money = fields.Money(decimal.Decimal('1.233'), 'RUB')
+        assert money == fields.Money(decimal.Decimal('1.24'), 'RUB')
+        assert money.value == decimal.Decimal('1.24')
 
 
 class TestCurrencyStorage:

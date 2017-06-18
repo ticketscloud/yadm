@@ -82,18 +82,24 @@ class Money:
             else:
                 self._value = value.value
                 self._currency = value.currency
-                return
-
-        elif isinstance(value, Decimal):
-            self._value = value
 
         else:
-            self._value = Decimal(value, context=self._context)
+            if currency is None:
+                raise TypeError("Curency not set.")
+            else:
+                self._currency = currency = DEFAULT_CURRENCY_STORAGE[currency]
 
-        if currency is None:
-            raise TypeError("Curency not set.")
-        else:
-            self._currency = DEFAULT_CURRENCY_STORAGE[currency]
+            print(Context(rounding=ROUND_UP))
+            print(self._context)
+
+            if isinstance(value, Decimal):
+                precision_decimal = Decimal('1.' + '0' * currency.precision)
+                self._value = value.quantize(precision_decimal, self._context.rounding)
+
+            else:
+                value = Decimal(value, context=self._context)
+                precision_decimal = Decimal('1.' + '0' * currency.precision)
+                self._value = value.quantize(precision_decimal, self._context.rounding)
 
     @classmethod
     def from_cents(cls, cents: int, currency) -> 'Money':
