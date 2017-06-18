@@ -316,7 +316,7 @@ class QuerySet(BaseQuerySet):
 
         if data is None:
             if exc is not None:
-                raise exc(criteria)
+                raise exc(qs)
             else:
                 return None
 
