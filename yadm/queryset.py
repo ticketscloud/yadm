@@ -1,5 +1,7 @@
 from enum import Enum
+
 from bson import ObjectId
+from pymongo import read_preferences
 
 from yadm.join import Join
 from yadm.cache import StackCache
@@ -173,6 +175,21 @@ class BaseQuerySet:
         """
         collection_params = (self._collection_params or {}).copy()
         collection_params['read_preference'] = read_preference
+        return self.copy(collection_params=collection_params)
+
+    def read_primary(self, preferred=False):
+        """ Return queryset setupd with read preference for primary.
+
+        If `preferred` argument is `True`, `PrimaryPreferred` is used
+        else `Primary`.
+        """
+        collection_params = (self._collection_params or {}).copy()
+
+        if not preferred:
+            collection_params['read_preference'] = read_preferences.Primary
+        else:
+            collection_params['read_preference'] = read_preferences.PrimaryPreferred
+
         return self.copy(collection_params=collection_params)
 
     def find(self, criteria=None, projection=None):

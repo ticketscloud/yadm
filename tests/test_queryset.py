@@ -1,5 +1,7 @@
 import random
+
 import pytest
+
 import pymongo
 from bson import ObjectId
 
@@ -311,6 +313,16 @@ def test_bulk(qs):
     _id = list(bulk)[0]
     assert bulk[_id].id == _id
     assert {d.i for d in bulk.values()} == {6, 7, 8, 9}
+
+
+@pytest.mark.parametrize('preferred, rp', [
+    (False, pymongo.read_preferences.Primary),
+    (True, pymongo.read_preferences.PrimaryPreferred),
+])
+def test_read_primary(qs, preferred, rp):
+    assert not qs._collection_params
+    qs = qs.read_primary(preferred=preferred)
+    assert qs._collection_params['read_preference'] == rp
 
 
 class TestFindIn:

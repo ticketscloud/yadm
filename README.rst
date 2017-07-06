@@ -73,6 +73,12 @@ Quick start
 CHANGES
 =======
 
+1.4.7 (2017-07-06)
+------------------
+
+* Add ``QuerySet.read_primary`` method for simple setup ``read_preference.Primary``.
+
+
 1.4.4 (2017-05-17)
 ------------------
 
