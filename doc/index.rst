@@ -67,7 +67,14 @@ Quick start
 CHANGES
 =======
 
-1.4.4 (2017-05-XX)
+1.4.9 (2017-07-06)
+------------------
+
+* Add :py:meth:`QuerySet.read_primary <yadm.queryset.QuerySet.read_primary>` method
+    for simple setup ``pymongo.read_preference.Primary``.
+
+
+1.4.4 (2017-05-17)
 ------------------
 
 * Add :py:class:`TimedeltaField <yadm.fields.datetime.TimedeltaField>` for stores durations;

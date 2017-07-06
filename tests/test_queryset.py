@@ -316,13 +316,14 @@ def test_bulk(qs):
 
 
 @pytest.mark.parametrize('preferred, rp', [
-    (False, pymongo.read_preferences.Primary),
-    (True, pymongo.read_preferences.PrimaryPreferred),
+    (False, pymongo.read_preferences.Primary()),
+    (True, pymongo.read_preferences.PrimaryPreferred()),
 ])
 def test_read_primary(qs, preferred, rp):
     assert not qs._collection_params
     qs = qs.read_primary(preferred=preferred)
     assert qs._collection_params['read_preference'] == rp
+    assert len(qs)  # try to execute query
 
 
 class TestFindIn:

@@ -10,6 +10,9 @@ from yadm.serialize import from_mongo
 
 CACHE_SIZE = 100
 
+_Primary = read_preferences.Primary()
+_PrimaryPreferred = read_preferences.PrimaryPreferred()
+
 
 class NotFoundBehavior(Enum):
     NONE = 'none'
@@ -178,7 +181,7 @@ class BaseQuerySet:
         return self.copy(collection_params=collection_params)
 
     def read_primary(self, preferred=False):
-        """ Return queryset setupd with read preference for primary.
+        """ Return queryset with setupd read concern for primary.
 
         If `preferred` argument is `True`, `PrimaryPreferred` is used
         else `Primary`.
@@ -186,9 +189,9 @@ class BaseQuerySet:
         collection_params = (self._collection_params or {}).copy()
 
         if not preferred:
-            collection_params['read_preference'] = read_preferences.Primary
+            collection_params['read_preference'] = _Primary
         else:
-            collection_params['read_preference'] = read_preferences.PrimaryPreferred
+            collection_params['read_preference'] = _PrimaryPreferred
 
         return self.copy(collection_params=collection_params)
 
