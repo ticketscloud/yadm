@@ -102,7 +102,11 @@ class ReferenceField(Field):
                     return document.__qs__.cache[(rdc, value)]
                 else:
                     qs = document.__db__.get_queryset(rdc, cache=document.__qs__.cache)
-                    doc = qs.find_one(value, exc=BrokenReference)
+
+                    doc = qs.find_one(value)
+                    if doc is None:
+                        doc = qs.read_primary().find_one(value, exc=BrokenReference)
+
                     document.__qs__.cache[(rdc, value)] = doc
                     return doc
             else:

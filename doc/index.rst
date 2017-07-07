@@ -67,6 +67,14 @@ Quick start
 CHANGES
 =======
 
+
+1.4.10 (2017-07-07)
+------------------
+
+* :py:meth:`ReferenceField.from_mongo <yadm.fields.reference.ReferenceField.from_mongo>`
+    try to get document from primary if not found by default.
+
+
 1.4.9 (2017-07-06)
 ------------------
 
