@@ -104,14 +104,19 @@ class ReferenceField(Field):
                     qs = document.__db__.get_queryset(rdc, cache=document.__qs__.cache)
 
                     doc = qs.find_one(value)
-                    if doc is None:
+                    if doc is None:  # pragma: no cover
                         doc = qs.read_primary().find_one(value, exc=BrokenReference)
 
                     document.__qs__.cache[(rdc, value)] = doc
                     return doc
             else:
                 qs = document.__db__.get_queryset(rdc)
-                return qs.find_one(value, exc=BrokenReference)
+
+                doc = qs.find_one(value)
+                if doc is None:  # pragma: no cover
+                    return qs.read_primary().find_one(value, exc=BrokenReference)
+                else:
+                    return doc
 
         else:
             raise NotBindingToDatabase((document, self, value))
