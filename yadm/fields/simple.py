@@ -25,6 +25,9 @@ class StaticField(Field):
     def copy(self):
         return self.__class__(self.data)
 
+    def get_fake(self, document, faker, depth):
+        return AttributeNotSet
+
     def prepare_value(self, document, value):
         raise AttributeError("'{}' object has no attribute '{}'"
                              "".format(document.__class__.__name__,

@@ -2,6 +2,7 @@ import pytest
 
 from yadm import fields
 from yadm.documents import Document
+from yadm.testing import create_fake
 
 
 class TestStaticField:
@@ -63,3 +64,18 @@ class TestStaticField:
 
         with pytest.raises(RuntimeError):
             getattr(doc, field)
+
+
+def test_faker():
+    class Doc(Document):
+        __collection__ = 'docs'
+
+        int = fields.StaticField(13)
+        str = fields.StaticField('string')
+
+    doc = create_fake(Doc)
+    assert doc.int == 13
+    assert doc.str == 'string'
+
+    with pytest.raises(AttributeError):
+        doc.int = 666
