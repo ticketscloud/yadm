@@ -27,6 +27,7 @@ before_install:
     - docker run -d -p 127.0.0.1:27017:27017 mongo:$MONGO
 
 install:
+    - pip install -U setuptools
     - pip install -U pip
     - pip install -U pytest pytest-cov coveralls pymongo$PYMONGO
     - python3 setup.py install
