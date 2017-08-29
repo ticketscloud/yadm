@@ -12,7 +12,6 @@ class TestStaticField:
         int = fields.StaticField(13)
         str = fields.StaticField('string')
 
-
     def test_init(self):
         doc = self.Doc()
 
@@ -65,17 +64,19 @@ class TestStaticField:
         with pytest.raises(RuntimeError):
             getattr(doc, field)
 
+    def test_faker(self):
+        doc = create_fake(self.Doc)
+        assert doc.int == 13
+        assert doc.str == 'string'
 
-def test_faker():
-    class Doc(Document):
-        __collection__ = 'docs'
+        with pytest.raises(AttributeError):
+            doc.int = 666
 
-        int = fields.StaticField(13)
-        str = fields.StaticField('string')
+    def test_faker_save(self, db):
+        doc = create_fake(self.Doc, db)
+        assert doc.int == 13
+        assert doc.str == 'string'
 
-    doc = create_fake(Doc)
-    assert doc.int == 13
-    assert doc.str == 'string'
-
-    with pytest.raises(AttributeError):
-        doc.int = 666
+        raw = db.db[self.Doc.__collection__].find_one()
+        assert raw['int'] == 13
+        assert raw['str'] == 'string'
