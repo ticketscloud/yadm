@@ -5,7 +5,7 @@ Yet Another Document Mapper
 .. image:: https://travis-ci.org/zzzsochi/yadm.svg?branch=master
     :target: https://travis-ci.org/zzzsochi/yadm
 
-.. image:: https://coveralls.io/repos/zzzsochi/yadm/badge.png
+.. image:: https://coveralls.io/repos/zzzsochi/yadm/badge.svg
     :target: https://coveralls.io/r/zzzsochi/yadm
 
 
