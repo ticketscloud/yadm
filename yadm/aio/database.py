@@ -2,29 +2,17 @@ import pymongo
 
 import yadm.abc as abc
 from yadm.database import BaseDatabase
-from yadm.serialize import to_mongo
+from yadm.serialize import to_mongo, from_mongo
 
 from .queryset import AioQuerySet
 
 PYMONGO_VERSION = pymongo.version_tuple
 
+RPS = pymongo.read_preferences
+
 
 @abc.Database.register
 class AioDatabase(BaseDatabase):
-    def _get_collection(self, document_class, *, read_preference=None):
-        # Return pymongo collection for document class.
-        if PYMONGO_VERSION < (3, 0):
-            collection = self.db[document_class.__collection__]
-
-            if read_preference is not None:
-                collection.read_preference = read_preference
-
-            return collection
-
-        else:
-            return self.db.get_collection(document_class.__collection__,
-                                          read_preference=read_preference)
-
     async def insert(self, document):
         document.__db__ = self
         collection = self._get_collection(document.__class__)
@@ -94,6 +82,27 @@ class AioDatabase(BaseDatabase):
             document.__cache__.clear()
             document.__changed__.clear()
             return document
+
+    async def get_document(self, document_class, _id, *,
+                           exc=None,
+                           read_preference=RPS.PrimaryPreferred(),
+                           **collection_params):
+        collection_params['read_preference'] = read_preference
+        col = self.db.get_collection(document_class.__collection__,
+                                     **collection_params)
+
+        raw = await col.find_one({'_id': _id})
+
+        if raw:
+            doc = from_mongo(document_class, raw)
+            doc.__db__ = self
+            return doc
+
+        elif exc is not None:
+            raise exc((document_class, _id, collection_params))
+
+        else:
+            return None
 
     def get_queryset(self, document_class, *, cache=None):
         return AioQuerySet(self, document_class, cache=cache)

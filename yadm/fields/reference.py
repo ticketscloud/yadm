@@ -118,17 +118,17 @@ class ReferenceField(Field):
             else:
                 qs = document.__db__.get_queryset(rdc, cache=cache)
 
-                doc = qs.find_one(value)
-                if not asyncio.iscoroutine(doc):
+                from yadm.aio.database import AioDatabase  # fail
+                if isinstance(document.__db__, AioDatabase):
+                    cache[(rdc, value)] = ref = Reference(value, document, self)
+                    return ref
+                else:
+                    doc = qs.find_one(value)
                     if doc is None:  # pragma: no cover
                         doc = qs.read_primary().find_one(value, exc=BrokenReference)
 
                     cache[(rdc, value)] = doc
                     return doc
-
-                else:
-                    cache[(rdc, value)] = ref = Reference(value, document, self)
-                    return ref
 
         else:
             raise NotBindingToDatabase((document, self, value))
@@ -160,18 +160,16 @@ class Reference(ObjectId):
     def __repr__(self):
         n = self.__class__.__name__
         collection = self.document_class.__collection__
-
-        status = '+' if self.document is None else '-'
-
+        status = '+' if self.document is not None else '-'
         return "{}({}:{} {})".format(n, collection, str(self), status)
 
-    async def __await__(self):
-        return await self.get()
+    def __await__(self):
+        return self.get().__await__()
 
     async def get(self, force: bool=False):
         if self.document is None or force:
             self.document = await self.db(self.document_class).find_one(self)
-            if self.document is None:
+            if self.document is None:  # pragma: no cover
                 self.document = await self.db.get_document(self.document_class, self)
 
         return self.document
