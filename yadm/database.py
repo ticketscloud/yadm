@@ -266,7 +266,7 @@ class Database(BaseDatabase):
         :param list pipeline: initial pipeline
         :param **collection_params: params for get_collection
         """
-        return Aggregator(self, document_class, pipeline=None,
+        return Aggregator(self, document_class, pipeline=pipeline,
                           collection_params=collection_params)
 
     def bulk(self, document_class, *,
