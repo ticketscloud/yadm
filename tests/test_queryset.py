@@ -9,7 +9,7 @@ from yadm.documents import Document
 from yadm import fields
 from yadm.markers import NotLoaded
 from yadm.results import UpdateResult, RemoveResult
-from yadm.queryset import NotFoundError
+from yadm.queryset import QuerySet, NotFoundError
 
 
 class Doc(Document):
@@ -324,6 +324,28 @@ def test_read_primary(qs, preferred, rp):
     qs = qs.read_primary(preferred=preferred)
     assert qs._collection_params['read_preference'] == rp
     assert len(qs)  # try to execute query
+
+
+def test_batch_size__set():
+    qs_one = QuerySet(None, Doc)
+    assert qs_one._batch_size is None
+
+    qs_two = qs_one.batch_size(10)
+    assert qs_two._batch_size == 10
+    assert qs_one._batch_size is None
+
+    qs_three = qs_two.batch_size(None)
+    assert qs_three._batch_size is None
+    assert qs_two._batch_size == 10
+    assert qs_one._batch_size is None
+
+
+def test_batch_size__get(qs):
+    n = 0
+    for doc in qs.batch_size(10):
+        n += 1
+
+    assert n > 0
 
 
 class TestFindIn:

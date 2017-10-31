@@ -38,7 +38,7 @@ class BaseQuerySet:
     """
     def __init__(self, db, document_class, *,
                  cache=None, criteria=None, projection=None, sort=None,
-                 slice=None, collection_params=None):
+                 slice=None, batch_size=None, collection_params=None):
 
         self._db = db
         self._document_class = document_class
@@ -47,6 +47,7 @@ class BaseQuerySet:
         self._projection = projection
         self._sort = sort
         self._slice = slice
+        self._batch_size = batch_size
         self._collection_params = collection_params or {}
 
     def __repr__(self):
@@ -131,6 +132,9 @@ class BaseQuerySet:
             if self._slice.stop:
                 cursor = cursor.limit(self._slice.stop - (self._slice.start or 0))
 
+        if self._batch_size is not None:
+            cursor = cursor.batch_size(self._batch_size)
+
         return cursor
 
     @property
@@ -143,7 +147,7 @@ class BaseQuerySet:
         return self._cache
 
     def copy(self, *, cache=None, criteria=None, projection=None,
-             sort=None, slice=None, collection_params=None):
+             sort=None, slice=None, batch_size=None, collection_params=None):
         """ Copy queryset with new parameters.
 
         Only keywords arguments is alowed.
@@ -165,6 +169,7 @@ class BaseQuerySet:
             projection=projection or self._projection,
             sort=sort or self._sort,
             slice=slice or self._slice,
+            batch_size=batch_size or self._batch_size,
             collection_params=collection_params or self._collection_params,
         )
 
@@ -265,6 +270,16 @@ class BaseQuerySet:
             return self.copy(sort=sort)
         else:
             return self.copy(sort=self._sort + sort)
+
+    def batch_size(self, batch_size):
+        """ Setup batch size to cursor for this queryset.
+        """
+        if batch_size is not None:
+            return self.copy(batch_size=batch_size)
+        else:
+            qs = self.copy()
+            qs._batch_size = None
+            return qs
 
     def __iter__(self):
         raise NotImplementedError
