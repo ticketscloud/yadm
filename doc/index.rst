@@ -67,6 +67,13 @@ Quick start
 CHANGES
 =======
 
+1.4.13 (2017-10-31)
+------------------
+
+* Add :py:meth:`QuerySet.batch_size <yadm.queryset.QuerySet.batch_size>`
+    method for setup batch size for cursor;
+* Some minor fixes.
+
 
 1.4.10 (2017-07-07)
 ------------------
