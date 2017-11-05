@@ -67,6 +67,15 @@ Quick start
 CHANGES
 =======
 
+1.4.14 (2017-11-06)
+------------------
+
+* Add :py:meth:`EnumField <yadm.fields.enum.EnumField>`
+    for save ``enum.Enum``;
+* Add :py:meth:`EnumStateField <yadm.fields.enum.EnumStateField>`
+    for simple state machines based on ``enum.Enum``.
+
+
 1.4.13 (2017-10-31)
 ------------------
 

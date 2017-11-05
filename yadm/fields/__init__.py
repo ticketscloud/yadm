@@ -13,6 +13,7 @@ from yadm.fields.simple import (  # noqa
 )
 
 from yadm.fields.email import EmailField  # noqa
+from yadm.fields.enum import EnumField, EnumStateField  # noqa
 
 from yadm.fields.datetime import (  # noqa
     DatetimeField,
