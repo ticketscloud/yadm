@@ -27,10 +27,10 @@ before_install:
     - docker run -d -p 127.0.0.1:27017:27017 mongo:$MONGO
 
 install:
-    - pip install -U setuptools
-    - pip install -U pip
-    - pip install -U pytest pytest-cov coveralls pymongo$PYMONGO
-    - python3 setup.py install
+    - travis_retry pip install --retries=30 --timeout=5 --no-cache-dir --disable-pip-version-check -U setuptools
+    - travis_retry pip install --retries=30 --timeout=5 --no-cache-dir --disable-pip-version-check -U pip
+    - travis_retry pip install --retries=30 --timeout=5 --no-cache-dir --disable-pip-version-check -U pytest pytest-cov coveralls pymongo$PYMONGO
+    - travis_retry pip install --retries=30 --timeout=5 --no-cache-dir --disable-pip-version-check .
 
 script:
     - py.test -v --cov yadm --cov-report term-missing
