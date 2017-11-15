@@ -166,11 +166,7 @@ class Document(BaseDocument):
         super().__init__(*args, **kwargs)
 
     def __repr__(self):
-        if hasattr(self, '_id'):
-            _id = str(self._id)
-        else:
-            _id = '<new>'
-
+        _id = getattr(self, '_id', '<new>')
         return '{}({})'.format(self.__class__.__name__, _id)
 
     def __eq__(self, other):

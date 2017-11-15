@@ -29,9 +29,8 @@ class StaticField(Field):
         return AttributeNotSet
 
     def prepare_value(self, document, value):
-        raise AttributeError("can't set attribute '{}.{}'"
-                             "".format(document.__class__.__name__,
-                                       self.name))
+        raise AttributeError("can't set attribute {!r}.{}"
+                             "".format(document, self.name))
 
     def to_mongo(self, document, value):
         if value != self.data:

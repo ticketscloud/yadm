@@ -86,7 +86,7 @@ class EmbeddedDocumentField(BaseEmbeddedDocumentField):
             ed_class = self.get_embedded_document_class(document)
             return ed_class(__parent__=document, __name__=self.name)
         else:
-            raise AttributeError(self.name)
+            return super().get_if_attribute_not_set(document)
 
     def get_fake(self, document, faker, depth):
         return create_fake(

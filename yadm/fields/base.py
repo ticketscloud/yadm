@@ -218,7 +218,8 @@ class Field:
     def get_if_attribute_not_set(self, document):
         """ Call if key not exist in document.
         """
-        raise AttributeError(self.name)
+        raise AttributeError("{!r} document has no attribute {!r}"
+                             "".format(document.__class__.__name__, self.name))
 
     def get_fake(self, document, faker, deep):  # pragma: no cover
         """ Return fake data for testing.
