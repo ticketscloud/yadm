@@ -204,7 +204,7 @@ class BaseQuerySet:
         """ Return queryset copy with new criteria and projection.
 
         :param dict criteria: update queryset's criteria
-        :param dict projection: update queryset's projection
+        :param dict projection: set queryset's projection
         :return: new :class:`yadm.queryset.QuerySet`
 
         .. code:: python
@@ -223,11 +223,9 @@ class BaseQuerySet:
             criteria_new = None
 
         if projection is not None:
-            if self._projection is None:
-                projection_new = projection
-            else:
-                projection_new = self._projection.copy()
-                criteria_new.update(projection)
+            projection_new = projection
+        elif self._projection is not None:
+            projection_new = self._projection.copy()
         else:
             projection_new = None
 
