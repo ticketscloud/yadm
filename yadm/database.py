@@ -257,6 +257,9 @@ class Database(BaseDatabase):
         col = self.db.get_collection(document_class.__collection__,
                                      **collection_params)
 
+        if projection is None:
+            projection = document_class.__default_projection__
+
         if projection is not None:
             raw = col.find_one({'_id': _id}, projection)
             not_loaded = [k for k, v in projection.items() if not v]
