@@ -220,6 +220,14 @@ aggregations
 CHANGES
 -------
 
+1.4.15 (2017-12-27)
+===================
+
+* Add ``projection`` argument to :py:meth:`get_document <Database.get_document>`
+*   and :py:meth:`reload <Database.reload>`;
+* Add :py:attr:`Document.__default_projection__` attribute.
+
+
 1.4.14 (2017-11-06)
 ===================
 

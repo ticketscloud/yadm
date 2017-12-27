@@ -51,6 +51,23 @@ def test_get_document(db):
     assert doc.__db__ is db
 
 
+def test_get_document_w_projection(db):
+    col = db.db.testdocs
+    ids = [col.insert_one({'i': i, 'b': bool(i % 2)}).inserted_id
+           for i in range(10)]
+
+    _id = ids[5]
+    doc = db.get_document(Doc, _id, projection={'b': False})
+
+    assert doc is not None
+    assert doc._id == _id
+    assert doc.i == 5
+    assert doc.__db__ is db
+
+    with pytest.raises(fields.base.NotLoadedError):
+        doc.b
+
+
 def test_get_document__not_found(db):
     col = db.db.testdocs
     [col.insert_one({'i': i}).inserted_id for i in range(10)]
@@ -192,8 +209,8 @@ def test_reload(db):
 
     assert doc.i == 1
     new = db.reload(doc)
-    assert doc.i == 2
     assert doc is new
+    assert doc.i == 2
 
 
 def test_reload_new_instance(db):
@@ -205,6 +222,24 @@ def test_reload_new_instance(db):
 
     assert doc.i == 1
     new = db.reload(doc, new_instance=True)
-    assert doc.i == 1
     assert doc is not new
+    assert doc.i == 1
     assert new.i == 2
+
+
+def test_w_projection(db):
+    doc = Doc()
+    doc.i = 1
+    doc.b = True
+    db.insert(doc)
+
+    db.db.testdocs.update({'_id': doc.id}, {'$set': {'i': 2}})
+
+    assert doc.i == 1
+    assert doc.b is True
+    new = db.reload(doc, projection={'b': False})
+    assert doc is new
+    assert doc.i == 2
+
+    with pytest.raises(fields.base.NotLoadedError):
+        doc.b

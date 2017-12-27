@@ -70,7 +70,9 @@ class BaseDatabase:
     def remove(self, document, **collection_params):
         raise NotImplementedError
 
-    def reload(self, document, new_instance=False, **collection_params):
+    def reload(self, document, new_instance=False, *,
+               projection=None,
+               **collection_params):
         raise NotImplementedError
 
     def get_queryset(self, document_class, *,
@@ -78,6 +80,7 @@ class BaseDatabase:
         raise NotImplementedError
 
     def get_document(self, document_class, _id, *,
+                     projection=None,
                      exc=None,
                      read_preference=RPS.PrimaryPreferred(),
                      **collection_params):
@@ -189,7 +192,8 @@ class Database(BaseDatabase):
         col = self._get_collection(document.__class__, collection_params)
         return col.remove({'_id': document._id})
 
-    def reload(self, document, new_instance=False,
+    def reload(self, document, new_instance=False, *,
+               projection=None,
                read_preference=RPS.PrimaryPreferred(),
                **collection_params):
         """ Reload document.
@@ -197,11 +201,16 @@ class Database(BaseDatabase):
         :param Document document: instance for reload
         :param bool new_instance: if `True` return new instance of document,
             else change data in given document (default: `False`)
+        :param dict projection: projection for query
         :param **collection_params: params for get_collection
         """
         collection_params['read_preference'] = read_preference
         qs = self.get_queryset(document.__class__, **collection_params)
-        new = qs.find_one(document.id)
+
+        if projection is not None:
+            new = qs.find_one(document.id, projection)
+        else:
+            new = qs.find_one(document.id)
 
         if new_instance:
             return new
@@ -224,10 +233,13 @@ class Database(BaseDatabase):
         This create instance of :class:`yadm.queryset.QuerySet`
         with presetted document's collection information.
         """
-        return QuerySet(self, document_class, cache=cache,
+        return QuerySet(self, document_class,
+                        projection=document_class.__default_projection__,
+                        cache=cache,
                         collection_params=collection_params)
 
     def get_document(self, document_class, _id, *,
+                     projection=None,
                      exc=None,
                      read_preference=RPS.PrimaryPreferred(),
                      **collection_params):
@@ -235,6 +247,7 @@ class Database(BaseDatabase):
 
         :param document_class: :class:`yadm.documents.Document`
         :param _id: document's _id
+        :param dict projection: projection for query
         :param Exception exc: raise given exception if not found
         :param **collection_params: params for get_collection
 
@@ -244,10 +257,15 @@ class Database(BaseDatabase):
         col = self.db.get_collection(document_class.__collection__,
                                      **collection_params)
 
-        raw = col.find_one({'_id': _id})
+        if projection is not None:
+            raw = col.find_one({'_id': _id}, projection)
+            not_loaded = [k for k, v in projection.items() if not v]
+        else:
+            raw = col.find_one({'_id': _id})
+            not_loaded = []
 
         if raw:
-            doc = from_mongo(document_class, raw)
+            doc = from_mongo(document_class, raw, not_loaded=not_loaded)
             doc.__db__ = self
             return doc
 

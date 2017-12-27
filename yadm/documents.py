@@ -137,6 +137,10 @@ class Document(BaseDocument):
 
         Name of MongoDB collection
 
+    .. py:attribute:: __default_projection__
+
+        Default projection for querysets
+
     .. py:attribute:: _id
 
         Mongo object id (:py:class:`bson.ObjectId`)
@@ -156,6 +160,7 @@ class Document(BaseDocument):
         Documents gets from this queryset
     """
     __collection__ = None
+    __default_projection__ = None
     __db__ = None
     __qs__ = None
 

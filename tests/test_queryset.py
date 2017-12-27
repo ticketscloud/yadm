@@ -14,8 +14,8 @@ from yadm.queryset import QuerySet, NotFoundError
 
 class Doc(Document):
     __collection__ = 'testdocs'
-    i = fields.IntegerField
-    s = fields.StringField
+    i = fields.IntegerField()
+    s = fields.StringField()
 
 
 @pytest.fixture
@@ -346,6 +346,19 @@ def test_batch_size__get(qs):
         n += 1
 
     assert n > 0
+
+
+def test_default_projection(db, qs):
+    class ProjectedDoc(Doc):
+        __default_projection__ = {'s': False}
+
+    qs = db.get_queryset(ProjectedDoc)
+    doc = qs.find_one()
+
+    assert isinstance(doc.i, int)
+
+    with pytest.raises(fields.base.NotLoadedError):
+        doc.s
 
 
 class TestFindIn:
