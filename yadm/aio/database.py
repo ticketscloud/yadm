@@ -128,5 +128,6 @@ class AioDatabase(BaseDatabase):
 
     def bulk(self, document_class,
              ordered=False, raise_on_errors=True, **collection_params):
-        return AioBulk(self, document_class, ordered, raise_on_errors,
-                       collection_params=collection_params)
+        raise NotImplementedError
+        # return AioBulk(self, document_class, ordered, raise_on_errors,
+        #                collection_params=collection_params)
