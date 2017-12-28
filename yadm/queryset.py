@@ -55,9 +55,6 @@ class BaseQuerySet:
                 " {s._criteria!r} {s._projection!r} {s._sort!r})"
                 "".format(s=self))
 
-    def __len__(self):
-        return self.count()
-
     def __call__(self, criteria=None, projection=None):
         return self.find(criteria, projection)
 
@@ -316,6 +313,9 @@ class BaseQuerySet:
 class QuerySet(BaseQuerySet):
     def __iter__(self):
         return self._from_mongo_list(self._cursor)
+
+    def __len__(self):
+        return self.count()
 
     def __contains__(self, document):
         return self.find_one(document.id) is not None
