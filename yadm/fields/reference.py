@@ -21,7 +21,7 @@ Work with references.
     assert doc.rdoc.id == rdoc.id
     assert doc.rdoc.i == 13
 
-Or asynchronous:
+Or with asyncio:
 
 .. code-block:: python
 
@@ -29,9 +29,8 @@ Or asynchronous:
     assert rdoc.id == rdoc.id
     assert rdoc.i == 13
     assert doc.rdoc == rdoc.id
-"""
-import asyncio
 
+"""
 from bson import ObjectId
 from bson.errors import InvalidId
 
@@ -116,13 +115,11 @@ class ReferenceField(Field):
             if (rdc, value) in document.__qs__.cache:
                 return cache[(rdc, value)]
             else:
-                qs = document.__db__.get_queryset(rdc, cache=cache)
-
-                from yadm.aio.database import AioDatabase  # fail
-                if isinstance(document.__db__, AioDatabase):
+                if document.__db__.aio:
                     cache[(rdc, value)] = ref = Reference(value, document, self)
                     return ref
                 else:
+                    qs = document.__db__.get_queryset(rdc, cache=cache)
                     doc = qs.find_one(value)
                     if doc is None:  # pragma: no cover
                         doc = qs.read_primary().find_one(value, exc=BrokenReference)
@@ -143,7 +140,7 @@ class Reference(ObjectId):
 
     This is awaitable:
 
-        doc = await reference
+        doc = await doc.reference
     """
     document = None
 
