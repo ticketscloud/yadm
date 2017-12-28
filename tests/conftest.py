@@ -27,7 +27,7 @@ def pytest_addoption(parser):
 
 def pytest_ignore_collect(path, config):
     if '/tests_aio' in str(path):
-        return not WITH_MOTOR or sys.version_info < (3, 5)
+        return not WITH_MOTOR or sys.version_info < (3, 6)
 
 
 @pytest.fixture(scope='session')
