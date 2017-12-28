@@ -309,6 +309,10 @@ class BaseQuerySet:
     def join(self, *field_names):
         raise NotImplementedError
 
+    def find_in(self, comparable, field='_id', *,
+                not_found=NotFoundBehavior.SKIP):
+        raise NotImplementedError
+
 
 class QuerySet(BaseQuerySet):
     def __iter__(self):
