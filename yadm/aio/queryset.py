@@ -4,30 +4,10 @@ from yadm.queryset import BaseQuerySet, NotFoundBehavior
 from yadm.results import UpdateResult, RemoveResult
 
 
-class _AioQuerySetCursor:
-    def __init__(self, qs):
-        self.cursor = qs._cursor
-        self.from_mongo_one = qs._from_mongo_one
-
-    async def __anext__(self):
-        raw = await self.cursor.__anext__()
-        return self.from_mongo_one(raw)
-
-
-class _AioIdsGenerator:
-    def __init__(self, qs):
-        self.cursor = qs._cursor
-
-    async def __aiter__(self):
-        return self
-
-    async def __anext__(self):
-        return (await self.cursor.__anext__())['_id']
-
-
 class AioQuerySet(BaseQuerySet):
     async def __aiter__(self):
-        return _AioQuerySetCursor(self)
+        async for raw in self._cursor:
+            yield self._from_mongo_one(raw)
 
     async def _get_one(self, index):
         cursor = self._cursor.skip(index).limit(1)
@@ -93,18 +73,14 @@ class AioQuerySet(BaseQuerySet):
     async def count(self):
         return await self._cursor.count()
 
-    def ids(self):
-        return _AioIdsGenerator(self.copy(projection={'_id': True}))
+    async def ids(self):
+        async for raw in self.copy(projection={'_id': True})._cursor:
+            yield raw['_id']
 
     async def bulk(self):
         qs = self.copy()
         qs._sort = None
-
-        res = {}
-        async for doc in qs:
-            res[doc.id] = doc
-
-        return res
+        return {obj.id: obj async for obj in qs}
 
     async def join(self, *field_names):
         raise NotImplementedError

@@ -134,3 +134,17 @@ def test_ids(loop, qs):
             assert isinstance(i, ObjectId)
 
     loop.run_until_complete(test())
+
+
+def test_bulk(loop, qs):
+    async def test():
+        bulk = await qs.find({'i': {'$gte': 6}}).bulk()
+        assert isinstance(bulk, dict)
+        assert len(bulk), 4
+        assert isinstance(list(bulk)[0], ObjectId)
+        assert isinstance(list(bulk.values())[0], Doc)
+        _id = list(bulk)[0]
+        assert bulk[_id].id == _id
+        assert {d.i for d in bulk.values()} == {6, 7, 8, 9}
+
+    loop.run_until_complete(test())
