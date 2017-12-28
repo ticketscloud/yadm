@@ -37,6 +37,8 @@ RPS = pymongo.read_preferences
 
 
 class BaseDatabase:
+    aio = None
+
     def __init__(self, client, name, **database_params):
         self.client = client
         self.name = name
@@ -76,7 +78,9 @@ class BaseDatabase:
         raise NotImplementedError
 
     def get_queryset(self, document_class, *,
-                     cache=None, **collection_params):
+                     projection=None,
+                     cache=None,
+                     **collection_params):
         raise NotImplementedError
 
     def get_document(self, document_class, _id, *,
@@ -101,6 +105,7 @@ class Database(BaseDatabase):
     :param pymongo.Client client: database connection
     :param str name: database name
     """
+    aio = False
 
     def insert(self, document, **collection_params):
         """ Insert document to database.
@@ -205,7 +210,9 @@ class Database(BaseDatabase):
         :param **collection_params: params for get_collection
         """
         collection_params['read_preference'] = read_preference
-        qs = self.get_queryset(document.__class__, **collection_params)
+        qs = self.get_queryset(document.__class__,
+                               projection=projection,
+                               **collection_params)
 
         if projection is not None:
             new = qs.find_one(document.id, projection)
@@ -268,6 +275,7 @@ class Database(BaseDatabase):
         """ Return queryset for document class.
 
         :param document_class: :class:`yadm.documents.Document`
+        :param dict projection:
         :param cache: cache for share with other querysets
         :param **collection_params: params for get_collection
 
