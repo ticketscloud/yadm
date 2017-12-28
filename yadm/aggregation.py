@@ -11,7 +11,7 @@ import pymongo
 PYMONGO_VERSION = pymongo.version_tuple
 
 
-class Aggregator:
+class BaseAggregator:
     def __init__(self, db, document_class, *,
                  pipeline=None, collection_params=None):
         self._db = db
@@ -19,9 +19,27 @@ class Aggregator:
         self._pipeline = [] if pipeline is None else pipeline
         self._collection_params = collection_params
 
+    def __repr__(self):
+        return ("{s.__class__.__name__}("
+                "{s._document_class.__collection__} {s._pipeline})"
+                "".format(s=self))
+
     def __getattr__(self, op):
         return AgOperator(self, op)
 
+    @property
+    def _cursor(self):  # noqa
+        """ pymongo aggregate cursor.
+        """
+        collection = self._db._get_collection(self._document_class)
+        cur = collection.aggregate(self._pipeline)
+        if PYMONGO_VERSION < (3, 0):
+            return cur['result']
+        else:
+            return cur
+
+
+class Aggregator(BaseAggregator):
     def __iter__(self):
         return iter(self._cursor)
 
@@ -56,22 +74,6 @@ class Aggregator:
                             " not {t.__name__}"
                             "".format(s=self, t=type(index)))
 
-    def __repr__(self):
-        return ("{s.__class__.__name__}("
-                "{s._document_class.__collection__} {s._pipeline})"
-                "".format(s=self))
-
-    @property
-    def _cursor(self):
-        """ pymongo aggregate cursor.
-        """
-        collection = self._db._get_collection(self._document_class)
-        cur = collection.aggregate(self._pipeline)
-        if PYMONGO_VERSION < (3, 0):
-            return cur['result']
-        else:
-            return cur
-
 
 class AgOperator:
     def __init__(self, aggregate, op):
@@ -88,11 +90,11 @@ class AgOperator:
 
         pipeline = self._aggregate._pipeline.copy()
         pipeline.append({self._op: value})
-        return Aggregator(self._aggregate._db,
-                          self._aggregate._document_class,
-                          pipeline=pipeline)
+        return self._aggregate.__class__(self._aggregate._db,
+                                         self._aggregate._document_class,
+                                         pipeline=pipeline)
 
     def __repr__(self):
-        return ("{s.__class__.__name__}("
-                "{a._document_class.__collection__} {a._pipeline} {s._op})"
+        return ("{s.__class__.__name__}"
+                "({a._document_class.__collection__} {a._pipeline} {s._op})"
                 "".format(s=self, a=self._aggregate))

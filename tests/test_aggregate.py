@@ -41,7 +41,11 @@ def test_pipeline(db, docs):
 
 
 def test_first(db, docs):
-    agg = db.aggregate(Doc).group({'_id': '1', 's': {'$sum': '$i'}, 'c': {'$sum': 1}})
+    agg = db.aggregate(Doc).group({
+        '_id': '1',
+        's': {'$sum': '$i'},
+        'c': {'$sum': 1},
+    })
     res = agg[0]
 
     assert set(res) == {'_id', 'c', 's'}
