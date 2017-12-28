@@ -1,6 +1,6 @@
 from bson import ObjectId
 
-from yadm.queryset import BaseQuerySet
+from yadm.queryset import BaseQuerySet, NotFoundBehavior
 from yadm.results import UpdateResult, RemoveResult
 
 
@@ -105,3 +105,10 @@ class AioQuerySet(BaseQuerySet):
             res[doc.id] = doc
 
         return res
+
+    async def join(self, *field_names):
+        raise NotImplementedError
+
+    async def find_in(self, comparable, field='_id', *,
+                      not_found=NotFoundBehavior.SKIP):
+        raise NotImplementedError
