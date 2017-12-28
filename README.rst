@@ -20,7 +20,9 @@ Requirements
 
 YADM support MongoDB version 3.x only. MongoDB 2.x is not supported.
 
-Minimal version of python is 3.5.
+Minimal version of python without asyncio support is 3.5.
+
+Minimal version of python with asyncio support  3.6.
 
 
 -----------
