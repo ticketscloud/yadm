@@ -13,23 +13,24 @@ RPS = pymongo.read_preferences
 
 @abc.Database.register
 class AioDatabase(BaseDatabase):
-    async def insert(self, document):
+    async def insert(self, document, **collection_params):
         document.__db__ = self
-        collection = self._get_collection(document.__class__)
+        collection = self._get_collection(document.__class__, collection_params)
         document._id = await collection.insert(to_mongo(document))
         document.__changed_clear__()
         return document
 
-    async def save(self, document):
+    async def save(self, document, **collection_params):
         document.__db__ = self
-        collection = self._get_collection(document.__class__)
+        collection = self._get_collection(document.__class__, collection_params)
         document._id = await collection.save(to_mongo(document))
         document.__changed_clear__()
         return document
 
     async def update_one(self, document, reload=True, *,
                          set=None, unset=None, inc=None,
-                         push=None, pull=None):
+                         push=None, pull=None,
+                         **collection_params):
         update_data = {}
 
         if set:
@@ -51,7 +52,7 @@ class AioDatabase(BaseDatabase):
             update_data['$pull'] = pull
 
         if update_data:
-            await self._get_collection(document).update(
+            await self._get_collection(document, collection_params).update(
                 {'_id': document.id},
                 update_data,
                 upsert=False,
@@ -61,18 +62,21 @@ class AioDatabase(BaseDatabase):
         if reload:
             await self.reload(document)
 
-    async def remove(self, document):
-        collection = self._get_collection(document.__class__)
+    async def remove(self, document, **collection_params):
+        collection = self._get_collection(document.__class__, collection_params)
         return await collection.remove({'_id': document._id})
 
-    async def reload(self, document, new_instance=False):
-        """ Reload document.
+    async def reload(self, document, new_instance=False, *,
+                     projection=None,
+                     read_preference=RPS.PrimaryPreferred(),
+                     **collection_params):
+        collection_params['read_preference'] = read_preference
 
-        :param Document document: instance for reload
-        :param bool new_instance: if `True` return new instance of document,
-            else change data in given document (default: `False`)
-        """
-        new = await self.get_queryset(document.__class__).find_one(document.id)
+        qs = self.get_queryset(document.__class__,
+                               projection=projection,
+                               **collection_params)
+
+        new = qs.find_one(document.id)
 
         if new_instance:
             return new
@@ -104,11 +108,24 @@ class AioDatabase(BaseDatabase):
         else:
             return None
 
-    def get_queryset(self, document_class, *, cache=None):
-        return AioQuerySet(self, document_class, cache=cache)
+    def get_queryset(self, document_class, *,
+                     projection=None,
+                     cache=None,
+                     **collection_params):
+        if projection is None:
+            projection = document_class.__default_projection__
 
-    def aggregate(self, document_class, *, pipeline=None):
-        return AioAggregator(self, document_class, pipeline=None)
+        return AioQuerySet(self, document_class,
+                           projection=projection,
+                           cache=cache,
+                           collection_params=collection_params)
 
-    def bulk(self, document_class, ordered=False, raise_on_errors=True):
-        return AioBulk(self, document_class, ordered, raise_on_errors)
+    def aggregate(self, document_class, *, pipeline=None, **collection_params):
+        return AioAggregator(self, document_class,
+                             pipeline=None,
+                             collection_params=collection_params)
+
+    def bulk(self, document_class,
+             ordered=False, raise_on_errors=True, **collection_params):
+        return AioBulk(self, document_class, ordered, raise_on_errors,
+                       collection_params=collection_params)
