@@ -76,7 +76,7 @@ class AioDatabase(BaseDatabase):
                                projection=projection,
                                **collection_params)
 
-        new = qs.find_one(document.id)
+        new = await qs.find_one(document.id)
 
         if new_instance:
             return new

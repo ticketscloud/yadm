@@ -15,14 +15,6 @@ class _AioQuerySetCursor:
 
 
 class AioQuerySet(BaseQuerySet):
-    def __len__(self):
-        n = self.__class__.__name__
-        raise TypeError("__len__ is not supported for {}".format(n))
-
-    def __contains__(self, document):
-        n = self.__class__.__name__
-        raise TypeError("__contains__ is not supported for {}".format(n))
-
     async def __aiter__(self):
         return _AioQuerySetCursor(self)
 
