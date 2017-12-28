@@ -5,6 +5,7 @@ from yadm.database import BaseDatabase
 from yadm.serialize import to_mongo, from_mongo
 
 from .queryset import AioQuerySet
+from .aggregation import AioAggregator
 
 PYMONGO_VERSION = pymongo.version_tuple
 
