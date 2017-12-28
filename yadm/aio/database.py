@@ -14,6 +14,8 @@ RPS = pymongo.read_preferences
 
 @abc.Database.register
 class AioDatabase(BaseDatabase):
+    aio = True
+
     async def insert(self, document, **collection_params):
         document.__db__ = self
         collection = self._get_collection(document.__class__, collection_params)

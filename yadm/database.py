@@ -37,6 +37,8 @@ RPS = pymongo.read_preferences
 
 
 class BaseDatabase:
+    aio = None
+
     def __init__(self, client, name, **database_params):
         self.client = client
         self.name = name
@@ -103,6 +105,7 @@ class Database(BaseDatabase):
     :param pymongo.Client client: database connection
     :param str name: database name
     """
+    aio = False
 
     def insert(self, document, **collection_params):
         """ Insert document to database.
