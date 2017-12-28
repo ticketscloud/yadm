@@ -99,7 +99,7 @@ def test_find_one(loop, qs):
     loop.run_until_complete(test())
 
 
-def test_find_exc(loop, qs):
+def test_find_one_exc(loop, qs):
     class SimpleException(Exception):
         pass
 
@@ -122,5 +122,15 @@ def test_distinct(loop, db, qs):
 
         res = await qs.distinct('i')
         assert len(res) == len(set(res))
+
+    loop.run_until_complete(test())
+
+
+def test_ids(loop, qs):
+    async def test():
+        res = [i async for i in qs.ids()]
+        assert len(res) == 10
+        for i in res:
+            assert isinstance(i, ObjectId)
 
     loop.run_until_complete(test())
