@@ -221,23 +221,6 @@ class Database(BaseDatabase):
             document.__changed__.clear()
             return document
 
-    def get_queryset(self, document_class, *,
-                     cache=None,
-                     **collection_params):
-        """ Return queryset for document class.
-
-        :param document_class: :class:`yadm.documents.Document`
-        :param cache: cache for share with other querysets
-        :param **collection_params: params for get_collection
-
-        This create instance of :class:`yadm.queryset.QuerySet`
-        with presetted document's collection information.
-        """
-        return QuerySet(self, document_class,
-                        projection=document_class.__default_projection__,
-                        cache=cache,
-                        collection_params=collection_params)
-
     def get_document(self, document_class, _id, *,
                      projection=None,
                      exc=None,
@@ -277,6 +260,27 @@ class Database(BaseDatabase):
 
         else:
             return None
+
+    def get_queryset(self, document_class, *,
+                     projection=None,
+                     cache=None,
+                     **collection_params):
+        """ Return queryset for document class.
+
+        :param document_class: :class:`yadm.documents.Document`
+        :param cache: cache for share with other querysets
+        :param **collection_params: params for get_collection
+
+        This create instance of :class:`yadm.queryset.QuerySet`
+        with presetted document's collection information.
+        """
+        if projection is None:
+            projection = document_class.__default_projection__
+
+        return QuerySet(self, document_class,
+                        projection=projection,
+                        cache=cache,
+                        collection_params=collection_params)
 
     def aggregate(self, document_class, *,
                   pipeline=None,
