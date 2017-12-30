@@ -1,8 +1,12 @@
+import random
+
 import pytest
 from bson import ObjectId
 
 from yadm import fields
 from yadm.documents import Document
+from yadm.results import UpdateResult, RemoveResult
+from yadm.queryset import NotFoundError
 
 
 class Doc(Document):
@@ -89,7 +93,7 @@ def test_count(loop, qs):
     loop.run_until_complete(test())
 
 
-def test_find_one(loop, qs):
+def test_find_one__query(loop, qs):
     async def test():
         doc = await qs.find_one({'i': 7})
         assert isinstance(doc, Doc)
@@ -99,13 +103,89 @@ def test_find_one(loop, qs):
     loop.run_until_complete(test())
 
 
-def test_find_one_exc(loop, qs):
+def test_find_one__oid(loop, qs):
+    async def test():
+        doc = await qs[3]
+        res_doc = await qs.find_one(doc.id)
+        assert isinstance(res_doc, Doc)
+        assert res_doc.id == doc.id
+        assert res_doc.i == doc.i
+
+    loop.run_until_complete(test())
+
+
+def test_find_one__nf(loop, qs):
+    async def test():
+        res = await qs.find_one({'i': 100500})
+        assert res is None
+
+    loop.run_until_complete(test())
+
+
+def test_find_one__nf_exc(loop, qs):
     class SimpleException(Exception):
         pass
 
     async def test():
         with pytest.raises(SimpleException):
             await qs.find_one({'i': 100500}, exc=SimpleException)
+
+    loop.run_until_complete(test())
+
+
+def test_update(loop, db, qs):
+    async def test():
+        result = await (qs.find({'i': {'$gte': 6}})
+                          .update({'$set': {'s': 'test'}}))
+
+        assert isinstance(result, UpdateResult)
+        assert result
+        assert result.matched == result.modified == int(result) == 4
+        assert result.upserted == 0
+
+        assert (await db.db.testdocs.count()) == 10
+        assert {d['i'] async for d in db.db.testdocs.find()} == set(range(10))
+        assert (await db.db.testdocs.find({'s': 'test'}).count()) == 4
+
+        async for doc in db.db.testdocs.find({'i': {'$lt': 6}}):
+            assert doc['s'] != 'test'
+            assert doc['s'].startswith('str(')
+
+        async for doc in db.db.testdocs.find({'i': {'$gte': 6}}):
+            assert doc['s'] == 'test'
+
+    loop.run_until_complete(test())
+
+
+def test_find_and_modify(loop, db, qs):
+    async def test():
+        doc = await qs.find({'i': 6}).find_and_modify({'$set': {'s': 'test'}})
+
+        assert (await db.db.testdocs.count()) == 10
+        assert {d['i'] async for d in db.db.testdocs.find()} == set(range(10))
+        assert (await db.db.testdocs.find({'s': 'test'}).count()) == 1
+        assert (await db.db.testdocs.find_one({'i': 6}))['s'] == 'test'
+
+        assert isinstance(doc, Document)
+        assert doc.i == 6
+        assert doc.s == 'str(6)'
+
+    loop.run_until_complete(test())
+
+
+def test_remove(loop, db, qs):
+    async def test():
+        result = await qs.find({'i': {'$gte': 6}}).remove()
+
+        assert isinstance(result, RemoveResult)
+        assert result
+        assert result.removed == int(result) == 4
+
+        assert (await qs.count()) == 6
+        assert {d.i async for d in qs} == set(range(6))
+
+        assert await db.db.testdocs.count() == 6
+        assert {d['i'] async for d in db.db.testdocs.find()} == set(range(6))
 
     loop.run_until_complete(test())
 

@@ -59,7 +59,7 @@ class AioQuerySet(BaseQuerySet):
         )
         if not full_response:
             return self._from_mongo_one(result)
-        else:
+        else:  # pragma: no cover
             result['value'] = self._from_mongo_one(result['value'])
             return result
 
@@ -82,7 +82,7 @@ class AioQuerySet(BaseQuerySet):
         qs._sort = None
         return {obj.id: obj async for obj in qs}
 
-    async def join(self, *field_names):
+    async def join(self, *field_names):  # pragma: no cover
         raise NotImplementedError
 
     async def find_in(self, comparable, field='_id', *,
