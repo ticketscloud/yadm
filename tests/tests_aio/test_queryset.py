@@ -148,3 +148,65 @@ def test_bulk(loop, qs):
         assert {d.i for d in bulk.values()} == {6, 7, 8, 9}
 
     loop.run_until_complete(test())
+
+
+class TestFindIn:
+    @pytest.fixture(autouse=True)
+    def ids(self, loop, qs):
+        async def fixture():
+            ids = [doc.id async for doc in qs]
+            random.shuffle(ids)
+            return ids
+
+        return loop.run_until_complete(fixture())
+
+    def test_simple(self, loop, qs, ids):
+        async def test():
+            result = [getattr(doc, 'id', doc)
+                      async for doc in qs.find_in(ids)]
+
+            assert result == ids
+
+        loop.run_until_complete(test())
+
+    def test_skip(self, loop, qs, ids):
+        async def test():
+            ids.append('NotExistId')
+            result = [doc.id async for doc in qs.find_in(ids)]
+            assert result == ids[:-1]
+
+        loop.run_until_complete(test())
+
+    def test_none(self, loop, qs, ids):
+        async def test():
+            index = random.randrange(len(ids))
+            ids[index] = 'NotExistId'
+            result = [getattr(doc, 'id', doc)
+                      async for doc in qs.find_in(ids, not_found='none')]
+
+            ids[index] = None
+            assert result == ids
+
+        loop.run_until_complete(test())
+
+    def test_exception(self, loop, qs, ids):
+        async def test():
+            [getattr(doc, 'id', doc)
+             async for doc in qs.find_in(ids, not_found='error')]
+
+            with pytest.raises(NotFoundError):
+                ids.append('NotExistId')
+                [getattr(doc, 'id', doc)
+                 async for doc in qs.find_in(ids, not_found='error')]
+
+        loop.run_until_complete(test())
+
+    def test_copy_id(self, loop, qs, ids):
+        async def test():
+            ids.append(ids[0])
+            result = [getattr(doc, 'id', doc)
+                      async for doc in qs.find_in(ids)]
+
+            assert result == ids
+
+        loop.run_until_complete(test())

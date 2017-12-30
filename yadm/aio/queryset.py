@@ -1,6 +1,6 @@
 from bson import ObjectId
 
-from yadm.queryset import BaseQuerySet, NotFoundBehavior
+from yadm.queryset import BaseQuerySet, NotFoundBehavior, NotFoundError
 from yadm.results import UpdateResult, RemoveResult
 
 
@@ -87,4 +87,28 @@ class AioQuerySet(BaseQuerySet):
 
     async def find_in(self, comparable, field='_id', *,
                       not_found=NotFoundBehavior.SKIP):
-        raise NotImplementedError
+        not_found = NotFoundBehavior(not_found)
+        hash_docs = {}
+
+        async for doc in self.find({field: {'$in': comparable}}):
+            key = getattr(doc, field)
+            if key not in hash_docs:
+                hash_docs[key] = doc
+
+        for cmp_item in comparable:
+            value = hash_docs.get(cmp_item)
+
+            if not_found is NotFoundBehavior.NONE:
+                yield value
+
+            elif not_found is NotFoundBehavior.SKIP:
+                if value is not None:
+                    yield value
+
+            elif not_found is NotFoundBehavior.ERROR:
+                if value is not None:
+                    yield value
+                else:
+                    raise NotFoundError("Could not find a document with"
+                                        " the field '{}' equal '{}'"
+                                        "".format(field, cmp_item))
