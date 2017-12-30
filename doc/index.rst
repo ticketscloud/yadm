@@ -220,11 +220,19 @@ aggregations
 CHANGES
 -------
 
+1.5.0 (2017-12-XX)
+==================
+
+* Experimental ``asyncio`` support;
+* Add :py:class:`ReferencesListField <yadm.fields.references_list.ReferencesListField>`
+    for lists of references.
+
+
 1.4.15 (2017-12-27)
 ===================
 
 * Add ``projection`` argument to :py:meth:`get_document <Database.get_document>`
-*   and :py:meth:`reload <Database.reload>`;
+    and :py:meth:`reload <Database.reload>`;
 * Add :py:attr:`Document.__default_projection__` attribute.
 
 

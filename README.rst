@@ -228,6 +228,13 @@ aggregations
 CHANGES
 -------
 
+1.5.0 (2017-12-XX)
+==================
+
+* Experimental ``asyncio`` support;
+* Add ``ReferencesListField`` for lists of references.
+
+
 1.4.15 (2017-12-27)
 ===================
 
