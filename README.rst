@@ -228,7 +228,7 @@ aggregations
 CHANGES
 -------
 
-1.5.0 (2017-12-XX)
+1.5.0 (2017-12-31)
 ==================
 
 * Experimental ``asyncio`` support;
