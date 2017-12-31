@@ -149,7 +149,11 @@ class ReferencesList(MutableSequence, DocumentItemMixin):
             self._resolved = True
         else:
             async def resolver_coro(self):
-                self._documents = [d async for d in qs.find_in(self._ids)]
+                accumulator = []
+                async for doc in qs.find_in(self._ids):
+                    accumulator.append(doc)
+
+                self._documents = accumulator
                 self._resolved = True
 
             return resolver_coro(self)
