@@ -10,6 +10,7 @@ class Doc(Document):
     __collection__ = 'testdocs'
     b = fields.BooleanField()
     i = fields.IntegerField()
+    l = fields.ListField(fields.IntegerField())
 
 
 def test_insert(loop, db):
@@ -25,7 +26,7 @@ def test_insert(loop, db):
         assert not doc.__changed__
         assert doc.__db__ is db
 
-    loop.run_until_complete((test()))
+    loop.run_until_complete(test())
 
 
 def test_save_new(loop, db):
@@ -41,7 +42,7 @@ def test_save_new(loop, db):
         assert not doc.__changed__
         assert doc.__db__ is db
 
-    loop.run_until_complete((test()))
+    loop.run_until_complete(test())
 
 
 def test_save(loop, db):
@@ -59,22 +60,59 @@ def test_save(loop, db):
         assert not doc.__changed__
         assert doc.__db__ is db
 
-    loop.run_until_complete((test()))
+    loop.run_until_complete(test())
 
 
-@pytest.mark.parametrize('unset', [['i'], {'i': True}])
-def test_update_one(loop, db, unset):
+@pytest.fixture(scope='function')
+def doc(loop, db):
+    async def fixture():
+        return await db.insert(
+            Doc(
+                b=True,
+                i=13,
+                l=[1, 2, 3],
+            ),
+        )
+
+    return loop.run_until_complete(fixture())
+
+
+@pytest.mark.parametrize('kwargs, result', [
+    (
+        {'set': {'i': 88}},
+        {'b': True, 'i': 88, 'l': [1, 2, 3]},
+    ),
+    (
+        {'unset': {'i': True}},
+        {'b': True, 'l': [1, 2, 3]},
+    ),
+    (
+        {'unset': ['b']},
+        {'i': 13, 'l': [1, 2, 3]},
+    ),
+    (
+        {'push': {'l': 33}},
+        {'b': True, 'i': 13, 'l': [1, 2, 3, 33]},
+    ),
+    (
+        {'pull': {'l': 2}},
+        {'b': True, 'i': 13, 'l': [1, 3]},
+    ),
+    (
+        {'inc': {'i': 653}},
+        {'b': True, 'i': 666, 'l': [1, 2, 3]},
+    ),
+])
+def test_update_one(loop, db, doc, kwargs, result):
     async def test():
-        col = db.db.testdocs
-        _id = await col.insert({'i': 13})
+        await db.update_one(doc, **kwargs)
+        raw_doc = await db.db['testdocs'].find_one(doc.id)
 
-        doc = from_mongo(Doc, await col.find_one(_id))
-        await db.update_one(doc, set={'b': True}, unset=unset)
+        assert raw_doc
+        del raw_doc['_id']
+        assert raw_doc == result
 
-        assert doc.b
-        assert not hasattr(doc, 'i')
-
-    loop.run_until_complete((test()))
+    loop.run_until_complete(test())
 
 
 def test_remove(loop, db):
@@ -88,4 +126,4 @@ def test_remove(loop, db):
         await db.remove(doc)
         assert await col.count() == 0
 
-    loop.run_until_complete((test()))
+    loop.run_until_complete(test())

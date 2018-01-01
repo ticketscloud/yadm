@@ -152,41 +152,50 @@ def test_save_full(db):
     assert doc.__db__ is db
 
 
-@pytest.mark.parametrize('unset', [['i'], {'i': True}])
-def test_update_one(db, unset):
-    col = db.db.testdocs
-    _id = col.insert({'i': 13})
-
-    doc = from_mongo(Doc, col.find_one(_id))
-    db.update_one(doc, set={'b': True}, unset=unset)
-
-    assert doc.b
-    assert not hasattr(doc, 'i')
-
-
-def test_update_one__inc(db):
-    col = db.db.testdocs
-    _id = col.insert({'i': 12})
-
-    doc = from_mongo(Doc, col.find_one(_id))
-    db.update_one(doc, inc={'i': 1})
-
-    assert doc.i == 13
-    assert not hasattr(doc, 'b')
+@pytest.fixture(scope='function')
+def doc(db):
+    return db.insert(
+        Doc(
+            b=True,
+            i=13,
+            l=[1, 2, 3],
+        ),
+    )
 
 
-@pytest.mark.parametrize('cmd, v, r', [
-    ('push', 4, [1, 2, 3, 4]),
-    ('pull', 2, [1, 3]),
+@pytest.mark.parametrize('kwargs, result', [
+    (
+        {'set': {'i': 88}},
+        {'b': True, 'i': 88, 'l': [1, 2, 3]},
+    ),
+    (
+        {'unset': {'i': True}},
+        {'b': True, 'l': [1, 2, 3]},
+    ),
+    (
+        {'unset': ['b']},
+        {'i': 13, 'l': [1, 2, 3]},
+    ),
+    (
+        {'push': {'l': 33}},
+        {'b': True, 'i': 13, 'l': [1, 2, 3, 33]},
+    ),
+    (
+        {'pull': {'l': 2}},
+        {'b': True, 'i': 13, 'l': [1, 3]},
+    ),
+    (
+        {'inc': {'i': 653}},
+        {'b': True, 'i': 666, 'l': [1, 2, 3]},
+    ),
 ])
-def test_update_one__push_pull(db, cmd, v, r):
-    col = db.db.testdocs
-    _id = col.insert({'l': [1, 2, 3]})
+def test_update_one(db, doc, kwargs, result):
+    db.update_one(doc, **kwargs)
+    raw_doc = db.db['testdocs'].find_one(doc.id)
 
-    doc = from_mongo(Doc, col.find_one(_id))
-    db.update_one(doc, **{cmd: {'l': v}})
-
-    assert doc.l == r
+    assert raw_doc
+    del raw_doc['_id']
+    assert raw_doc == result
 
 
 def test_remove(db):
