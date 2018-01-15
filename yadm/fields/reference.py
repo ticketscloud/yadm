@@ -112,7 +112,7 @@ class ReferenceField(Field):
             else:
                 cache = {}  # fake cache
 
-            if (rdc, value) in document.__qs__.cache:
+            if (rdc, value) in cache:
                 return cache[(rdc, value)]
             else:
                 if document.__db__.aio:
