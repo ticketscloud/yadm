@@ -1,5 +1,6 @@
 """ YADM with faker integration.
 """
+from collections import Counter
 from types import GeneratorType
 
 import pymongo
@@ -36,6 +37,8 @@ def create_fake(__document_class__,
     """
     if not issubclass(__document_class__, BaseDocument):
         raise TypeError("only BaseDocument subclasses is allowed")
+
+    create_fake.counter[__document_class__] += 1
 
     if __depth__ < 0:
         return AttributeNotSet
@@ -98,3 +101,6 @@ def create_fake(__document_class__,
                 pass
 
     return document
+
+
+create_fake.counter = Counter()
