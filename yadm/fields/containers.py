@@ -68,7 +68,7 @@ class Container(DocumentItemMixin):
             raise ValueError("can't reload deep objects: {}"
                              "".format(self.__field_name__))
 
-        doc = self._get_queryset().find_one()
+        doc = self._get_queryset().read_primary().find_one()
         self._data = self.__get_value__(doc)._data
 
 
