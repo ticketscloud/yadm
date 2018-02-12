@@ -9,7 +9,7 @@ Field for decimal numbers
     doc = DocClass()
     doc.dec = Decimal('3.14')
 
-    db.insert(doc)
+    db.insert_one(doc)
 
 This code save to MongoDB document:
 

@@ -93,7 +93,7 @@ def create_fake(__document_class__,
             doc_fake_proc = None
 
     if __db__ is not None:
-        __db__.insert(document, write_concern=__write_concern__)
+        __db__.insert_one(document, write_concern=__write_concern__)
 
         # post save processor
         if isinstance(doc_fake_proc, GeneratorType):

@@ -16,8 +16,8 @@ class Doc(Document):
 
 
 def test_get(db):
-    id_ref = db.db.testdocs_ref.insert({})
-    id = db.db.testdocs.insert({'ref': id_ref})
+    id_ref = db.db.testdocs_ref.insert_one({}).inserted_id
+    id = db.db.testdocs.insert_one({'ref': id_ref}).inserted_id
 
     doc = db.get_queryset(Doc).find_one(id)
 
@@ -27,7 +27,7 @@ def test_get(db):
 
 
 def test_get_broken(db):
-    id = db.db.testdocs.insert({'ref': ObjectId()})
+    id = db.db.testdocs.insert_one({'ref': ObjectId()}).inserted_id
     doc = db.get_queryset(Doc).find_one(id)
 
     with pytest.raises(fields.BrokenReference):
@@ -35,7 +35,7 @@ def test_get_broken(db):
 
 
 def test_get_notbindingtodatabase(db):
-    id = db.db.testdocs.insert({'ref': ObjectId()})
+    id = db.db.testdocs.insert_one({'ref': ObjectId()}).inserted_id
     doc = db.get_queryset(Doc).find_one(id)
     doc.__db__ = None
 
@@ -47,17 +47,20 @@ def test_get_notbindingtodatabase(db):
     lambda d: d,
     lambda d: d.id,
     lambda d: str(d.id),
-])
+], ids=['doc', 'doc.id', 'str(doc.id)'])
 def test_set(db, cast):
-    id = db.db.testdocs.insert({})
-    doc = db.get_queryset(Doc).find_one(id)
-    doc.ref = cast(db.insert(DocRef()))
+    _id = db.db.testdocs.insert_one({}).inserted_id
+    doc = db.get_queryset(Doc).find_one(_id)
+
+    doc_ref = DocRef()
+    db.insert_one(doc_ref)
+    doc.ref = cast(doc_ref)
 
     assert isinstance(doc.ref, DocRef)
 
     db.save(doc)
 
-    id_ref = db.db.testdocs.find_one({'_id': id})['ref']
+    id_ref = db.db.testdocs.find_one({'_id': _id})['ref']
 
     assert isinstance(id_ref, ObjectId)
     assert isinstance(doc.ref, Document)
@@ -73,8 +76,8 @@ def test_not_object_id_get(db):
         __collection__ = 'testdocs'
         ref = fields.ReferenceField(DocNotObjectIdRef)
 
-    id_ref = db.db.testdocs_ref.insert({'_id': 13})
-    id = db.db.testdocs.insert({'ref': id_ref})
+    id_ref = db.db.testdocs_ref.insert_one({'_id': 13}).inserted_id
+    id = db.db.testdocs.insert_one({'ref': id_ref}).inserted_id
 
     doc = db.get_queryset(DocNotObjectId).find_one(id)
 
@@ -93,8 +96,8 @@ class DocWEmbedded(Document):
 
 
 def test_embedded_get(db):
-    id_ref = db.db.testdocs_ref.insert({})
-    id = db.db.testdocs.insert({'emb': {'ref': id_ref}})
+    id_ref = db.db.testdocs_ref.insert_one({}).inserted_id
+    id = db.db.testdocs.insert_one({'emb': {'ref': id_ref}}).inserted_id
 
     doc = db.get_queryset(DocWEmbedded).find_one(id)
 
@@ -105,12 +108,15 @@ def test_embedded_get(db):
 
 
 def test_cache(db):
-    ref_one = db.insert(DocRef(i=13))
-    ref_two = db.insert(DocRef(i=26))
+    ref_one = DocRef(i=13)
+    db.insert_one(ref_one)
 
-    db.insert(Doc(ref=ref_one))
-    db.insert(Doc(ref=ref_one))
-    db.insert(Doc(ref=ref_two))
+    ref_two = DocRef(i=26)
+    db.insert_one(ref_two)
+
+    db.insert_one(Doc(ref=ref_one))
+    db.insert_one(Doc(ref=ref_one))
+    db.insert_one(Doc(ref=ref_two))
 
     qs = db.get_queryset(Doc)
     assert len(qs.cache) == 0

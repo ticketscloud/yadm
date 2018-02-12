@@ -22,7 +22,7 @@ def test_save(db):
     edoc.i = 42
     doc.li.add(edoc)
 
-    db.insert(doc)
+    db.insert_one(doc)
 
     data = db.db.testdocs.find_one()
 
@@ -41,7 +41,7 @@ def test_save(db):
 
 
 def test_load(db):
-    _id = db.db.testdocs.insert({'li': []})
+    _id = db.db.testdocs.insert_one({'li': []}).inserted_id
     db.db.testdocs.update({'_id': _id}, {'$addToSet': {'li': {'i': 13}}})
     db.db.testdocs.update({'_id': _id}, {'$addToSet': {'li': {'i': 42}}})
 
@@ -63,7 +63,7 @@ def test_load(db):
 
 def test_add_to_set(db):
     doc = Doc()
-    db.insert(doc)
+    db.insert_one(doc)
 
     edoc = EDoc()
     edoc.i = 13

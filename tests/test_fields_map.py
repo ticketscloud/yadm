@@ -21,7 +21,9 @@ def test_default():
 
 
 def test_load(db):
-    _id = db.db.testdoc.insert({'map': {'a': 1, 'b': 2, 'c': 3}})
+    _id = db.db.testdoc.insert_one({
+        'map': {'a': 1, 'b': 2, 'c': 3},
+    }).inserted_id
     doc = db.get_queryset(Doc).find_one(_id)
 
     assert doc.map
@@ -39,7 +41,9 @@ def test_getitem_keyerror():
 
 
 def test_setitem(db):
-    _id = db.db.testdoc.insert({'map': {'a': 1, 'b': 2, 'c': 3}})
+    _id = db.db.testdoc.insert_one({
+        'map': {'a': 1, 'b': 2, 'c': 3},
+    }).inserted_id
     doc = db.get_queryset(Doc).find_one(_id)
     doc.map['d'] = 4
 
@@ -53,7 +57,9 @@ def test_setitem_valueerror():
 
 
 def test_setattr_save(db):
-    _id = db.db.testdoc.insert({'map': {'a': 1, 'b': 2, 'c': 3}})
+    _id = db.db.testdoc.insert_one({
+        'map': {'a': 1, 'b': 2, 'c': 3},
+    }).inserted_id
     doc = db.get_queryset(Doc).find_one(_id)
     doc.map['d'] = 4
     db.save(doc)
@@ -64,7 +70,9 @@ def test_setattr_save(db):
 
 
 def test_remove(db):
-    _id = db.db.testdoc.insert({'map': {'a': 1, 'b': 2, 'c': 3}})
+    _id = db.db.testdoc.insert_one({
+        'map': {'a': 1, 'b': 2, 'c': 3},
+    }).inserted_id
     doc = db.get_queryset(Doc).find_one(_id)
     del doc.map['b']
 
@@ -72,7 +80,9 @@ def test_remove(db):
 
 
 def test_remove_save(db):
-    _id = db.db.testdoc.insert({'map': {'a': 1, 'b': 2, 'c': 3}})
+    _id = db.db.testdoc.insert_one({
+        'map': {'a': 1, 'b': 2, 'c': 3},
+    }).inserted_id
     doc = db.get_queryset(Doc).find_one(_id)
     del doc.map['b']
     db.save(doc)
@@ -82,7 +92,9 @@ def test_remove_save(db):
 
 
 def test_set(db):
-    _id = db.db.testdoc.insert({'map': {'a': 1, 'b': 2, 'c': 3}})
+    _id = db.db.testdoc.insert_one({
+        'map': {'a': 1, 'b': 2, 'c': 3},
+    }).inserted_id
     doc = db.get_queryset(Doc).find_one(_id)
     doc.map.set('d', 4)
 
@@ -106,7 +118,9 @@ def test_set_valueerror(db):
 
 
 def test_unset(db):
-    _id = db.db.testdoc.insert({'map': {'a': 1, 'b': 2, 'c': 3}})
+    _id = db.db.testdoc.insert_one({
+        'map': {'a': 1, 'b': 2, 'c': 3},
+    }).inserted_id
     doc = db.get_queryset(Doc).find_one(_id)
     doc.map.unset('b')
 
@@ -125,7 +139,9 @@ def test_custom_load(db):
     one = ObjectId()
     two = ObjectId()
 
-    _id = db.db.testdoc.insert({'map': {str(one): 1, str(two): 2}})
+    _id = db.db.testdoc.insert_one({
+        'map': {str(one): 1, str(two): 2},
+    }).inserted_id
     doc = db.get_queryset(DocCustom).find_one(_id)
 
     assert doc.map
@@ -141,7 +157,9 @@ def test_custom_setitem(db):
     one = ObjectId()
     two = ObjectId()
 
-    _id = db.db.testdoc.insert({'map': {str(one): 1}})
+    _id = db.db.testdoc.insert_one({
+        'map': {str(one): 1},
+    }).inserted_id
     doc = db.get_queryset(DocCustom).find_one(_id)
 
     doc.map[two] = 3

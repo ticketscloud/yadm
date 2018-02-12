@@ -27,7 +27,7 @@ class TestDatetimeField:
     def test_save(self, db):
         doc = self.Doc()
         doc.dt = datetime(1970, 1, 1, tzinfo=pytz.utc)
-        db.insert(doc)
+        db.insert_one(doc)
 
         doc = db.get_queryset(self.Doc).find_one(doc.id)
         data = db.db.testdocs.find_one()
@@ -37,7 +37,7 @@ class TestDatetimeField:
 
     def test_load(self, db):
         epoch = datetime(1970, 1, 1, tzinfo=pytz.utc)
-        _id = db.db.testdocs.insert({'dt': epoch})
+        _id = db.db.testdocs.insert_one({'dt': epoch}).inserted_id
 
         doc = db.get_queryset(self.Doc).find_one(_id)
 
@@ -51,7 +51,7 @@ class TestDatetimeField:
 
     def test_default_now_save(self, db):
         doc = self.Doc()
-        db.insert(doc)
+        db.insert_one(doc)
 
         doc = db.get_queryset(self.Doc).find_one(doc.id)
         data = db.db.testdocs.find_one()
@@ -64,7 +64,7 @@ class TestDatetimeField:
 
         doc = self.Doc()
         doc.now = epoch
-        db.insert(doc)
+        db.insert_one(doc)
 
         doc = db.get_queryset(self.Doc).find_one(doc.id)
         data = db.db.testdocs.find_one()
@@ -74,7 +74,7 @@ class TestDatetimeField:
 
     def test_now_load(self, db):
         epoch = datetime(1970, 1, 1, tzinfo=pytz.utc)
-        _id = db.db.testdocs.insert({'now': epoch})
+        _id = db.db.testdocs.insert_one({'now': epoch}).inserted_id
 
         doc = db.get_queryset(self.Doc).find_one(_id)
 

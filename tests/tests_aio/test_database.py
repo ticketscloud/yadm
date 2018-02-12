@@ -13,12 +13,12 @@ class Doc(Document):
     l = fields.ListField(fields.IntegerField())
 
 
-def test_insert(loop, db):
+def test_insert_one(loop, db):
     async def test():
         doc = Doc()
         doc.i = 13
 
-        await db.insert(doc)
+        await db.insert_one(doc)
 
         assert await db.db.testdocs.find().count() == 1
         assert (await db.db.testdocs.find_one())['i'] == 13
@@ -66,13 +66,9 @@ def test_save(loop, db):
 @pytest.fixture(scope='function')
 def doc(loop, db):
     async def fixture():
-        return await db.insert(
-            Doc(
-                b=True,
-                i=13,
-                l=[1, 2, 3],
-            ),
-        )
+        doc = Doc(b=True, i=13, l=[1, 2, 3])
+        await db.insert_one(doc)
+        return doc
 
     return loop.run_until_complete(fixture())
 
@@ -115,15 +111,15 @@ def test_update_one(loop, db, doc, kwargs, result):
     loop.run_until_complete(test())
 
 
-def test_remove(loop, db):
+def test_delete_one(loop, db):
     async def test():
         col = db.db.testdocs
-        await col.insert({'i': 13})
+        await col.insert_one({'i': 13})
 
         doc = from_mongo(Doc, await col.find_one({'i': 13}))
 
         assert await col.count() == 1
-        await db.remove(doc)
+        await db.delete_one(doc)
         assert await col.count() == 0
 
     loop.run_until_complete(test())

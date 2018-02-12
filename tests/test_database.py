@@ -88,11 +88,11 @@ def test_get_document__not_found_exc(db):
         db.get_document(Doc, ObjectId(), exc=Exc)
 
 
-def test_insert(db):
+def test_insert_one(db):
     doc = Doc()
     doc.i = 13
 
-    db.insert(doc)
+    db.insert_one(doc)
 
     assert db.db.testdocs.find().count() == 1
     assert db.db.testdocs.find()[0]['i'] == 13
@@ -114,12 +114,12 @@ def test_save_new(db):
 
 def test_save(db):
     col = db.db.testdocs
-    col.insert({'i': 13})
+    col.insert_one({'i': 13})
 
     doc = from_mongo(Doc, col.find_one({'i': 13}))
     doc.i = 26
 
-    col.update({'_id': doc.id}, {'$set': {'b': True}})
+    col.update_one({'_id': doc.id}, {'$set': {'b': True}})
 
     db.save(doc)
 
@@ -134,12 +134,12 @@ def test_save(db):
 
 def test_save_full(db):
     col = db.db.testdocs
-    col.insert({'i': 13})
+    col.insert_one({'i': 13})
 
     doc = from_mongo(Doc, col.find_one({'i': 13}))
     doc.i = 26
 
-    col.update({'_id': doc.id}, {'$set': {'b': True}})
+    col.update_one({'_id': doc.id}, {'$set': {'b': True}})
 
     db.save(doc, full=True)
 
@@ -154,13 +154,9 @@ def test_save_full(db):
 
 @pytest.fixture(scope='function')
 def doc(db):
-    return db.insert(
-        Doc(
-            b=True,
-            i=13,
-            l=[1, 2, 3],
-        ),
-    )
+    doc = Doc(b=True, i=13, l=[1, 2, 3])
+    db.insert_one(doc)
+    return doc
 
 
 @pytest.mark.parametrize('kwargs, result', [
@@ -200,7 +196,7 @@ def test_update_one(db, doc, kwargs, result):
 
 def test_remove(db):
     col = db.db.testdocs
-    col.insert({'i': 13})
+    col.insert_one({'i': 13})
 
     doc = from_mongo(Doc, col.find_one({'i': 13}))
 
@@ -212,9 +208,9 @@ def test_remove(db):
 def test_reload(db):
     doc = Doc()
     doc.i = 1
-    db.insert(doc)
+    db.insert_one(doc)
 
-    db.db.testdocs.update({'_id': doc.id}, {'i': 2})
+    db.db.testdocs.update_one({'_id': doc.id}, {'$set': {'i': 2}})
 
     assert doc.i == 1
     new = db.reload(doc)
@@ -225,9 +221,9 @@ def test_reload(db):
 def test_reload_new_instance(db):
     doc = Doc()
     doc.i = 1
-    db.insert(doc)
+    db.insert_one(doc)
 
-    db.db.testdocs.update({'_id': doc.id}, {'i': 2})
+    db.db.testdocs.update_one({'_id': doc.id}, {'$set': {'i': 2}})
 
     assert doc.i == 1
     new = db.reload(doc, new_instance=True)
@@ -240,9 +236,9 @@ def test_w_projection(db):
     doc = Doc()
     doc.i = 1
     doc.b = True
-    db.insert(doc)
+    db.insert_one(doc)
 
-    db.db.testdocs.update({'_id': doc.id}, {'$set': {'i': 2}})
+    db.db.testdocs.update_one({'_id': doc.id}, {'$set': {'i': 2}})
 
     assert doc.i == 1
     assert doc.b is True

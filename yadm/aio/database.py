@@ -16,12 +16,13 @@ RPS = pymongo.read_preferences
 class AioDatabase(BaseDatabase):
     aio = True
 
-    async def insert(self, document, **collection_params):
+    async def insert_one(self, document, **collection_params):
         document.__db__ = self
         collection = self._get_collection(document.__class__, collection_params)
-        document._id = await collection.insert(to_mongo(document))
+        result = await collection.insert_one(to_mongo(document))
+        document._id = result.inserted_id
         document.__changed_clear__()
-        return document
+        return result
 
     async def save(self, document, **collection_params):
         document.__db__ = self
@@ -65,9 +66,9 @@ class AioDatabase(BaseDatabase):
         if reload:
             await self.reload(document)
 
-    async def remove(self, document, **collection_params):
-        collection = self._get_collection(document.__class__, collection_params)
-        return await collection.remove({'_id': document._id})
+    async def delete_one(self, document, **collection_params):
+        _col = self._get_collection(document.__class__, collection_params)
+        return await _col.delete_one({'_id': document._id})
 
     async def reload(self, document, new_instance=False, *,
                      projection=None,

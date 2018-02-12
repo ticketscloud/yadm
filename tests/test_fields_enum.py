@@ -32,7 +32,7 @@ class TestEnumField:
         assert raw['e'] == 1
 
     def test_load(self, db):
-        db.db['docs'].insert({'e': 2})
+        db.db['docs'].insert_one({'e': 2})
         doc = db(self.Doc).find_one()
         assert isinstance(doc.e, WordsEnum)
         assert doc.e == WordsEnum.b

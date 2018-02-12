@@ -76,7 +76,7 @@ def test_save(db):
 
 
 def test_load(db):
-    db.db.testdocs.insert({'dec': {'i': 314, 'e': -2}})
+    db.db.testdocs.insert_one({'dec': {'i': 314, 'e': -2}})
 
     doc = db.get_queryset(Doc).find_one()
 

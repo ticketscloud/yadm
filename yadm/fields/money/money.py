@@ -10,7 +10,7 @@ Use :class:`yadm.fields.money.Money`, as value for money
     doc = DocClass()
     doc.money = Money('3.14', 'USD')
 
-    db.insert(doc)
+    db.insert_one(doc)
 
 This code save to MongoDB document:
 

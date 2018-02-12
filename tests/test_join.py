@@ -19,18 +19,18 @@ class Doc(Document):
 
 @pytest.fixture
 def id_ref_1(db):
-    return db.db.testdocs_ref.insert({'i': 1})
+    return db.db.testdocs_ref.insert_one({'i': 1}).inserted_id
 
 
 @pytest.fixture
 def id_ref_2(db, id_ref_1):
-    return db.db.testdocs_ref.insert({'i': 2})
+    return db.db.testdocs_ref.insert_one({'i': 2}).inserted_id
 
 
 @pytest.fixture
 def qs(db, id_ref_1, id_ref_2):
     for n in range(10):
-        db.db.testdocs.insert({
+        db.db.testdocs.insert_one({
             'i': n,
             'ref': id_ref_1 if n % 2 else id_ref_2,
         })
@@ -62,7 +62,7 @@ def test_join(join, id_ref_1, id_ref_2):
 
 
 def test_get_queryset(db, qs, id_ref_1, id_ref_2):
-    db.db.testdocs_ref.insert({'i': 3})
+    db.db.testdocs_ref.insert_one({'i': 3})
     qs = qs.join().get_queryset('ref')
     assert qs.count() == 2
     assert {d.id for d in qs} == {id_ref_1, id_ref_2}

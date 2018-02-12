@@ -18,7 +18,7 @@ def docs(loop, db):
         docs = []
         for n in range(randint(10, 20)):
             doc = Doc(i=randint(-666, 666))
-            await db.insert(doc)
+            await db.insert_one(doc)
             docs.append(doc)
 
         return docs

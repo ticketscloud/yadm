@@ -84,8 +84,11 @@ def test_context_manager_error(db):
 
 
 def test_update_one(db):
-    doc_one = db.insert(Doc(i=1))
-    doc_two = db.insert(Doc(i=2))
+    doc_one = Doc(i=1)
+    db.insert_one(doc_one)
+
+    doc_two = Doc(i=2)
+    db.insert_one(doc_two)
 
     with db.bulk(Doc) as bulk:
         bulk.update_one(doc_one, set={'i': 7})
@@ -96,9 +99,14 @@ def test_update_one(db):
 
 
 def test_find_update(db):
-    doc_one = db.insert(Doc(i=1))
-    doc_two = db.insert(Doc(i=2))
-    doc_three = db.insert(Doc(i=3))
+    doc_one = Doc(i=1)
+    db.insert_one(doc_one)
+
+    doc_two = Doc(i=2)
+    db.insert_one(doc_two)
+
+    doc_three = Doc(i=3)
+    db.insert_one(doc_three)
 
     with db.bulk(Doc) as bulk:
         bulk.find({'i': {'$gte': 2}}).update(inc={'i': 11})
@@ -118,7 +126,7 @@ def test_find_upsert_update(db):
 
 def test_find_remove(db):
     for i in range(20):
-        db.insert(Doc(i=i))
+        db.insert_one(Doc(i=i))
 
     with db.bulk(Doc) as bulk:
         bulk.find({'i': 13}).remove()
@@ -131,7 +139,7 @@ def test_find_remove(db):
 
 def test_find_mixed(db):
     for i in range(5):
-        db.insert(Doc(i=i))
+        db.insert_one(Doc(i=i))
 
     with db.bulk(Doc, ordered=True) as bulk:
         for i in range(5, 10):

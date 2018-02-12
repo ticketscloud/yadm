@@ -29,7 +29,7 @@ def test_save(db):
     edoc.i = 42
     doc.li.append(edoc)
 
-    db.insert(doc)
+    db.insert_one(doc)
 
     data = db.db.docs.find_one()
 
@@ -41,7 +41,7 @@ def test_save(db):
 
 
 def test_load(db):
-    db.db.docs.insert({'li': [{'i': 13}, {'i': 42}]})
+    db.db.docs.insert_one({'li': [{'i': 13}, {'i': 42}]})
 
     doc = db.get_queryset(Doc).find_one()
 
@@ -59,7 +59,7 @@ def test_load(db):
 
 def test_push_reload(db):
     doc = Doc()
-    db.insert(doc)
+    db.insert_one(doc)
 
     edoc = EDoc()
     edoc.i = 13
@@ -86,7 +86,7 @@ def test_push_reload(db):
 
 def test_push_no_reload(db):
     doc = Doc()
-    db.insert(doc)
+    db.insert_one(doc)
 
     edoc = EDoc()
     edoc.i = 13
@@ -114,7 +114,7 @@ def test_replace(db):
     doc = Doc()
     doc.li.append(EDoc(i=13, s='13'))
     doc.li.append(EDoc(i=42, s='42'))
-    db.insert(doc)
+    db.insert_one(doc)
 
     doc.li.replace({'i': 13}, EDoc(i=26))
 
@@ -133,7 +133,7 @@ def test_update(db):
     doc = Doc()
     doc.li.append(EDoc(i=13, s='13'))
     doc.li.append(EDoc(i=42, s='42'))
-    db.insert(doc)
+    db.insert_one(doc)
 
     doc.li.update({'i': 13}, {'i': 26})
 
@@ -183,7 +183,7 @@ def test_deep_save(db):
 
 
 def test_deep_load(db):
-    db.db.docs.insert({'li': [{'lie': [{'i': 13}]}]})
+    db.db.docs.insert_one({'li': [{'lie': [{'i': 13}]}]})
 
     doc = db.get_queryset(DeepDoc).find_one()
 
@@ -197,7 +197,7 @@ def test_deep_load(db):
 
 def test_deep_push(db):
     doc = DeepDoc()
-    db.insert(doc)
+    db.insert_one(doc)
 
     doc.li.push(DeepEDoc())
 
@@ -218,7 +218,7 @@ def test_deep_push(db):
 
 def test_deep_push_valueerror(db):
     doc = DeepDoc()
-    db.insert(doc)
+    db.insert_one(doc)
 
     doc.li.push(DeepEDoc())
 
@@ -230,7 +230,9 @@ def test_deep_push_valueerror(db):
 
 
 def test_deep_pull(db):
-    _id = db.db.docs.insert({'li': [{'lie': [{'i': 13}, {'i': 42}]}]})
+    _id = db.db.docs.insert_one({
+        'li': [{'lie': [{'i': 13}, {'i': 42}]}]
+    }).inserted_id
     doc = db.get_queryset(DeepDoc).find_one({'_id': _id})
 
     doc.li[0].lie.pull({'i': 42}, reload=False)

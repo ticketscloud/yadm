@@ -1,5 +1,3 @@
-import pytest
-
 from bson import ObjectId
 
 from yadm.documents import Document
@@ -18,8 +16,8 @@ class Doc(Document):
 
 def test_get(loop, db):
     async def test():
-        id_ref = await db.db.testdocs_ref.insert({'i': 13})
-        id = await db.db.testdocs.insert({'ref': id_ref})
+        id_ref = (await db.db.testdocs_ref.insert_one({'i': 13})).inserted_id
+        id = (await db.db.testdocs.insert_one({'ref': id_ref})).inserted_id
 
         doc = await db.get_queryset(Doc).find_one(id)
 

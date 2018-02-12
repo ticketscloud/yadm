@@ -12,7 +12,7 @@ Map.
     doc.map['b'] = 2
     assert doc.map == {'a': 1, 'b': 2}
 
-    db.insert(doc)
+    db.insert_one(doc)
     doc = db.get_queryset(Doc).find_one(doc.id)  # reload
 
     doc.map['c'] = 3  # do not save

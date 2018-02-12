@@ -11,11 +11,11 @@ Work with references.
 
     rdoc = RDoc()
     rdoc.i = 13
-    db.insert(rdoc)
+    db.insert_one(rdoc)
 
     doc = Doc()
     doc.rdoc = rdoc
-    db.insert(doc)
+    db.insert_one(doc)
 
     doc = db.get_queryset(Doc).find_one(doc.id)  # reload doc
     assert doc.rdoc.id == rdoc.id

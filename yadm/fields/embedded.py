@@ -13,7 +13,7 @@ Work with embedded documents.
     doc = Doc()
     doc.edoc = EDoc()
     doc.edoc.i = 13
-    db.insert(doc)
+    db.insert_one(doc)
 """
 import random
 

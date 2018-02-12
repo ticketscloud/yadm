@@ -35,13 +35,13 @@ class Doc(Document):
     ('two', EDocTwo),
 ])
 def test_load(db, type_name, ed_class):
-    db.db.test.insert({'e': {'type': type_name}})
+    db.db.test.insert_one({'e': {'type': type_name}})
     doc = db(Doc).find_one()
     assert isinstance(doc.e, ed_class)
 
 
 def test_load_bad_type(db):
-    db.db.test.insert({'e': {'type': 'bad_type'}})
+    db.db.test.insert_one({'e': {'type': 'bad_type'}})
     doc = db(Doc).find_one()
 
     with pytest.raises(ValueError):
@@ -63,7 +63,7 @@ def test_save(db, ed_class, type_name, data):
 
 
 def test_load_list(db):
-    db.db.test.insert({'l': [
+    db.db.test.insert_one({'l': [
         {'type': 'one', 'i': 1},
         {'type': 'two', 'i': '2'},
     ]})

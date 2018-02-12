@@ -8,7 +8,6 @@ from bson import ObjectId
 from yadm.documents import Document
 from yadm import fields
 from yadm.markers import NotLoaded
-from yadm.results import UpdateResult, RemoveResult
 from yadm.queryset import QuerySet, NotFoundError
 
 
@@ -21,7 +20,7 @@ class Doc(Document):
 @pytest.fixture
 def qs(db):
     for n in range(10):
-        db.db.testdocs.insert({
+        db.db.testdocs.insert_one({
             'i': n,
             's': 'str({})'.format(n),
         })
@@ -107,13 +106,13 @@ def test_find_with_collisium(qs):
     assert qs[0].i == 5
 
 
-def test_update(db, qs):
-    result = qs.find({'i': {'$gte': 6}}).update({'$set': {'s': 'test'}})
+def test_update_many(db, qs):
+    result = qs.find({'i': {'$gte': 6}}).update_many({'$set': {'s': 'test'}})
 
-    assert isinstance(result, UpdateResult)
-    assert result
-    assert result.matched == result.modified == int(result) == 4
-    assert result.upserted == 0
+    assert isinstance(result, pymongo.results.UpdateResult)
+    assert result.acknowledged
+    assert result.matched_count == result.modified_count == 4
+    assert result.upserted_id is None
 
     assert db.db.testdocs.count() == 10
     assert {d['i'] for d in db.db.testdocs.find()} == set(range(10))
@@ -127,13 +126,13 @@ def test_update(db, qs):
         assert doc['s'] == 'test'
 
 
-def test_update_not_multi(db, qs):
-    result = qs.find({'i': {'$gte': 6}}).update({'$set': {'s': 'test'}}, multi=False)
+def test_update_one(db, qs):
+    result = qs.find({'i': {'$gte': 6}}).update_one({'$set': {'s': 'test'}})
 
-    assert isinstance(result, UpdateResult)
-    assert result
-    assert result.matched == result.modified == int(result) == 1
-    assert result.upserted == 0
+    assert isinstance(result, pymongo.results.UpdateResult)
+    assert result.acknowledged
+    assert result.matched_count == result.modified_count == 1
+    assert result.upserted_id is None
 
     assert db.db.testdocs.count() == 10
     assert {d['i'] for d in db.db.testdocs.find()} == set(range(10))
@@ -216,12 +215,12 @@ def test_find_and_modify_not_found(qs):
     assert ret is None
 
 
-def test_remove(db, qs):
-    result = qs.find({'i': {'$gte': 6}}).remove()
+def test_delete_many(db, qs):
+    result = qs.find({'i': {'$gte': 6}}).delete_many()
 
-    assert isinstance(result, RemoveResult)
-    assert result
-    assert result.removed == int(result) == 4
+    assert isinstance(result, pymongo.results.DeleteResult)
+    assert result.acknowledged
+    assert result.deleted_count == 4
 
     assert len([d for d in qs]) == 6
     assert {d.i for d in qs} == set(range(6))
@@ -230,12 +229,12 @@ def test_remove(db, qs):
     assert {d['i'] for d in db.db.testdocs.find()} == set(range(6))
 
 
-def test_remove__one(db, qs):
-    result = qs.find({'i': {'$gte': 6}}).remove(multi=False)
+def test_delete_one(db, qs):
+    result = qs.find({'i': {'$gte': 6}}).delete_one()
 
-    assert isinstance(result, RemoveResult)
-    assert result
-    assert result.removed == int(result) == 1
+    assert isinstance(result, pymongo.results.DeleteResult)
+    assert result.acknowledged
+    assert result.deleted_count == 1
 
     assert len([d for d in qs]) == 9
     assert db.db.testdocs.count() == 9
@@ -292,9 +291,18 @@ def test_ids(db):
     assert not list(qs.ids())
 
     ids = set()
-    ids.add(db.insert(Doc(i=3)))
-    ids.add(db.insert(Doc(i=4)))
-    ids.add(db.insert(Doc(i=10)))
+
+    _doc = Doc(i=3)
+    db.insert_one(_doc)
+    ids.add(_doc)
+
+    _doc = Doc(i=4)
+    db.insert_one(_doc)
+    ids.add(_doc)
+
+    _doc = Doc(i=10)
+    db.insert_one(_doc)
+    ids.add(_doc)
 
     assert len(list(qs.ids())) == 3
     assert set(qs.ids()) == ids
@@ -305,9 +313,9 @@ def test_distinct(db, qs):
     assert isinstance(res, list)
     assert len(res) == len(set(res))
 
-    db.insert(Doc(i=3))
-    db.insert(Doc(i=4))
-    db.insert(Doc(i=10))
+    db.insert_one(Doc(i=3))
+    db.insert_one(Doc(i=4))
+    db.insert_one(Doc(i=10))
 
     res = qs.distinct('i')
     assert len(res) == len(set(res))

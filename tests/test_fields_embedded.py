@@ -63,9 +63,9 @@ def test_default_auto_not_save_empty(db):
 ])
 def test_get(db, raw):
     if raw is not None:
-        _id = db.db.testdoc.insert({'e': raw})
+        _id = db.db.testdoc.insert_one({'e': raw}).inserted_id
     else:
-        _id = db.db.testdoc.insert({})
+        _id = db.db.testdoc.insert_one({}).inserted_id
 
     doc = db.get_queryset(Doc).find_one(_id)
 
@@ -99,9 +99,9 @@ def test_get(db, raw):
 ])
 def test_get_deeper(db, raw):
     if raw is not None:
-        _id = db.db.testdoc.insert({'e': {'e': raw}})
+        _id = db.db.testdoc.insert_one({'e': {'e': raw}}).inserted_id
     else:
-        _id = db.db.testdoc.insert({'e': {}})
+        _id = db.db.testdoc.insert_one({'e': {}}).inserted_id
 
     doc = db.get_queryset(Doc).find_one(_id)
 
@@ -154,7 +154,7 @@ def test_set_typeerror():
 
 def test_set_insert_wo_set(db):
     doc = Doc()
-    db.insert(doc)
+    db.insert_one(doc)
 
     data = db.db.testdoc.find_one({'_id': doc.id})
     assert set(data) == {'_id'}
@@ -165,7 +165,7 @@ def test_set_insert(db):
     doc = Doc()
     doc.e = EDoc()
     doc.e.i = 13
-    db.insert(doc)
+    db.insert_one(doc)
 
     data = db.db.testdoc.find_one({'_id': doc.id})
     assert set(data) == {'_id', 'e'}
@@ -174,7 +174,7 @@ def test_set_insert(db):
 
 
 def test_set_save(db):
-    _id = db.db.testdoc.insert({'e': {'i': 13}})
+    _id = db.db.testdoc.insert_one({'e': {'i': 13}}).inserted_id
     doc = db.get_queryset(Doc).find_one(_id)
 
     doc.e.i = 26
@@ -185,7 +185,7 @@ def test_set_save(db):
 
 
 def test_delete_save(db):
-    _id = db.db.testdoc.insert({'e': {'i': 13}})
+    _id = db.db.testdoc.insert_one({'e': {'i': 13}}).inserted_id
     doc = db.get_queryset(Doc).find_one(_id)
 
     del doc.e
@@ -196,7 +196,7 @@ def test_delete_save(db):
 
 
 def test_delete_deep_save(db):
-    _id = db.db.testdoc.insert({'e': {'i': 13, 'id': ObjectId()}})
+    _id = db.db.testdoc.insert_one({'e': {'i': 13, 'id': ObjectId()}}).inserted_id
     doc = db.get_queryset(Doc).find_one(_id)
 
     del doc.e.i
@@ -220,7 +220,7 @@ def test_id_insert(db):
     doc = Doc({'e': {'i': 13}})
 
     # eid = doc.e.id
-    db.insert(doc)
+    db.insert_one(doc)
     # assert doc.e.id == eid
     # db.reload(doc)
 

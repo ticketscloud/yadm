@@ -2,10 +2,10 @@ import random
 
 import pytest
 from bson import ObjectId
+import pymongo
 
 from yadm import fields
 from yadm.documents import Document
-from yadm.results import UpdateResult, RemoveResult
 from yadm.queryset import NotFoundError
 
 
@@ -19,7 +19,7 @@ class Doc(Document):
 def qs(loop, db):
     async def fixture():
         for n in range(10):
-            await db.db.testdocs.insert({
+            await db.db.testdocs.insert_one({
                 'i': n,
                 's': 'str({})'.format(n),
             })
@@ -133,15 +133,18 @@ def test_find_one__nf_exc(loop, qs):
     loop.run_until_complete(test())
 
 
-def test_update(loop, db, qs):
+def test_update_many(loop, db, qs):
     async def test():
-        result = await (qs.find({'i': {'$gte': 6}})
-                          .update({'$set': {'s': 'test'}}))
+        result = await qs.find({
+            'i': {'$gte': 6}
+        }).update_many({
+            '$set': {'s': 'test'}
+        })
 
-        assert isinstance(result, UpdateResult)
-        assert result
-        assert result.matched == result.modified == int(result) == 4
-        assert result.upserted == 0
+        assert isinstance(result, pymongo.results.UpdateResult)
+        assert result.acknowledged
+        assert result.matched_count == result.modified_count == 4
+        assert result.upserted_id is None
 
         assert (await db.db.testdocs.count()) == 10
         assert {d['i'] async for d in db.db.testdocs.find()} == set(range(10))
@@ -173,13 +176,13 @@ def test_find_and_modify(loop, db, qs):
     loop.run_until_complete(test())
 
 
-def test_remove(loop, db, qs):
+def test_delete_many(loop, db, qs):
     async def test():
-        result = await qs.find({'i': {'$gte': 6}}).remove()
+        result = await qs.find({'i': {'$gte': 6}}).delete_many()
 
-        assert isinstance(result, RemoveResult)
-        assert result
-        assert result.removed == int(result) == 4
+        assert isinstance(result, pymongo.results.DeleteResult)
+        assert result.acknowledged
+        assert result.deleted_count == 4
 
         assert (await qs.count()) == 6
         assert {d.i async for d in qs} == set(range(6))
@@ -190,15 +193,33 @@ def test_remove(loop, db, qs):
     loop.run_until_complete(test())
 
 
+def test_delete_one(loop, db, qs):
+    async def test():
+        result = await qs.find({'i': {'$gte': 6}}).delete_one()
+
+        assert isinstance(result, pymongo.results.DeleteResult)
+        assert result.acknowledged
+        assert result.deleted_count == 1
+
+        assert (await qs.count()) == 9
+
+        removed = list(set(range(10)) - {d.i async for d in qs})[0]
+
+        assert await db.db.testdocs.count() == 9
+        assert (await db.db.testdocs.find_one({'i': removed})) is None
+
+    loop.run_until_complete(test())
+
+
 def test_distinct(loop, db, qs):
     async def test():
         res = await qs.distinct('i')
         assert isinstance(res, list)
         assert len(res) == len(set(res))
 
-        await db.insert(Doc(i=3))
-        await db.insert(Doc(i=4))
-        await db.insert(Doc(i=10))
+        await db.insert_one(Doc(i=3))
+        await db.insert_one(Doc(i=4))
+        await db.insert_one(Doc(i=10))
 
         res = await qs.distinct('i')
         assert len(res) == len(set(res))

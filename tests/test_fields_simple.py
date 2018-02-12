@@ -43,7 +43,7 @@ class TestStaticField:
         assert raw['str'] == 'string'
 
     def test_load(self, db):
-        db.db['docs'].insert({'int': 13, 'str': 'string'})
+        db.db['docs'].insert_one({'int': 13, 'str': 'string'})
 
         doc = db(self.Doc).find_one()
 
@@ -57,7 +57,7 @@ class TestStaticField:
         ({'str': 'string'}, 'int'),
     ])
     def test_bad_data_in_db(self, db, data, field):
-        db.db['docs'].insert(data)
+        db.db['docs'].insert_one(data)
 
         doc = db(self.Doc).find_one()
 

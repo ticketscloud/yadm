@@ -8,7 +8,9 @@ class Doc(Document):
 
 
 def test_load(db):
-    _id = db.db.testdoc.insert({'map': {'a': 1, 'b': '2', 'c': 'qwerty'}})
+    _id = db.db.testdoc.insert_one({
+        'map': {'a': 1, 'b': '2', 'c': 'qwerty'},
+    }).inserted_id
     doc = db.get_queryset(Doc).find_one(_id)
 
     assert hasattr(doc, 'map')
@@ -18,7 +20,7 @@ def test_load(db):
 
 
 def test_setattr(db):
-    _id = db.db.testdoc.insert({'map': {'a': 1}})
+    _id = db.db.testdoc.insert_one({'map': {'a': 1}}).inserted_id
     doc = db.get_queryset(Doc).find_one(_id)
     doc.map = {'b': 2}
 
@@ -27,7 +29,7 @@ def test_setattr(db):
 
 
 def test_setattr_save(db):
-    _id = db.db.testdoc.insert({'map': {'a': 1}})
+    _id = db.db.testdoc.insert_one({'map': {'a': 1}}).inserted_id
     doc = db.get_queryset(Doc).find_one(_id)
     doc.map = {'b': 2}
 

@@ -12,7 +12,7 @@ This module for provide work with MongoDB database.
     db = Database(self.client, 'test')
 
     doc = Doc()
-    db.insert(doc)
+    db.insert_one(doc)
 
     doc.arg = 13
     db.save(doc)
@@ -57,7 +57,7 @@ class BaseDatabase:
         return self.db.get_collection(document_class.__collection__,
                                       **(params or {}))
 
-    def insert(self, document, **collection_params):
+    def insert_one(self, document, **collection_params):
         raise NotImplementedError
 
     def save(self, document, full=False, upsert=False, **collection_params):
@@ -69,7 +69,7 @@ class BaseDatabase:
                    **collection_params):
         raise NotImplementedError
 
-    def remove(self, document, **collection_params):
+    def delete_one(self, document, **collection_params):
         raise NotImplementedError
 
     def reload(self, document, new_instance=False, *,
@@ -107,21 +107,18 @@ class Database(BaseDatabase):
     """
     aio = False
 
-    def insert(self, document, **collection_params):
+    def insert_one(self, document, **collection_params):
         """ Insert document to database.
-
-        :param Document document: document instance for insert to database
-
-        It's bind new document to database set
-        :py:attr:`_id <yadm.documents.Document._id>`.
-        :param **collection_params: params for get_collection
         """
         document.__db__ = self
         collection = self._get_collection(document.__class__, collection_params)
 
-        document._id = collection.insert_one(to_mongo(document)).inserted_id
+        result = collection.insert_one(to_mongo(document))
+
+        document._id = result.inserted_id
         document.__changed_clear__()
-        return document
+
+        return result
 
     def save(self, document, full=False, upsert=False, **collection_params):
         """ Save document to database.
@@ -160,41 +157,40 @@ class Database(BaseDatabase):
                 self.update_one(document, set=set_data, unset=unset_data,
                                 **collection_params)
 
-            return document
         else:
-            return self.insert(document, **collection_params)
+            self.insert_one(document, **collection_params)
+
+        return document
 
     def update_one(self, document, *, reload=True,
                    set=None, unset=None, inc=None,
                    push=None, pull=None,
                    **collection_params):  # TODO: extend
         """ Update one document.
-
-        :param Document document: document instance for update
-        :param bool reload: if True, reload document
-        :param **collection_params: params for get_collection
         """
         update_data = build_update_query(set=set, unset=unset, inc=inc,
                                          push=push, pull=pull)
 
         if update_data:
-            self._get_collection(document, collection_params).update_one(
+            collection = self._get_collection(document, collection_params)
+            result = collection.update_one(
                 {'_id': document.id},
                 update_data,
                 upsert=False,
             )
+        else:
+            result = None
 
         if reload:
             self.reload(document, **collection_params)
 
-    def remove(self, document, **collection_params):
-        """ Remove document from database.
+        return result
 
-        :param Document document: instance for remove from database
-        :param **collection_params: params for get_collection
+    def delete_one(self, document, **collection_params):
+        """ Remove a single document from database.
         """
         col = self._get_collection(document.__class__, collection_params)
-        return col.remove({'_id': document._id})
+        return col.delete_one({'_id': document._id})
 
     def reload(self, document, new_instance=False, *,
                projection=None,
@@ -320,3 +316,12 @@ class Database(BaseDatabase):
         """
         return Bulk(self, document_class, ordered,
                     raise_on_errors, collection_params)
+
+    def insert(self, document, **collection_params):
+        # Deprecated
+        self.insert_one(document, **collection_params)
+        return document
+
+    def remove(self, document, **collection_params):
+        # Deprecated
+        return self.delete_one(document, **collection_params)

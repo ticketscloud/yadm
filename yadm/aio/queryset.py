@@ -1,7 +1,6 @@
 from bson import ObjectId
 
 from yadm.queryset import BaseQuerySet, NotFoundBehavior, NotFoundError
-from yadm.results import UpdateResult, RemoveResult
 
 
 class AioQuerySet(BaseQuerySet):
@@ -35,14 +34,19 @@ class AioQuerySet(BaseQuerySet):
 
         return self._from_mongo_one(data, projection=qs._projection)
 
-    async def update(self, update, *, multi=True, upsert=False):
-        raw_result = await self._collection.update(
+    async def update_one(self, update, *, upsert=False):
+        return await self._collection.update_one(
             self._criteria,
             update,
-            multi=multi,
             upsert=upsert,
         )
-        return UpdateResult(raw_result)
+
+    async def update_many(self, update, *, upsert=False):
+        return await self._collection.update_many(
+            self._criteria,
+            update,
+            upsert=upsert,
+        )
 
     async def find_and_modify(
             self, update=None, *, upsert=False,
@@ -63,9 +67,11 @@ class AioQuerySet(BaseQuerySet):
             result['value'] = self._from_mongo_one(result['value'])
             return result
 
-    async def remove(self, *, multi=True):
-        raw_result = await self._collection.remove(self._criteria, multi=multi)
-        return RemoveResult(raw_result)
+    async def delete_one(self):
+        return await self._collection.delete_one(self._criteria)
+
+    async def delete_many(self):
+        return await self._collection.delete_many(self._criteria)
 
     async def distinct(self, field):
         return await self._cursor.distinct(field)

@@ -67,7 +67,7 @@ class Doc(Document):
 def test_doc_insert(db):
     doc = Doc()
     doc.point = fields.Point(1, 2)
-    db.insert(doc)
+    db.insert_one(doc)
 
     raw = db.db.testdoc.find_one({'_id': doc.id})
     assert 'point' in raw
@@ -75,9 +75,9 @@ def test_doc_insert(db):
 
 
 def test_doc_get(db):
-    _id = db.db.testdoc.insert(
+    _id = db.db.testdoc.insert_one(
         {'point': {'type': 'Point', 'coordinates': [1, 2]}}
-    )
+    ).inserted_id
     doc = db(Doc).find_one(_id)
 
     assert hasattr(doc, 'point')

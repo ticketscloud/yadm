@@ -19,15 +19,15 @@ def test_save(db):
 
     ref_one = RDoc()
     ref_one.i = 13
-    db.insert(ref_one)
+    db.insert_one(ref_one)
     doc.li.add(ref_one)
 
     ref_two = RDoc()
     ref_two.i = 42
-    db.insert(ref_two)
+    db.insert_one(ref_two)
     doc.li.add(ref_two)
 
-    db.insert(doc)
+    db.insert_one(doc)
 
     data = db.db.testdocs.find_one()
 
@@ -44,10 +44,10 @@ def test_save(db):
 
 
 def test_load(db):
-    db.db.testdocs.insert(
+    db.db.testdocs.insert_one(
         {'li': [
-            db.db.testrdocs.insert({'i': 13}),
-            db.db.testrdocs.insert({'i': 42}),
+            db.db.testrdocs.insert_one({'i': 13}).inserted_id,
+            db.db.testrdocs.insert_one({'i': 42}).inserted_id,
         ]}
     )
 

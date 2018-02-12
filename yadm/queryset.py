@@ -5,7 +5,6 @@ from pymongo import read_preferences
 
 from yadm.join import Join
 from yadm.cache import StackCache
-from yadm.results import UpdateResult, RemoveResult
 from yadm.serialize import from_mongo
 
 CACHE_SIZE = 100
@@ -288,7 +287,10 @@ class BaseQuerySet:
     def find_one(self, criteria=None, projection=None, *, exc=None):
         raise NotImplementedError
 
-    def update(self, update, *, multi=True, upsert=False):
+    def update_many(self, update, *, upsert=False):
+        raise NotImplementedError
+
+    def update_one(self, update, *, upsert=False):
         raise NotImplementedError
 
     def find_and_modify(
@@ -297,7 +299,10 @@ class BaseQuerySet:
             **kwargs):
         raise NotImplementedError
 
-    def remove(self, *, multi=True):
+    def delete_one(self):
+        raise NotImplementedError
+
+    def delete_many(self):
         raise NotImplementedError
 
     def distinct(self, field):
@@ -380,23 +385,23 @@ class QuerySet(BaseQuerySet):
         doc._id = _id
         return self.find_one({'_id': doc._id})
 
-    def update(self, update, *, multi=True, upsert=False):
-        """ Update documents in queryset.
-
-        :param dict update: update query
-        :param bool multi: update all matched documents
-            *(default True)*
-        :param bool upsert: insert if not found
-            *(default False)*
-        :return: update result
+    def update_one(self, update, *, upsert=False):
+        """ Update a single document in queryset.
         """
-        raw_result = self._collection.update(
+        return self._collection.update_one(
             self._criteria,
             update,
-            multi=multi,
             upsert=upsert,
         )
-        return UpdateResult(raw_result)
+
+    def update_many(self, update, *, upsert=False):
+        """ Update one or more documents in queryset.
+        """
+        return self._collection.update_many(
+            self._criteria,
+            update,
+            upsert=upsert,
+        )
 
     def find_and_modify(
             self, update=None, *, upsert=False,
@@ -430,14 +435,15 @@ class QuerySet(BaseQuerySet):
             result['value'] = self._from_mongo_one(result['value'])
             return result
 
-    def remove(self, *, multi=True):
-        """ Remove documents in queryset.
-
-        :param bool multi: if False, remove only first finded document
-            *(default True)*
+    def delete_one(self):
+        """ Remove a single document in queryset.
         """
-        raw_result = self._collection.remove(self._criteria, multi=multi)
-        return RemoveResult(raw_result)
+        return self._collection.delete_one(self._criteria)
+
+    def delete_many(self):
+        """ Remove a single document in queryset.
+        """
+        return self._collection.delete_many(self._criteria)
 
     def distinct(self, field):
         """ Distinct query.
@@ -537,3 +543,17 @@ class QuerySet(BaseQuerySet):
                     raise NotFoundError("Could not find a document with"
                                         " the field '{}' equal '{}'"
                                         "".format(field, cmp_item))
+
+    def update(self, update, *, multi=True, upsert=False):  # pragma: no cover
+        # Deprecated!
+        if multi:
+            return self.update_many(update, upsert=upsert)
+        else:
+            return self.update_one(update, upsert=upsert)
+
+    def remove(self, *, multi=True):  # pragma: no cover
+        # Deprecated!
+        if multi:
+            return self.remove_many()
+        else:
+            return self.remove_one()

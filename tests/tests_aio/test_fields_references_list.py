@@ -17,19 +17,19 @@ def test_resolve(loop, db):
     async def test():
         ref_one = RDoc()
         ref_one.i = 13
-        await db.insert(ref_one)
+        await db.insert_one(ref_one)
 
         ref_two = RDoc()
         ref_two.i = 42
-        await db.insert(ref_two)
+        await db.insert_one(ref_two)
 
         ref_three = RDoc()
         ref_three.i = 666
-        await db.insert(ref_three)
+        await db.insert_one(ref_three)
 
         doc = Doc()
         doc.ref.extend([ref_one, ref_two])
-        await db.insert(doc)
+        await db.insert_one(doc)
 
         doc = await db.get_document(Doc, doc.id)
 

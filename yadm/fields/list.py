@@ -12,7 +12,7 @@ List of objects.
     doc.integers.append(2)
     assert doc.integers == [1, 2]
 
-    db.insert(doc)
+    db.insert_one(doc)
     doc = db.get_queryset(Doc).find_one(doc.id)  # reload
 
     doc.integers.append(3)  # do not save

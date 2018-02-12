@@ -26,36 +26,36 @@ class Doc(Document):
 def docs(db):
     ref_one = RDoc()
     ref_one.i = 13
-    db.insert(ref_one)
+    db.insert_one(ref_one)
 
     ref_two = RDoc()
     ref_two.i = 42
-    db.insert(ref_two)
+    db.insert_one(ref_two)
 
     ref_three = RDoc()
     ref_three.i = 666
-    db.insert(ref_three)
+    db.insert_one(ref_three)
 
     doc_one = Doc()
     doc_one.ref.append(ref_one)
     doc_one.ref.append(ref_two)
-    db.insert(doc_one)
+    db.insert_one(doc_one)
 
     doc_two = Doc()
     doc_two.ref.append(ref_two)
-    db.insert(doc_two)
+    db.insert_one(doc_two)
 
     doc_three = Doc()
     doc_three.ref.append(ref_two)
     doc_three.ref.append(ref_three)
-    db.insert(doc_three)
+    db.insert_one(doc_three)
 
     return [doc_one, doc_two, doc_three]
 
 
 def test_save_empty(db):
     doc = Doc()
-    db.insert(doc)
+    db.insert_one(doc)
 
     data = db.db.testdocs.find_one()
     assert data['ref'] == []
@@ -67,16 +67,16 @@ def test_save_new(db):
 
     ref_one = RDoc()
     ref_one.i = 13
-    db.insert(ref_one)
+    db.insert_one(ref_one)
 
     doc.ref.append(ref_one)
 
     ref_two = RDoc()
     ref_two.i = 42
-    db.insert(ref_two)
+    db.insert_one(ref_two)
     doc.ref.append(ref_two)
 
-    db.insert(doc)
+    db.insert_one(doc)
 
     data = db.db.testdocs.find_one()
 
