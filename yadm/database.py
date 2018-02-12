@@ -29,6 +29,7 @@ from yadm.markers import AttributeNotSet
 from yadm.aggregation import Aggregator
 from yadm.queryset import QuerySet
 from yadm.bulk import Bulk
+from yadm.bulk_writer import BulkWriter, BATCH_SIZE as BULK_BATCH_SIZE
 from yadm.serialize import to_mongo, from_mongo
 from yadm.common import build_update_query
 
@@ -99,8 +100,8 @@ class BaseDatabase:
                   pipeline=None, **collection_params):
         raise NotImplementedError
 
-    def bulk(self, document_class, *,
-             ordered=False, raise_on_errors=True, **collection_params):
+    def bulk_write(self, document_class, *,
+                   ordered=False, **collection_params):
         raise NotImplementedError
 
 
@@ -334,23 +335,20 @@ class Database(BaseDatabase):
         return Aggregator(self, document_class, pipeline=pipeline,
                           collection_params=collection_params)
 
+    def bulk_write(self, document_class, *,
+                   ordered=False,
+                   batch_size=BULK_BATCH_SIZE,
+                   **collection_params):
+        """ Return BulkWriter for realize bulk_write from pymongo.
+        """
+        return BulkWriter(self, document_class,
+                          ordered=ordered, batch_size=batch_size,
+                          collection_params=collection_params)
+
     def bulk(self, document_class, *,
              ordered=False, raise_on_errors=True,
              **collection_params):
-        """ Return Bulk.
-
-        :param MetaDocument document_class: class of documents fo bulk
-        :param bool ordered: create ordered bulk (default `False`)
-        :param bool raise_on_errors: raise BulkWriteError exception
-            if write errors (default `True`)
-        :param **collection_params: params for get_collection
-
-        Context manager:
-
-            with db.bulk(Doc) as bulk:
-                bulk.insert(doc_1)
-                bulk.insert(doc_2)
-        """
+        # Deprecated
         return Bulk(self, document_class, ordered,
                     raise_on_errors, collection_params)
 

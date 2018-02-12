@@ -5,9 +5,11 @@ import pymongo
 import yadm.abc as abc
 from yadm.database import BaseDatabase
 from yadm.serialize import to_mongo, from_mongo
+from yadm.bulk_writer import BATCH_SIZE as BULK_BATCH_SIZE
 
 from .queryset import AioQuerySet
 from .aggregation import AioAggregator
+from .bulk_writer import AioBulkWriter
 
 PYMONGO_VERSION = pymongo.version_tuple
 
@@ -158,8 +160,12 @@ class AioDatabase(BaseDatabase):
                              pipeline=pipeline,
                              collection_params=collection_params)
 
-    def bulk(self, document_class,
-             ordered=False, raise_on_errors=True, **collection_params):
-        raise NotImplementedError
-        # return AioBulk(self, document_class, ordered, raise_on_errors,
-        #                collection_params=collection_params)
+    def bulk_write(self, document_class, *,
+                   ordered=False,
+                   batch_size=BULK_BATCH_SIZE,
+                   **collection_params):
+        """ Return AioBulkWriter for realize bulk_write from pymongo.
+        """
+        return AioBulkWriter(self, document_class,
+                             ordered=ordered, batch_size=batch_size,
+                             collection_params=collection_params)
