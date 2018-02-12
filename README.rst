@@ -228,6 +228,17 @@ aggregations
 CHANGES
 -------
 
+2.0.0 (2017-02-XX)
+==================
+
+* Update interface for new pymongo:
+    - Add ``Database.insert_one``, ``Database.insert_many`` and ``Database.delete_one``;
+    - Add ``QuerySet.update_one`` and ``QuerySet.update_many``,
+        ``QuerySet.delete_one`` and ``QuerySet.delete_many``;
+    - Deprecate ``Database.insert``, ``Database.remove``,
+        ``QuerySet.update``, ``QuerySet.remove``;
+
+
 1.5.0 (2017-12-31)
 ==================
 

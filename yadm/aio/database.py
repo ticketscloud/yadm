@@ -1,3 +1,5 @@
+import itertools
+
 import pymongo
 
 import yadm.abc as abc
@@ -23,6 +25,33 @@ class AioDatabase(BaseDatabase):
         document._id = result.inserted_id
         document.__changed_clear__()
         return result
+
+    async def insert_many(self, documents, *, ordered=True, **collection_params):
+        if ordered:
+            documents = list(documents)
+            if documents:
+                collection = self._get_collection(documents[0].__class__,
+                                                  collection_params)
+
+                _gen = (to_mongo(doc) for doc in documents)
+                result = await collection.insert_many(_gen, ordered=ordered)
+
+                for _id, document in zip(result.inserted_ids, documents):
+                    document.__db__ = self
+                    document.id = _id
+
+                return result
+            else:
+                return pymongo.results.InsertManyResult([], True)
+
+        else:
+            iterator = iter(documents)
+            first = next(iterator)
+            collection = self._get_collection(first.__class__,
+                                              collection_params)
+
+            _gen = (to_mongo(doc) for doc in itertools.chain([first], iterator))
+            return await collection.insert_many(_gen, ordered=ordered)
 
     async def save(self, document, **collection_params):
         document.__db__ = self

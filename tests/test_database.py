@@ -1,3 +1,5 @@
+import random
+
 import pytest
 
 from bson import ObjectId
@@ -98,6 +100,30 @@ def test_insert_one(db):
     assert db.db.testdocs.find()[0]['i'] == 13
     assert not doc.__changed__
     assert doc.__db__ is db
+
+
+def test_insert_many(db):
+    documents = [Doc(i=i) for i in range(10)]
+    random.shuffle(documents)
+
+    result = db.insert_many(documents)
+
+    for _id, doc in zip(result.inserted_ids, documents):
+        assert doc.id == _id
+
+    assert len(result.inserted_ids) == len(documents)
+
+
+def test_insert_many__unordered(db):
+    documents = [Doc(i=i) for i in range(10)]
+    random.shuffle(documents)
+
+    result = db.insert_many(documents, ordered=False)
+
+    for doc in documents:
+        assert not hasattr(doc, 'id')
+
+    assert len(result.inserted_ids) == len(documents)
 
 
 def test_save_new(db):

@@ -1,3 +1,5 @@
+import random
+
 import pytest
 from bson import ObjectId
 
@@ -25,6 +27,36 @@ def test_insert_one(loop, db):
         assert isinstance(doc.id, ObjectId)
         assert not doc.__changed__
         assert doc.__db__ is db
+
+    loop.run_until_complete(test())
+
+
+def test_insert_many(loop, db):
+    async def test():
+        documents = [Doc(i=i) for i in range(10)]
+        random.shuffle(documents)
+
+        result = await db.insert_many(documents)
+
+        for _id, doc in zip(result.inserted_ids, documents):
+            assert doc.id == _id
+
+        assert len(result.inserted_ids) == len(documents)
+
+    loop.run_until_complete(test())
+
+
+def test_insert_many__unordered(loop, db):
+    async def test():
+        documents = [Doc(i=i) for i in range(10)]
+        random.shuffle(documents)
+
+        result = await db.insert_many(documents, ordered=False)
+
+        for doc in documents:
+            assert not hasattr(doc, 'id')
+
+        assert len(result.inserted_ids) == len(documents)
 
     loop.run_until_complete(test())
 
