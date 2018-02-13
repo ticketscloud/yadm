@@ -273,13 +273,6 @@ def test_read_preference(db):
     assert qs._collection.read_preference == sp
 
 
-def test_with_id(db, qs):
-    _id = db.db.testdocs.find_one({'i': 4}, {'_id': True})['_id']
-    doc = qs.with_id(_id)
-    assert doc.s == 'str(4)'
-    assert doc.i == 4
-
-
 def test_contains(qs):
     doc = qs.find_one({'i': 0})
     assert doc in qs

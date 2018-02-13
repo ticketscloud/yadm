@@ -371,20 +371,6 @@ class QuerySet(BaseQuerySet):
 
         return self._from_mongo_one(data, projection=qs._projection)
 
-    def with_id(self, _id):
-        """ Find document with id.
-
-        This method is deprecated. Use find_one.
-
-        :param _id: id of searching document
-        :return: :class:`yadm.documents.Document` or **None**
-        """
-        import warnings
-        warnings.warn("QuerySet.with_id is deprecated", DeprecationWarning)
-        doc = self._document_class()
-        doc._id = _id
-        return self.find_one({'_id': doc._id})
-
     def update_one(self, update, *, upsert=False):
         """ Update a single document in queryset.
         """
