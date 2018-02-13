@@ -1,6 +1,5 @@
 import re
 import sys
-from unittest import SkipTest
 
 import pytest
 import pymongo
@@ -58,7 +57,7 @@ def client(request, mongo_args):
     try:
         return pymongo.MongoClient(host, port, tz_aware=True)
     except pymongo.errors.ConnectionFailure:
-        raise SkipTest("Can't connect to mongodb ({}:{})".format(host, port))
+        raise pytest.skip("Can't connect to mongodb ({}:{})".format(host, port))
 
 
 @pytest.fixture(scope='function')

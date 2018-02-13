@@ -1,5 +1,6 @@
-import pytest
+import sys
 
+import pytest
 
 from yadm.documents import Document
 from yadm.fields import IntegerField
@@ -28,8 +29,10 @@ def test_insert_one(db, batch_size):
     assert db.db['testdocs'].count() == 10
 
 
+@pytest.mark.skipif(sys.version_info[:2] < (3, 6),
+                    reason="Skip for Python < 3.6")
 @pytest.mark.parametrize('batch_size', [3, BATCH_SIZE])
-def test_complex(db, inserted, batch_size):
+def test_complex(client, db, inserted, batch_size):
     with db.bulk_write(Doc, batch_size=batch_size) as writer:
         for doc in (Doc(i=i) for i in range(10, 20)):
             writer.insert_one(doc)
