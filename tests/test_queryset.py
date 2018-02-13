@@ -5,10 +5,10 @@ import pytest
 import pymongo
 from bson import ObjectId
 
-from yadm.documents import Document
 from yadm import fields
-from yadm.markers import NotLoaded
+from yadm.documents import Document
 from yadm.queryset import QuerySet, NotFoundError
+from yadm.markers import NotLoaded
 
 
 class Doc(Document):
@@ -139,82 +139,6 @@ def test_update_one(db, qs):
     assert db.db.testdocs.find({'s': 'test'}).count() == 1
 
 
-def test_find_and_modify(db, qs):
-    doc = qs({'i': 6}).find_and_modify({'$set': {'s': 'test'}})
-
-    assert db.db.testdocs.count() == 10
-    assert {d['i'] for d in db.db.testdocs.find()} == set(range(10))
-    assert db.db.testdocs.find({'s': 'test'}).count() == 1
-    assert db.db.testdocs.find_one({'i': 6})['s'] == 'test'
-
-    assert isinstance(doc, Document)
-    assert doc.i == 6
-    assert doc.s == 'str(6)'
-
-
-def test_find_and_modify_new(db, qs):
-    doc = qs({'i': 6}).find_and_modify(
-        {'$set': {'s': 'test'}}, new=True)
-
-    assert db.db.testdocs.count() == 10
-    assert {d['i'] for d in db.db.testdocs.find()} == set(range(10))
-    assert db.db.testdocs.find({'s': 'test'}).count() == 1
-    assert db.db.testdocs.find_one({'i': 6})['s'] == 'test'
-
-    assert isinstance(doc, Document)
-    assert doc.i == 6
-    assert doc.s == 'test'
-
-
-def test_find_and_modify_full_response(db, qs):
-    result = qs({'i': 6}).find_and_modify(
-        {'$set': {'s': 'test'}}, full_response=True)
-
-    assert db.db.testdocs.count() == 10
-    assert {d['i'] for d in db.db.testdocs.find()} == set(range(10))
-    assert db.db.testdocs.find({'s': 'test'}).count() == 1
-    assert db.db.testdocs.find_one({'i': 6})['s'] == 'test'
-
-    assert 'value' in result
-    assert isinstance(result['value'], Document)
-    assert result['value'].i == 6
-    assert result['value'].s == 'str(6)'
-
-
-def test_find_and_modify_full_response_new(db, qs):
-    result = qs({'i': 6}).find_and_modify(
-        {'$set': {'s': 'test'}}, full_response=True, new=True)
-
-    assert db.db.testdocs.count() == 10
-    assert {d['i'] for d in db.db.testdocs.find()} == set(range(10))
-    assert db.db.testdocs.find({'s': 'test'}).count() == 1
-    assert db.db.testdocs.find_one({'i': 6})['s'] == 'test'
-
-    assert 'value' in result
-    assert isinstance(result['value'], Document)
-    assert result['value'].i == 6
-    assert result['value'].s == 'test'
-
-
-def test_find_and_modify_sort(db, qs):
-    qs = qs({'i': {'$lte': 6, '$gte': 4}}).sort(('s', -1))
-    doc = qs.find_and_modify({'$set': {'s': 'test'}})
-
-    assert db.db.testdocs.count() == 10
-    assert {d['i'] for d in db.db.testdocs.find()} == set(range(10))
-    assert db.db.testdocs.find({'s': 'test'}).count() == 1
-    assert db.db.testdocs.find_one({'i': 6})['s'] == 'test'
-
-    assert isinstance(doc, Document)
-    assert doc.i == 6
-    assert doc.s == 'str(6)'
-
-
-def test_find_and_modify_not_found(qs):
-    ret = qs({'i': 13}).find_and_modify({'$set': {'s': 'test'}})
-    assert ret is None
-
-
 def test_delete_many(db, qs):
     result = qs.find({'i': {'$gte': 6}}).delete_many()
 
@@ -238,6 +162,34 @@ def test_delete_one(db, qs):
 
     assert len([d for d in qs]) == 9
     assert db.db.testdocs.count() == 9
+
+
+@pytest.mark.parametrize('return_document, i', [
+    (pymongo.ReturnDocument.BEFORE, 9),
+    (pymongo.ReturnDocument.AFTER, 99),
+], ids=['BEFORE', 'AFTER'])
+def test_find_one_and_update(db, qs, return_document, i):
+    qs = qs.find({'i': {'$gte': 5}}).sort(('i', -1))
+    doc = qs.find_one_and_update({'$set': {'i': 99}},
+                                 return_document=return_document)
+    assert doc.i == i
+
+
+@pytest.mark.parametrize('return_document, i', [
+    (pymongo.ReturnDocument.BEFORE, 9),
+    (pymongo.ReturnDocument.AFTER, 99),
+], ids=['BEFORE', 'AFTER'])
+def test_find_one_and_replace(db, qs, return_document, i):
+    qs = qs.find({'i': {'$gte': 5}}).sort(('i', -1))
+    doc = qs.find_one_and_replace(Doc(i=99),
+                                  return_document=return_document)
+    assert doc.i == i
+
+
+def test_find_one_and_delete(db, qs):
+    qs = qs.find({'i': {'$gte': 5}}).sort(('i', -1))
+    doc = qs.find_one_and_delete()
+    assert doc.i == 9
 
 
 def test_sort(qs):

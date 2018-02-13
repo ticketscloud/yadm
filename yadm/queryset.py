@@ -1,11 +1,11 @@
 from enum import Enum
 
+from pymongo import read_preferences, ReturnDocument
 from bson import ObjectId
-from pymongo import read_preferences
 
 from yadm.join import Join
 from yadm.cache import StackCache
-from yadm.serialize import from_mongo
+from yadm.serialize import from_mongo, to_mongo
 
 CACHE_SIZE = 100
 
@@ -293,22 +293,27 @@ class BaseQuerySet:
     def update_one(self, update, *, upsert=False):
         raise NotImplementedError
 
-    def find_and_modify(
-            self, update=None, *, upsert=False,
-            full_response=False, new=False,
-            **kwargs):
-        raise NotImplementedError
-
     def delete_one(self):
         raise NotImplementedError
 
     def delete_many(self):
         raise NotImplementedError
 
-    def distinct(self, field):
+    def find_one_and_update(self, update, *,
+                            return_document=ReturnDocument.BEFORE):
+        raise NotImplementedError
+
+    def find_one_and_replace(self, document, *,
+                             return_document=ReturnDocument.BEFORE):
+        raise NotImplementedError
+
+    def find_one_and_delete(self):
         raise NotImplementedError
 
     def count(self):
+        raise NotImplementedError
+
+    def distinct(self, field):
         raise NotImplementedError
 
     def ids(self):
@@ -389,38 +394,6 @@ class QuerySet(BaseQuerySet):
             upsert=upsert,
         )
 
-    def find_and_modify(
-            self, update=None, *, upsert=False,
-            full_response=False, new=False,
-            **kwargs):
-        """ Execute *$findAndModify* query.
-
-        :param dict update: see second argument to update()
-        :param bool upsert: insert if object doesn’t exist
-            *(default False)*
-        :param bool full_response: return the entire response
-            object from the server *(default False)*
-        :param new: return updated rather than original object
-            *(default False)*
-        :param kwargs: any other options the findAndModify
-            command supports can be passed here
-        :return: :class:`yadm.documents.Document` or **None**
-        """
-        result = self._collection.find_and_modify(
-            query=self._criteria,
-            update=update,
-            upsert=upsert,
-            sort=self._sort or [],
-            full_response=full_response,
-            new=new,
-            **kwargs
-        )
-        if not full_response:
-            return self._from_mongo_one(result)
-        else:
-            result['value'] = self._from_mongo_one(result['value'])
-            return result
-
     def delete_one(self):
         """ Remove a single document in queryset.
         """
@@ -431,20 +404,62 @@ class QuerySet(BaseQuerySet):
         """
         return self._collection.delete_many(self._criteria)
 
-    def distinct(self, field):
-        """ Distinct query.
-
-        :param str field: field for distinct
-        :return: list with result data
+    def find_one_and_update(self, update, *,
+                            upsert=False,
+                            return_document=ReturnDocument.BEFORE):
+        """ Find a single document and update it.
         """
-        return self._cursor.distinct(field)
+        data = self._collection.find_one_and_update(
+            filter=self._criteria,
+            projection=self._projection,
+            update=update,
+            upsert=upsert,
+            sort=self._sort,
+            return_document=return_document,
+        )
+        if data is None:  # pragma: no cover
+            return None
+
+        return self._from_mongo_one(data, projection=self._projection)
+
+    def find_one_and_replace(self, document, *,
+                             return_document=ReturnDocument.BEFORE):
+        """ Find a single document and replace it.
+        """
+        data = self._collection.find_one_and_replace(
+            filter=self._criteria,
+            projection=self._projection,
+            replacement=to_mongo(document),
+            sort=self._sort,
+            return_document=return_document,
+        )
+        if data is None:  # pragma: no cover
+            return None
+
+        return self._from_mongo_one(data, projection=self._projection)
+
+    def find_one_and_delete(self):
+        """ Find a single document and delete it.
+        """
+        data = self._collection.find_one_and_delete(
+            filter=self._criteria,
+            projection=self._projection,
+            sort=self._sort,
+        )
+        if data is None:  # pragma: no cover
+            return None
+
+        return self._from_mongo_one(data, projection=self._projection)
 
     def count(self):
         """ Count documents in queryset.
-
-        :return: **int**
         """
         return self._cursor.count()
+
+    def distinct(self, field):
+        """ Distinct query.
+        """
+        return self._cursor.distinct(field)
 
     def ids(self):
         """ Return all objects ids from queryset.
@@ -531,15 +546,41 @@ class QuerySet(BaseQuerySet):
                                         "".format(field, cmp_item))
 
     def update(self, update, *, multi=True, upsert=False):  # pragma: no cover
-        # Deprecated!
+        # Deprecated
+        import warnings
+        warnings.warn("This is deprecated for use!", DeprecationWarning)
         if multi:
             return self.update_many(update, upsert=upsert)
         else:
             return self.update_one(update, upsert=upsert)
 
     def remove(self, *, multi=True):  # pragma: no cover
-        # Deprecated!
+        # Deprecated
+        import warnings
+        warnings.warn("This is deprecated for use!", DeprecationWarning)
         if multi:
             return self.remove_many()
         else:
             return self.remove_one()
+
+    def find_and_modify(
+            self, update=None, *, upsert=False,
+            full_response=False, new=False,
+            **kwargs):  # pragma: no cover
+        # Deprecated
+        import warnings
+        warnings.warn("This is deprecated for use!", DeprecationWarning)
+        result = self._collection.find_and_modify(
+            query=self._criteria,
+            update=update,
+            upsert=upsert,
+            sort=self._sort or [],
+            full_response=full_response,
+            new=new,
+            **kwargs
+        )
+        if not full_response:
+            return self._from_mongo_one(result)
+        else:
+            result['value'] = self._from_mongo_one(result['value'])
+            return result

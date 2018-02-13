@@ -232,11 +232,14 @@ CHANGES
 ==================
 
 * Update interface for new pymongo:
+    - Add ``Database.bulk_write``;
     - Add ``Database.insert_one``, ``Database.insert_many`` and ``Database.delete_one``;
+    - Deprecate ``Database.insert``, ``Database.remove`` and ``Database.bulk``;
+
     - Add ``QuerySet.update_one`` and ``QuerySet.update_many``;
     - Add ``QuerySet.delete_one`` and ``QuerySet.delete_many``;
-    - Add ``Database.bulk_write``;
-    - Deprecate ``Database.insert``, ``Database.remove``, ``Database.bulk``, ``QuerySet.update`` and ``QuerySet.remove``;
+    - Add ``QuerySet.find_one_and_update``, ``QuerySet.find_one_and_replace`` and ``QuerySet.find_one_and_delete``;
+    - Deprecate ``QuerySet.update``, ``QuerySet.remove`` and ``QuerySet.find_and_modify``;
     - Remove deprecated ``QuerySet.with_id``;
 
 

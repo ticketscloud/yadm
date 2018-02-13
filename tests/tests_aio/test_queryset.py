@@ -1,8 +1,9 @@
 import random
 
 import pytest
-from bson import ObjectId
+
 import pymongo
+from bson import ObjectId
 
 from yadm import fields
 from yadm.documents import Document
@@ -160,22 +161,6 @@ def test_update_many(loop, db, qs):
     loop.run_until_complete(test())
 
 
-def test_find_and_modify(loop, db, qs):
-    async def test():
-        doc = await qs.find({'i': 6}).find_and_modify({'$set': {'s': 'test'}})
-
-        assert (await db.db.testdocs.count()) == 10
-        assert {d['i'] async for d in db.db.testdocs.find()} == set(range(10))
-        assert (await db.db.testdocs.find({'s': 'test'}).count()) == 1
-        assert (await db.db.testdocs.find_one({'i': 6}))['s'] == 'test'
-
-        assert isinstance(doc, Document)
-        assert doc.i == 6
-        assert doc.s == 'str(6)'
-
-    loop.run_until_complete(test())
-
-
 def test_delete_many(loop, db, qs):
     async def test():
         result = await qs.find({'i': {'$gte': 6}}).delete_many()
@@ -207,6 +192,43 @@ def test_delete_one(loop, db, qs):
 
         assert await db.db.testdocs.count() == 9
         assert (await db.db.testdocs.find_one({'i': removed})) is None
+
+    loop.run_until_complete(test())
+
+
+@pytest.mark.parametrize('return_document, i', [
+    (pymongo.ReturnDocument.BEFORE, 9),
+    (pymongo.ReturnDocument.AFTER, 99),
+], ids=['BEFORE', 'AFTER'])
+def test_find_one_and_update(loop, db, qs, return_document, i):
+    async def test(qs=qs):
+        qs = qs.find({'i': {'$gte': 5}}).sort(('i', -1))
+        doc = await qs.find_one_and_update({'$set': {'i': 99}},
+                                           return_document=return_document)
+        assert doc.i == i
+
+    loop.run_until_complete(test())
+
+
+@pytest.mark.parametrize('return_document, i', [
+    (pymongo.ReturnDocument.BEFORE, 9),
+    (pymongo.ReturnDocument.AFTER, 99),
+], ids=['BEFORE', 'AFTER'])
+def test_find_one_and_replace(loop, db, qs, return_document, i):
+    async def test(qs=qs):
+        qs = qs.find({'i': {'$gte': 5}}).sort(('i', -1))
+        doc = await qs.find_one_and_replace(Doc(i=99),
+                                            return_document=return_document)
+        assert doc.i == i
+
+    loop.run_until_complete(test())
+
+
+def test_find_one_and_delete(loop, db, qs):
+    async def test(qs=qs):
+        qs = qs.find({'i': {'$gte': 5}}).sort(('i', -1))
+        doc = await qs.find_one_and_delete()
+        assert doc.i == 9
 
     loop.run_until_complete(test())
 

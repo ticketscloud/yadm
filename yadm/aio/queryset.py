@@ -1,6 +1,8 @@
+from pymongo import ReturnDocument
 from bson import ObjectId
 
 from yadm.queryset import BaseQuerySet, NotFoundBehavior, NotFoundError
+from yadm.serialize import to_mongo
 
 
 class AioQuerySet(BaseQuerySet):
@@ -48,36 +50,64 @@ class AioQuerySet(BaseQuerySet):
             upsert=upsert,
         )
 
-    async def find_and_modify(
-            self, update=None, *, upsert=False,
-            full_response=False, new=False,
-            **kwargs):
-        result = await self._collection.find_and_modify(
-            query=self._criteria,
-            update=update,
-            upsert=upsert,
-            sort=self._sort or [],
-            full_response=full_response,
-            new=new,
-            **kwargs
-        )
-        if not full_response:
-            return self._from_mongo_one(result)
-        else:  # pragma: no cover
-            result['value'] = self._from_mongo_one(result['value'])
-            return result
-
     async def delete_one(self):
         return await self._collection.delete_one(self._criteria)
 
     async def delete_many(self):
         return await self._collection.delete_many(self._criteria)
 
-    async def distinct(self, field):
-        return await self._cursor.distinct(field)
+    async def find_one_and_update(self, update, *,
+                                  upsert=False,
+                                  return_document=ReturnDocument.BEFORE):
+        """ Find a single document and update it.
+        """
+        data = await self._collection.find_one_and_update(
+            filter=self._criteria,
+            projection=self._projection,
+            update=update,
+            upsert=upsert,
+            sort=self._sort,
+            return_document=return_document,
+        )
+        if data is None:  # pragma: no cover
+            return None
+
+        return self._from_mongo_one(data, projection=self._projection)
+
+    async def find_one_and_replace(self, document, *,
+                                   return_document=ReturnDocument.BEFORE):
+        """ Find a single document and replace it.
+        """
+        data = await self._collection.find_one_and_replace(
+            filter=self._criteria,
+            projection=self._projection,
+            replacement=to_mongo(document),
+            sort=self._sort,
+            return_document=return_document,
+        )
+        if data is None:  # pragma: no cover
+            return None
+
+        return self._from_mongo_one(data, projection=self._projection)
+
+    async def find_one_and_delete(self):
+        """ Find a single document and delete it.
+        """
+        data = await self._collection.find_one_and_delete(
+            filter=self._criteria,
+            projection=self._projection,
+            sort=self._sort,
+        )
+        if data is None:  # pragma: no cover
+            return None
+
+        return self._from_mongo_one(data, projection=self._projection)
 
     async def count(self):
         return await self._cursor.count()
+
+    async def distinct(self, field):
+        return await self._cursor.distinct(field)
 
     async def ids(self):
         async for raw in self.copy(projection={'_id': True})._cursor:
