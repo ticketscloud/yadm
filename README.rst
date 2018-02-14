@@ -236,6 +236,7 @@ CHANGES
     - Add ``Database.insert_one``, ``Database.insert_many`` and ``Database.delete_one``;
     - Deprecate ``Database.insert``, ``Database.remove`` and ``Database.bulk``;
     - Remove deprecated ``Database.__data__``;
+    - Now is not allow to set fields as classes;
 
     - Add ``QuerySet.update_one`` and ``QuerySet.update_many``;
     - Add ``QuerySet.delete_one`` and ``QuerySet.delete_many``;

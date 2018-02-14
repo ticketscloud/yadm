@@ -144,7 +144,7 @@ def test_set():
 
 def test_set_typeerror():
     class FailEDoc(EmbeddedDocument):
-        s = fields.StringField
+        s = fields.StringField()
 
     doc = Doc()
 

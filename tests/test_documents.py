@@ -27,7 +27,7 @@ def test_fields():
 
 def test_inheritance_fields():
     class InhDoc(Doc):
-        d = fields.DecimalField
+        d = fields.DecimalField()
 
     assert set(InhDoc.__fields__) == {'_id', 'i', 'b', 'd'}
     assert set(Doc.__fields__) == {'_id', 'i', 'b'}

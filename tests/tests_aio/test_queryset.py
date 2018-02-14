@@ -12,8 +12,8 @@ from yadm.queryset import NotFoundError
 
 class Doc(Document):
     __collection__ = 'testdocs'
-    i = fields.IntegerField
-    s = fields.StringField
+    i = fields.IntegerField()
+    s = fields.StringField()
 
 
 @pytest.fixture

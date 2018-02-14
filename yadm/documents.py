@@ -34,11 +34,11 @@ class MetaDocument(type):
 
         for attr, field in cls_dict.items():
             if isinstance(field, type) and issubclass(field, Field):
-                field = field()
+                raise TypeError("Field must be instantiated: {}.{}".format(
+                                cls.__name__, attr))
 
-            if hasattr(field, 'contribute_to_class'):
+            if isinstance(field, Field):
                 field.contribute_to_class(cls, attr)
-
             else:
                 setattr(cls, attr, field)
 
@@ -124,32 +124,6 @@ class BaseDocument(metaclass=MetaDocument):
 
 class Document(BaseDocument):
     """ Class for build first level documents.
-
-    .. py:attribute:: __collection__
-
-        Name of MongoDB collection
-
-    .. py:attribute:: __default_projection__
-
-        Default projection for querysets
-
-    .. py:attribute:: _id
-
-        Mongo object id (:py:class:`bson.ObjectId`)
-
-    .. py:attribute:: id
-
-        Alias for :py:attr:`_id` for simply use
-
-    .. py:attribute:: __db__
-
-        Internal attribute contain instance of :py:class:`yadm.database.Database`
-        for realize :py:class:`yadm.fields.references.ReferenceField`.
-        It bind in :py:class:`yadm.database.Database` or :py:class:`yadm.queryset.QuerySet`.
-
-    .. py:attribute:: __qs__
-
-        Documents gets from this queryset
     """
     __collection__ = None
     __default_projection__ = None
