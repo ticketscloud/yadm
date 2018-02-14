@@ -235,6 +235,7 @@ CHANGES
     - Add ``Database.bulk_write``;
     - Add ``Database.insert_one``, ``Database.insert_many`` and ``Database.delete_one``;
     - Deprecate ``Database.insert``, ``Database.remove`` and ``Database.bulk``;
+    - Remove deprecated ``Database.__data__``;
 
     - Add ``QuerySet.update_one`` and ``QuerySet.update_many``;
     - Add ``QuerySet.delete_one`` and ``QuerySet.delete_many``;

@@ -213,8 +213,8 @@ def test_fields(qs):
 
 def test_fields_all(qs):
     doc = qs.fields('s').fields_all().find_one({'i': 3})
-    assert 'i' in doc.__data__
-    assert doc.__data__['i'] is 3
+    assert 'i' in doc.__raw__
+    assert doc.__raw__['i'] == 3
     assert doc.s == 'str(3)'
     assert doc.i == 3
 

@@ -101,14 +101,6 @@ class BaseDocument(metaclass=MetaDocument):
     def __repr__(self):
         return '{}({})'.format(self.__class__.__name__, str(hex(id(self))))
 
-    @property
-    def __data__(self):  # b/c
-        """ Deprecated! For backward compatibility only!
-
-        Old way to storing data in documents. Now equal to :py:attr:`__raw__`.
-        """
-        return self.__raw__
-
     def __fake__(self, values, faker, depth):
         """ Fake data customizer.
         """
