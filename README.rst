@@ -185,7 +185,7 @@ We have a cache in ``QuerySet`` object and get one referred document only once f
 join
 ----
 
-Yes! We have a joins! In userspace...
+Yes! We have joins! In userspace...
 
 .. code:: python
 
