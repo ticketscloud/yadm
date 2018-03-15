@@ -24,6 +24,8 @@ This code save to MongoDB document:
 from decimal import Decimal, getcontext
 from functools import reduce
 
+from bson import Decimal128
+
 from yadm.fields.base import Field, DefaultMixin, pass_null
 
 
@@ -90,15 +92,25 @@ class DecimalField(DefaultMixin, Field):
 
     @pass_null
     def from_mongo(self, document, value):
-        sign = value['i'] < 0  # False - positive, True - negative
+        if isinstance(value, dict):
+            sign = value['i'] < 0  # False - positive, True - negative
 
-        digits = []
-        i = abs(value['i'])
+            digits = []
+            i = abs(value['i'])
 
-        while i:
-            i, d = divmod(i, 10)
-            digits.append(d)
+            while i:
+                i, d = divmod(i, 10)
+                digits.append(d)
 
-        digits.reverse()
+            digits.reverse()
 
-        return Decimal((sign, digits, value['e']), context=self.context)
+            return Decimal((sign, digits, value['e']), context=self.context)
+
+        elif isinstance(value, Decimal128):
+            return value.to_decimal()
+
+        elif isinstance(value, Decimal):
+            return value
+
+        else:
+            raise TypeError(value)
