@@ -7,7 +7,6 @@ services:
     - docker
 
 env:
-    - MONGO=3.2 PYMONGO=">=3.2,<3.4" MOTOR=">=1.0,<1.1"
     - MONGO=3.2 PYMONGO=">=3.4,<3.6" MOTOR=">=1.1,<1.2"
     - MONGO=3.2 PYMONGO=">=3.6,<4"   MOTOR=">=1.2,<2"
 

@@ -18,11 +18,11 @@ setup(
     license='BSD',
     platforms='any',
     install_requires=[
-        'pymongo>=3.2',
+        'pymongo>=3.4',
         'zope.dottedname',
         'python-dateutil',
         'pytz',
-        'Faker<0.8',
+        'Faker',
     ],
 
     classifiers=[
