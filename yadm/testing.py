@@ -15,9 +15,10 @@ DEFAULT_DEPTH = 4  # <=450
 
 def create_fake(__document_class__,
                 __db__=None,
+                __faker__=None,
+                *,
                 __parent__=None,
                 __name__=None,
-                __faker__=None,
                 __depth__=DEFAULT_DEPTH,
                 __write_concern__=pymongo.WriteConcern(w='majority'),
                 **values):
@@ -27,9 +28,9 @@ def create_fake(__document_class__,
         for new instance
     :param yadm.database.Database __db__: database instance
         if specified, document and all references will be saved to database
+    :param Faker __faker__: faker instance, create if not specified
     :param yadm.documents.BaseDocument __parent__: parent document
     :param str __name__: name of parent field
-    :param Faker __faker__: faker instance, create if not specified
     :param int __depth__: maximum recursion depth,
         not recomendated use greater than 450
         (default 4)
@@ -44,6 +45,7 @@ def create_fake(__document_class__,
         return AttributeNotSet
 
     if __faker__ is None:
+        create_fake.counter['__without_faker__'] += 1
         __faker__ = Faker()
 
     document = __document_class__()
