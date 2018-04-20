@@ -282,7 +282,7 @@ class BaseQuerySet:
     def __contains__(self, document):
         raise NotImplementedError
 
-    def __bool__(self):
+    def __bool__(self):  # pragma: no cover
         raise NotImplementedError
 
     def find_one(self, criteria=None, projection=None, *, exc=None):
