@@ -324,6 +324,9 @@ class QuerySet(BaseQuerySet):
     def __contains__(self, document):
         return self.find_one(document.id) is not None
 
+    def __bool__(self):
+        return bool(self.find_one())
+
     def _get_one(self, index):
         return self._from_mongo_one(self._cursor[index])
 
