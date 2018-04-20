@@ -282,6 +282,9 @@ class BaseQuerySet:
     def __contains__(self, document):
         raise NotImplementedError
 
+    def __bool__(self):
+        raise NotImplementedError
+
     def find_one(self, criteria=None, projection=None, *, exc=None):
         raise NotImplementedError
 
@@ -325,7 +328,8 @@ class QuerySet(BaseQuerySet):
         return self.find_one(document.id) is not None
 
     def __bool__(self):
-        return bool(self.find_one())
+        qs = self.copy(sort=[], projection={'_id': True})
+        return qs.find_one() is not None
 
     def _get_one(self, index):
         return self._from_mongo_one(self._cursor[index])
