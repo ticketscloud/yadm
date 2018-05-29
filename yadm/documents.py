@@ -47,24 +47,13 @@ class MetaDocument(type):
 
 class BaseDocument(metaclass=MetaDocument):
     """ Base class for all documents.
-
-    .. py:attribute:: __raw__
-
-        Dict with raw data from mongo
-
-    .. py:attribute:: __cache__
-
-        Dict with cached objects, casted with fields
-
-    .. py:attribute:: __changed__
-
-        Dict with changed objects
     """
     __raw__ = None
     __cache__ = None
     __changed__ = None
+    __not_loaded__ = None
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, __new_document__=True, **kwargs):
         if args:
             if len(args) != 1:
                 raise TypeError("only one positional argument accepted!")
@@ -84,12 +73,13 @@ class BaseDocument(metaclass=MetaDocument):
         self.__raw__ = {}
         self.__cache__ = {}
         self.__changed__ = {}
+        self.__not_loaded__ = set()
 
         for key, field in self.__fields__.items():
             if key in data:
                 setattr(self, key, data[key])
-
-        self.__changed_clear__()
+            elif __new_document__:  # default values for new objects
+                self.__changed__[key] = field.get_default(self)
 
     def __changed_clear__(self):
         self.__cache__.update(self.__changed__)
@@ -114,12 +104,13 @@ class BaseDocument(metaclass=MetaDocument):
         """ Print debug information.
         """
         from pprint import pprint
-        pprint((
-            self,
-            self.__raw__,
-            self.__cache__,
-            self.__changed__,
-        ))
+        pprint({
+            'repr': repr(self),
+            'raw': self.__raw__,
+            'not_loaded': self.__not_loaded__,
+            'cache': self.__cache__,
+            'changed': self.__changed__,
+        })
 
 
 class Document(BaseDocument):
@@ -127,14 +118,16 @@ class Document(BaseDocument):
     """
     __collection__ = None
     __default_projection__ = None
+    __new_document__ = None
     __db__ = None
     __qs__ = None
 
     _id = ObjectIdField()
 
-    def __init__(self, *args, __db__=None, **kwargs):
+    def __init__(self, *args, __db__=None, __new_document__=True, **kwargs):
         self.__db__ = __db__
-        super().__init__(*args, **kwargs)
+        self.__new_document__ = __new_document__
+        super().__init__(*args, __new_document__=__new_document__, **kwargs)
 
     def __repr__(self):
         _id = getattr(self, '_id', '<new>')
@@ -165,25 +158,8 @@ class Document(BaseDocument):
 
 
 class DocumentItemMixin:
-    """ Mixin for custom all fields values, such as :py:class:`EmbeddedDocument`,
-    :py:class:`yadm.fields.containers.Container`.
-
-    .. py:attribute:: __parent__
-
-        Parent object.
-
-        .. code-block:: python
-
-            assert doc.embedded_doc.__parent__ is doc
-            assert doc.list[13].__parent__ is doc.list
-
-    .. py:attribute:: __name__
-
-        .. code-block:: python
-
-            assert doc.list.__name__ == 'list'
-            assert doc.list[13].__name__ == 13
-
+    """ Mixin for custom all fields values, such as EmbeddedDocument,
+        yadm.fields.containers.Container.
     """
     __parent__ = None
     __name__ = None
@@ -287,3 +263,7 @@ class EmbeddedDocument(DocumentItemMixin, BaseDocument):
         self.__parent__ = __parent__
         self.__name__ = __name__
         super().__init__(*args, **kwargs)
+
+    @property
+    def __new_document__(self):
+        return self.__document__.__new_document__

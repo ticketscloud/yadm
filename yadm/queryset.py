@@ -84,7 +84,7 @@ class BaseQuerySet:
         if data is None:
             return None
         elif not projection:
-            not_loaded = ()
+            not_loaded = frozenset()
         else:
             include = [f for f, v in projection.items() if v]
             exclude = {f for f, v in projection.items() if not v}
@@ -95,7 +95,7 @@ class BaseQuerySet:
                                      " of inclusion and exclusion")
 
                 for field_name in self._document_class.__fields__:
-                    if field_name not in include:
+                    if field_name not in include and field_name != '_id':
                         exclude.add(field_name)
 
             not_loaded = exclude

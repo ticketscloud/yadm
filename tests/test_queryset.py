@@ -8,6 +8,7 @@ from bson import ObjectId
 from yadm import fields
 from yadm.documents import Document
 from yadm.queryset import QuerySet, NotFoundError
+from yadm.exceptions import NotLoadedError
 from yadm.markers import NotLoaded
 
 
@@ -204,10 +205,10 @@ def test_fields(qs):
     doc = qs.fields('s').find_one({'i': 3})
 
     assert doc.s, 'str(3)'
-    assert 'i' in doc.__raw__
-    assert doc.__raw__['i'] is NotLoaded
+    assert 'i' not in doc.__raw__
+    assert 'i' in doc.__not_loaded__
 
-    with pytest.raises(fields.NotLoadedError):
+    with pytest.raises(NotLoadedError):
         doc.i
 
 
@@ -319,7 +320,7 @@ def test_default_projection(db, qs):
 
     assert isinstance(doc.i, int)
 
-    with pytest.raises(fields.base.NotLoadedError):
+    with pytest.raises(NotLoadedError):
         doc.s
 
 

@@ -1,7 +1,7 @@
 """ This package contain all fields.
 """
 
-from yadm.fields.base import FieldDescriptor, Field, NotLoadedError  # noqa
+from yadm.fields.base import FieldDescriptor, Field  # noqa
 
 from yadm.fields.simple import (  # noqa
     StaticField,

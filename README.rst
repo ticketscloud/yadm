@@ -228,15 +228,22 @@ aggregations
 CHANGES
 -------
 
-2.0.0 (2017-02-XX)
+2.0.0 (2017-06-XX)
 ==================
 
+* Rewrite document logic:
+
+    - Now is not allow to set fields as classes;
+    - Remove deprecated ``Database.__data__``;
+    - ``Document.__not_loaded__`` set for fields whitch not loaded by projection;
+    - ``Document.__new_document__`` flag is ``True`` for document's whitch created directly in code without DB;
+    - Now defaults is not lazy and creates with instant the document;
+
 * Update interface for new pymongo:
+
     - Add ``Database.bulk_write``;
     - Add ``Database.insert_one``, ``Database.insert_many`` and ``Database.delete_one``;
     - Deprecate ``Database.insert``, ``Database.remove`` and ``Database.bulk``;
-    - Remove deprecated ``Database.__data__``;
-    - Now is not allow to set fields as classes;
 
     - Add ``QuerySet.update_one`` and ``QuerySet.update_many``;
     - Add ``QuerySet.delete_one`` and ``QuerySet.delete_many``;

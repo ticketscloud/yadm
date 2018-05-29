@@ -259,6 +259,7 @@ class Database(BaseDatabase):
             document.__raw__.update(new.__raw__)
             document.__cache__.clear()
             document.__changed__.clear()
+            document.__not_loaded__ = new.__not_loaded__
             return document
 
     def get_document(self, document_class, _id, *,

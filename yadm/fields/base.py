@@ -3,20 +3,8 @@ Base classes for build database fields.
 """
 import functools
 
+from yadm.exceptions import NotLoadedError
 from yadm.markers import AttributeNotSet, NotLoaded
-
-
-class NotLoadedError(Exception):
-    """ Raise if value marked as not loaded.
-
-    .. code:: python
-
-        doc = db(Doc).fields('a').find_one()
-        try:
-            doc.b
-        except NotLoadedError:
-            print("raised!")
-    """
 
 
 def pass_null(method):
@@ -56,17 +44,36 @@ class FieldDescriptor:
 
         1. Lookup in __changed__;
         2. Lookup in __cache__;
+        3. Lookup in __raw__;
+        4. Lookup in __not_loaded__;
+        5. Field.get_if_attribute_not_set();
+
+        ...
+
+        1. Lookup in __changed__:
+
+            - if AttributeNotSet: Field.get_if_attribute_not_set();
+            - return;
+
+        2. Lookup in __cache__:
+
+            - if AttributeNotSet: Field.get_if_attribute_not_set();
+            - return;
+
         3. Lookup in __raw__:
 
-            - if AttributeNotSet -- call Field.get_if_attribute_not_set;
-            - if NotLoaded -- call Field.get_if_not_loaded;
-            - call Field.from_mongo;
-            - set __name__ and __parent__
-            - save to __cache__
+            - Field.from_mongo();
+            - if DocumentItemMixin -- set __name__ and __parent__;
+            - save to __cache__;
+            - return;
 
-        4. Call Field.get_default;
-        5. If AttributeNotSet -- call Field.get_if_attribute_not_set;
-        6. Return value.
+        4. Lookup in __not_loaded__:
+
+            - Fiels.get_if_not_loaded();
+            - if AttributeNotSet: Field.get_if_attribute_not_set();
+            - return;
+
+        5. return Field.get_if_attribute_not_set();
         """
         name = self.name
 
@@ -75,19 +82,20 @@ class FieldDescriptor:
 
         elif name in instance.__changed__:
             value = instance.__changed__[name]
+            if value is not AttributeNotSet:
+                return value
+            else:
+                return self.field.get_if_attribute_not_set(instance)
 
         elif name in instance.__cache__:
             value = instance.__cache__[name]
+            if value is not AttributeNotSet:
+                return value
+            else:
+                return self.field.get_if_attribute_not_set(instance)
 
         elif name in instance.__raw__:
-            raw = instance.__raw__[name]
-
-            if raw is AttributeNotSet:
-                return self.field.get_if_attribute_not_set(instance)
-            if raw is NotLoaded:
-                return self.field.get_if_not_loaded(instance)
-
-            value = self.field.from_mongo(instance, raw)
+            value = self.field.from_mongo(instance, instance.__raw__[name])
 
             from yadm.documents import DocumentItemMixin
             if isinstance(value, DocumentItemMixin):
@@ -95,15 +103,13 @@ class FieldDescriptor:
                 value.__parent__ = instance
 
             instance.__cache__[name] = value
+            return value
+
+        elif name in instance.__not_loaded__:
+            return self.field.get_if_not_loaded(instance)
 
         else:
-            value = self.field.get_default(instance)
-            instance.__changed__[name] = value
-
-        if value is AttributeNotSet:
             return self.field.get_if_attribute_not_set(instance)
-
-        return value
 
     def __set__(self, instance, value):
         """ Set value to document.
