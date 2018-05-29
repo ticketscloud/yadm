@@ -81,8 +81,8 @@ def test_save(loop, db):
     async def test():
         doc = Doc()
         doc.i = 13
-
         await db.save(doc)
+
         doc.i = 14
         await db.save(doc)
 

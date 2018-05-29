@@ -258,7 +258,7 @@ def test_reload_new_instance(db):
     assert new.i == 2
 
 
-def test_w_projection(db):
+def test_reload_w_projection(db):
     doc = Doc()
     doc.i = 1
     doc.b = True
