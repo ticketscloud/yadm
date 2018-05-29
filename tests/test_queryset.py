@@ -39,6 +39,15 @@ def test_len(qs):
     assert len(qs) == 4
 
 
+@pytest.mark.parametrize('additional_qs, result', [
+    ({}, True),
+    ({'i': {'$gte': 6}}, True),
+    ({'i': {'$gte': 1000}}, False),
+])
+def test_bool_(qs, additional_qs, result):
+    assert bool(qs.find(additional_qs)) is result
+
+
 @pytest.mark.parametrize('slice, result', [
     (slice(None, 2), [6, 7]),
     (slice(2, None), [8, 9]),
