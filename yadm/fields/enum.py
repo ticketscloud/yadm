@@ -10,6 +10,11 @@ class EnumField(SimpleField):
         self.type = enum
         super().__init__(**kwargs)
 
+    def copy(self):
+        return self.__class__(self.type,
+                              smart_null=self.smart_null,
+                              default=self.default)
+
     @pass_null
     def to_mongo(self, document, value):
         return value.value
@@ -38,6 +43,11 @@ class EnumStateField(EnumField):
 
         if not self.rules:
             raise ValueError("Rules list is empty")
+
+    def copy(self):
+        return self.__class__(self.type, self.rules,
+                              smart_null=self.smart_null,
+                              default=self.default)
 
     @pass_null
     def prepare_value(self, document, value):
