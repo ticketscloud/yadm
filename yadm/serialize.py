@@ -8,6 +8,9 @@ from yadm.exceptions import NotLoadedError
 from yadm.markers import AttributeNotSet
 
 
+LOOKUPS_KEY = '__yadm_lookups__'
+
+
 def to_mongo(document,
              exclude=None, include=None,
              skip_not_loaded=False,
@@ -82,6 +85,9 @@ def from_mongo(document_class, raw,
         if field_name not in raw:
             if field_name not in document.__not_loaded__ and field.smart_null:
                 document.__cache__[field_name] = None
+
+    if LOOKUPS_KEY in raw:
+        document.__yadm_lookups__ = raw.pop(LOOKUPS_KEY)
 
     if parent is not None:
         document.__parent__ = parent

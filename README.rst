@@ -182,19 +182,17 @@ Get attribute with reference makes the query to referred collection. Warning: N+
 We have a cache in ``QuerySet`` object and get one referred document only once for one queryset.
 
 
-join
-----
 
-Yes! We have joins! In userspace...
+Lookups
+-------
 
 .. code:: python
 
     comments = db(Comment).find({'post': post.id}).sort(('created_at', 1))
-    for comment in comments.join('user'):
+    for comment in comments.lookup('user'):
         print(comment.user.name, comment.text)
 
-1. Create the queryset for comments;
-2. In ``join`` we get all documents for qs, get all users with one ``$in``-query and bind to documents.
+This code create the aggregate query with ``$lookup`` statement for resolve the references.
 
 
 aggregations
@@ -238,6 +236,8 @@ CHANGES
     - ``Document.__not_loaded__`` set for fields whitch not loaded by projection;
     - ``Document.__new_document__`` flag is ``True`` for document's whitch created directly in code without DB;
     - Now defaults is not lazy and creates with instant the document;
+
+* Simple interface for create lookups: ``QuerySet.lookup``;
 
 * Update interface for new pymongo:
 

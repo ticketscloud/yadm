@@ -46,8 +46,7 @@ def test_get_notbindingtodatabase(db):
 @pytest.mark.parametrize('cast', [
     lambda d: d,
     lambda d: d.id,
-    lambda d: str(d.id),
-], ids=['doc', 'doc.id', 'str(doc.id)'])
+], ids=['document', 'objectid'])
 def test_set(db, cast):
     _id = db.db.testdocs.insert_one({}).inserted_id
     doc = db.get_queryset(Doc).find_one(_id)
@@ -128,3 +127,12 @@ def test_cache(db):
     doc = qs.find_one()
     assert doc.ref.__qs__ is not doc.__qs__
     assert doc.ref.__qs__.cache is doc.__qs__.cache
+
+
+def test_copy():
+    class InhDoc(Doc):
+        pass
+
+    assert InhDoc.ref is not Doc.ref
+    assert InhDoc.ref.reference_document_class == DocRef
+    assert InhDoc.ref.smart_null == Doc.ref.smart_null

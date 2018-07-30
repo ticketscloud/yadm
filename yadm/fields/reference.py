@@ -36,8 +36,9 @@ from bson.errors import InvalidId
 
 from yadm.common import EnclosedDocDescriptor
 from yadm.markers import AttributeNotSet
-from yadm.documents import Document, DocumentItemMixin
+from yadm.documents import BaseDocument, Document, DocumentItemMixin
 from yadm.fields.base import Field, pass_null
+from yadm.serialize import from_mongo
 from yadm.testing import create_fake
 
 
@@ -64,7 +65,7 @@ class ReferenceField(Field):
         self.reference_document_class = reference_document_class
 
     def get_default(self, document):
-        if self.smart_null:
+        if self.smart_null:  # pragma: no cover
             return None
         else:
             return AttributeNotSet
@@ -72,16 +73,10 @@ class ReferenceField(Field):
     def get_fake(self, document, faker, depth):
         """ Try create referenced document.
         """
-        res = create_fake(
-            self.reference_document_class,
-            __db__=document.__db__,
-            __faker__=faker,
-            __depth__=depth)
-
-        if res is AttributeNotSet and self.smart_null:
-            return None
-        else:
-            return res
+        return create_fake(self.reference_document_class,
+                           __db__=document.__db__,
+                           __faker__=faker,
+                           __depth__=depth)
 
     def copy(self):
         return self.__class__(self.reference_document_class,
@@ -91,41 +86,51 @@ class ReferenceField(Field):
     def prepare_value(self, document, value):
         if isinstance(value, Document):
             return value
-        elif value is AttributeNotSet:
+        elif value is AttributeNotSet:  # pragma: no cover
             return AttributeNotSet
         else:
-            if isinstance(value, str):
-                try:
-                    value = ObjectId(value)
-                except InvalidId:
-                    pass
-
             return self.from_mongo(document, value)
 
     @pass_null
     def from_mongo(self, document, value):
-        if document.__db__ is not None:
-            rdc = self.reference_document_class
+        """ Resolve reference.
 
-            if document.__qs__ is not None:
-                cache = document.__qs__.cache
+        1. Lookup in querysets cache;
+        2. Lookup in __yadm_lookups__[self.name];
+        3. Lookup in database;
+        4. Raise BrokenReference if not found.
+        """
+        rdc = self.reference_document_class
+
+        if document.__qs__ is not None:
+            cache = document.__qs__.cache
+        else:
+            cache = {}  # fake cache
+
+        if (rdc, value) in cache:
+            return cache[(rdc, value)]
+
+        elif (isinstance(document, BaseDocument) and
+                self.name in document.__yadm_lookups__):
+            cache[(rdc, value)] = doc = from_mongo(
+                document_class=rdc,
+                raw=document.__yadm_lookups__[self.name],
+            )
+            doc.__db__ = document.__db__
+            return doc
+
+        elif document.__db__ is not None:
+            if document.__db__.aio:
+                cache[(rdc, value)] = ref = Reference(value, document, self)
+                return ref
             else:
-                cache = {}  # fake cache
+                qs = document.__db__.get_queryset(rdc, cache=cache)
+                doc = qs.find_one(value)
+                if doc is None:  # pragma: no cover
+                    doc = qs.read_primary().find_one(value, exc=BrokenReference)
 
-            if (rdc, value) in cache:
-                return cache[(rdc, value)]
-            else:
-                if document.__db__.aio:
-                    cache[(rdc, value)] = ref = Reference(value, document, self)
-                    return ref
-                else:
-                    qs = document.__db__.get_queryset(rdc, cache=cache)
-                    doc = qs.find_one(value)
-                    if doc is None:  # pragma: no cover
-                        doc = qs.read_primary().find_one(value, exc=BrokenReference)
-
-                    cache[(rdc, value)] = doc
-                    return doc
+                cache[(rdc, value)] = doc
+                return doc
 
         else:
             raise NotBindingToDatabase((document, self, value))

@@ -5,7 +5,7 @@ from bson import ObjectId
 
 from yadm.join import Join
 from yadm.cache import StackCache
-from yadm.serialize import from_mongo, to_mongo
+from yadm.serialize import from_mongo, to_mongo, LOOKUPS_KEY
 
 CACHE_SIZE = 100
 
@@ -25,26 +25,19 @@ class NotFoundError(Exception):
 
 class BaseQuerySet:
     """ Query builder.
-
-    :param db:
-    :param document_class:
-    :param cache:
-    :param dict criteria:
-    :param dict projection:
-    :param list sort:
-    :param slice slice:
-    :param dict collection_params:
     """
     def __init__(self, db, document_class, *,
                  cache=None, criteria=None, projection=None, sort=None,
-                 slice=None, batch_size=None, collection_params=None):
+                 lookup=None, slice=None,
+                 batch_size=None, collection_params=None):
 
         self._db = db
         self._document_class = document_class
         self._cache = cache
-        self._criteria = {} if criteria is None else criteria
+        self._criteria = criteria or {}
         self._projection = projection
         self._sort = sort
+        self._lookup = lookup or frozenset()
         self._slice = slice
         self._batch_size = batch_size
         self._collection_params = collection_params or {}
@@ -54,7 +47,7 @@ class BaseQuerySet:
                 " {s._criteria!r} {s._projection!r} {s._sort!r})"
                 "".format(s=self))
 
-    def __call__(self, criteria=None, projection=None):
+    def __call__(self, criteria=None, projection=None):  # pragma: no cover
         return self.find(criteria, projection)
 
     def __getitem__(self, item):
@@ -81,7 +74,7 @@ class BaseQuerySet:
         """
         projection = projection or self._projection
 
-        if data is None:
+        if data is None:  # pragma: no cover
             return None
         elif not projection:
             not_loaded = frozenset()
@@ -90,7 +83,7 @@ class BaseQuerySet:
             exclude = {f for f, v in projection.items() if not v}
 
             if include:
-                if exclude and exclude != {'_id'}:
+                if exclude and exclude != {'_id'}:  # pragma: no cover
                     raise ValueError("projection cannot have a mix"
                                      " of inclusion and exclusion")
 
@@ -116,20 +109,74 @@ class BaseQuerySet:
     def _cursor(self):
         """ Raw cursor with parameters from queryset.
         """
-        cursor = self._collection.find(self._criteria, self._projection or None)
+        if not self._lookup:
+            return self._get_cursor_find(
+                self._collection,
+                self._criteria,
+                self._projection or None,
+                self._sort,
+                self._slice,
+                self._batch_size,
+            )
+        else:
+            return self._get_cursor_aggregation(
+                self._collection,
+                self._criteria,
+                self._projection or None,
+                self._sort,
+                self._lookup,
+                self._slice,
+                self._batch_size,
+            )
 
-        if self._sort is not None:
-            cursor = cursor.sort(self._sort)
+    @staticmethod
+    def _get_cursor_find(collection, criteria, projection,
+                         sort, slice, batch_size):
+        cursor = collection.find(criteria, projection)
 
-        if self._slice is not None:
-            if self._slice.start:
-                cursor = cursor.skip(self._slice.start)
+        if sort is not None:
+            cursor = cursor.sort(sort)
 
-            if self._slice.stop:
-                cursor = cursor.limit(self._slice.stop - (self._slice.start or 0))
+        if slice is not None:
+            if slice.start:
+                cursor = cursor.skip(slice.start)
 
-        if self._batch_size is not None:
-            cursor = cursor.batch_size(self._batch_size)
+            if slice.stop:
+                cursor = cursor.limit(slice.stop - (slice.start or 0))
+
+        if batch_size is not None:
+            cursor = cursor.batch_size(batch_size)
+
+        return cursor
+
+    @staticmethod
+    def _get_cursor_aggregation(collection, criteria, projection,
+                                sort, lookup, slice, batch_size):
+        pipeline = []
+
+        if criteria:
+            pipeline.append({'$match': criteria})
+
+        if projection:
+            pipeline.append({'$project': projection})
+
+        for collection_name, field_name in lookup:
+            pipeline.extend([
+                {'$lookup': {'from': collection_name,
+                             'localField': field_name,
+                             'foreignField': '_id',
+                             'as': f'{LOOKUPS_KEY}.{field_name}'}},
+                {'$unwind': f'${LOOKUPS_KEY}.{field_name}'},
+            ])
+
+
+        if sort:
+            pipeline.append({'$sort': sort})
+
+        cursor = collection.aggregate(pipeline)
+
+        if batch_size is not None:
+            cursor = cursor.batch_size(batch_size)
 
         return cursor
 
@@ -143,20 +190,12 @@ class BaseQuerySet:
         return self._cache
 
     def copy(self, *, cache=None, criteria=None, projection=None,
-             sort=None, slice=None, batch_size=None, collection_params=None):
+             sort=None, lookup=None, slice=None,
+             batch_size=None, collection_params=None):
         """ Copy queryset with new parameters.
 
         Only keywords arguments is alowed.
         Parameters simply replaced with given arguments.
-
-        :param cache:
-        :param dict criteria:
-        :param dict projection:
-        :param list sort:
-        :param slice slice:
-        :param dict collection_params:
-
-        :return: new :class:`yadm.queryset.QuerySet` object
         """
         return self.__class__(
             self._db, self._document_class,
@@ -164,6 +203,7 @@ class BaseQuerySet:
             criteria=criteria or self._criteria,
             projection=projection or self._projection,
             sort=sort or self._sort,
+            lookup=lookup or self._lookup,
             slice=slice or self._slice,
             batch_size=batch_size or self._batch_size,
             collection_params=collection_params or self._collection_params,
@@ -265,6 +305,23 @@ class BaseQuerySet:
         else:
             return self.copy(sort=self._sort + sort)
 
+    def lookup(self, *fields):
+        items = set()
+
+        for field_name in fields:
+            if field_name in self._document_class.__fields__:
+                field = self._document_class.__fields__[field_name]
+                if hasattr(field, 'reference_document_class'):
+                    col_name = field.reference_document_class.__collection__
+                    items.add((col_name, field_name))
+                else:
+                    raise ValueError(f"Field {field_name!r} is not a ReferenceField")
+            else:
+                raise ValueError(f"Field {field_name!r}"
+                                 f" not found in {self._document_class!r}")
+
+        return self.copy(lookup=(self._lookup | items))
+
     def batch_size(self, batch_size):
         """ Setup batch size to cursor for this queryset.
         """
@@ -329,7 +386,8 @@ class BaseQuerySet:
 
 class QuerySet(BaseQuerySet):
     def __iter__(self):
-        return self._from_mongo_list(self._cursor)
+        for raw in self._cursor:
+            yield self._from_mongo_one(raw)
 
     def __len__(self):
         return self.count()
@@ -343,12 +401,6 @@ class QuerySet(BaseQuerySet):
 
     def _get_one(self, index):
         return self._from_mongo_one(self._cursor[index])
-
-    def _from_mongo_list(self, data):
-        """ Generator for got documents from raw data list (cursor).
-        """
-        for d in data:
-            yield self._from_mongo_one(d)
 
     def find_one(self, criteria=None, projection=None, *, exc=None):
         """ Find and return only one document.

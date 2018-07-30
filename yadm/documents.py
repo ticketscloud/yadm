@@ -52,6 +52,7 @@ class BaseDocument(metaclass=MetaDocument):
     __cache__ = None
     __changed__ = None
     __not_loaded__ = None
+    __yadm_lookups__ = None
 
     def __init__(self, *args, __new_document__=True, **kwargs):
         if args:
@@ -74,6 +75,7 @@ class BaseDocument(metaclass=MetaDocument):
         self.__cache__ = {}
         self.__changed__ = {}
         self.__not_loaded__ = set()
+        self.__yadm_lookups__ = {}
 
         for key, field in self.__fields__.items():
             if key in data:

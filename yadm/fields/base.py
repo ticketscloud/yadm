@@ -4,7 +4,7 @@ Base classes for build database fields.
 import functools
 
 from yadm.exceptions import NotLoadedError
-from yadm.markers import AttributeNotSet, NotLoaded
+from yadm.markers import AttributeNotSet
 
 
 def pass_null(method):
@@ -123,21 +123,23 @@ class FieldDescriptor:
 
             name = self.name
 
-            if name in instance.__changed__:
-                value_old = instance.__changed__[name]
-            elif name in instance.__cache__:
-                value_old = instance.__cache__[name]
-            elif name in instance.__raw__:
-                try:
-                    value_old = getattr(instance, name, AttributeNotSet)
-                except NotLoadedError:
-                    value_old = NotLoaded
-            else:
-                value_old = AttributeNotSet
-
-            if value != value_old:
-                instance.__changed__[name] = value
+            if value is AttributeNotSet:
+                instance.__changed__[name] = AttributeNotSet
                 self.field.set_parent_changed(instance)
+
+            else:
+                if name in instance.__changed__:
+                    value_old = instance.__changed__[name]
+                elif name in instance.__cache__:
+                    value_old = instance.__cache__[name]
+                elif name in instance.__raw__:
+                    value_old = getattr(instance, name)
+                else:
+                    value_old = AttributeNotSet
+
+                if value != value_old:
+                    instance.__changed__[name] = value
+                    self.field.set_parent_changed(instance)
 
         else:
             raise TypeError("can't set field directly")  # pragma: no cover
