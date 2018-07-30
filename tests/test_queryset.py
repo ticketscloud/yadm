@@ -9,7 +9,6 @@ from yadm import fields
 from yadm.documents import Document
 from yadm.queryset import QuerySet, NotFoundError
 from yadm.exceptions import NotLoadedError
-from yadm.markers import NotLoaded
 
 
 class Doc(Document):
@@ -27,6 +26,10 @@ def qs(db):
         })
 
     return db.get_queryset(Doc)
+
+
+def test_repr(qs):
+    assert Doc.__collection__ in repr(qs)
 
 
 def test_count(qs):
@@ -57,6 +60,7 @@ def test_bool_(qs, additional_qs, result):
     (slice(-3, None), TypeError),
     (slice(-3, -1), TypeError),
     (slice(None, None, 2), TypeError),
+    ('some_wrong', TypeError),
 ])
 def test_slice(qs, slice, result):
     if isinstance(result, type) and issubclass(result, Exception):
@@ -218,6 +222,20 @@ def test_fields_all(qs):
     assert doc.__raw__['i'] == 3
     assert doc.s == 'str(3)'
     assert doc.i == 3
+
+
+@pytest.mark.parametrize('projection', [
+    {'i': True},
+    {'s': False},
+], ids=['positive', 'negative'])
+def test_projection(qs, projection):
+    doc = qs.find_one({'i': 3}, projection)
+    assert 'i' in doc.__raw__
+    assert doc.__raw__['i'] == 3
+    assert 's' not in doc.__raw__
+
+    with pytest.raises(NotLoadedError):
+        doc.s
 
 
 def test_read_preference(db):
