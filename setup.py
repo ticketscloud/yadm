@@ -33,5 +33,5 @@ setup(
         'Programming Language :: Python :: 3',
     ],
 
-    packages=['yadm', 'yadm.fields', 'yadm.fields.money'],
+    packages=['yadm', 'yadm.aio', 'yadm.fields', 'yadm.fields.money'],
 )
