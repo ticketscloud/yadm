@@ -125,7 +125,7 @@ class AioDatabase(BaseDatabase):
 
     def aggregate(self, document_class, *, pipeline=None, **collection_params):
         return AioAggregator(self, document_class,
-                             pipeline=None,
+                             pipeline=pipeline,
                              collection_params=collection_params)
 
     def bulk(self, document_class,
