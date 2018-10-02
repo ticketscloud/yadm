@@ -178,11 +178,10 @@ class Database(BaseDatabase):
                                          push=push, pull=pull)
 
         if update_data:
-            self._get_collection(document, collection_params).update(
+            self._get_collection(document, collection_params).update_one(
                 {'_id': document.id},
                 update_data,
                 upsert=False,
-                multi=False,
             )
 
         if reload:
