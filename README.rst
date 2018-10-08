@@ -11,7 +11,7 @@ Yet Another Document Mapper
 
 It's small and simple ODM for use with MongoDB.
 
-Full documentation: http://yadm.readthedocs.org
+.. Full documentation: http://yadm.readthedocs.org
 
 
 ------------
@@ -20,9 +20,7 @@ Requirements
 
 YADM support MongoDB version 3.x only. MongoDB 2.x is not supported.
 
-Minimal version of python without asyncio support is 3.5.
-
-Minimal version of python with asyncio support  3.6.
+Minimal version of python — 3.6.
 
 
 -----------
@@ -100,7 +98,7 @@ User
 .. code:: python
 
     user = User(name='Bill', email='bill@galactic.hero')
-    db.insert(user)
+    db.insert_one(user)
 
 Just insert document to database.
 
@@ -115,7 +113,7 @@ Post
     post.title = 'Small post'
     post.body = 'Bla-bla-bla...'
     post.log = [PostLogItem(op='created', at=datetime.utcnow())]
-    db.insert(post)
+    db.insert_one(post)
 
 You can fill documents as above.
 
@@ -168,11 +166,25 @@ find
 find_one
 --------
 
+Get the first finded document.
+
 .. code:: python
 
     post = db(Post).find_one({'user': user.id})
 
-``find_one`` get the first finded document.
+
+get_document
+------------
+
+Get the document by id from primary.
+
+.. code:: python
+
+    user = db.get_document(User, user.id)
+
+
+References
+----------
 
 .. code:: python
 
@@ -180,7 +192,6 @@ find_one
 
 Get attribute with reference makes the query to referred collection. Warning: N+1 problem!
 We have a cache in ``QuerySet`` object and get one referred document only once for one queryset.
-
 
 
 Lookups
@@ -195,7 +206,7 @@ Lookups
 This code create the aggregate query with ``$lookup`` statement for resolve the references.
 
 
-aggregations
+Aggregations
 ------------
 
 .. code:: python
@@ -208,18 +219,15 @@ aggregations
     for item in agg:
         print(item)
 
-.. Is equal of this:
+Or traditional MongoDB syntax:
 
-.. .. code:: python
+.. code:: python
 
-..     agg = db.aggregate(Comment, [
-..         {'match': {'user': user.id}},
-..         {'group': {'_id': 'post', 'count': {'$sum': 1}}},
-..         {'sort': {'count': -1}},
-..     ])
-
-..     for item in agg:
-..         print(item)
+    agg = db.aggregate(Comment, pipeline=[
+        {'match': {'user': user.id}},
+        {'group': {'_id': 'post', 'count': {'$sum': 1}}},
+        {'sort': {'count': -1}},
+    ])
 
 
 -------
@@ -230,7 +238,6 @@ CHANGES
 ==================
 
 * A big rewrite document logic:
-
     - ``Document.__raw__`` now contains only data from pymongo, without any ``AttributeNotSet`` or ``NotLoaded``;
     - ``Document.__changed__`` is removed: all changes reflects to ``Document.__cache__``;
     - ``Document.__not_loaded__`` frozenset of fields whitch not loaded by projection;
@@ -243,11 +250,9 @@ CHANGES
 * Simple interface for build lookups: ``QuerySet.lookup``;
 
 * Update interface for new pymongo:
-
     - Add ``Database.bulk_write``;
     - Add ``Database.insert_one``, ``Database.insert_many`` and ``Database.delete_one``;
     - Deprecate ``Database.insert``, ``Database.remove`` and ``Database.bulk``;
-
     - Add ``QuerySet.update_one`` and ``QuerySet.update_many``;
     - Add ``QuerySet.delete_one`` and ``QuerySet.delete_many``;
     - Add ``QuerySet.find_one_and_update``, ``QuerySet.find_one_and_replace`` and ``QuerySet.find_one_and_delete``;
