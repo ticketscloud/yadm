@@ -6,6 +6,7 @@ from bson import ObjectId
 import pymongo
 
 from yadm.documents import Document
+from yadm.log_items import Save, Insert
 from yadm.queryset import QuerySet
 from yadm.serialize import from_mongo
 from yadm import fields
@@ -98,7 +99,7 @@ def test_insert_one(db):
 
     assert db.db.testdocs.find().count() == 1
     assert db.db.testdocs.find()[0]['i'] == 13
-    assert not doc.__changed__
+    assert Insert(id=doc.id) in doc.__log__
     assert doc.__db__ is db
 
 
@@ -134,7 +135,7 @@ def test_save_new(db):
 
     assert db.db.testdocs.find().count() == 1
     assert db.db.testdocs.find()[0]['i'] == 13
-    assert not doc.__changed__
+    assert Save(id=doc.id) in doc.__log__
     assert doc.__db__ is db
 
 
@@ -150,31 +151,10 @@ def test_save(db):
     db.save(doc)
 
     assert doc.i == 26
-    assert doc.b is True
-    assert db.db.testdocs.find().count() == 1
-    assert db.db.testdocs.find()[0]['i'] == 26
-    assert db.db.testdocs.find()[0]['b'] is True
-    assert not doc.__changed__
-    assert doc.__db__ is db
-
-
-def test_save_full(db):
-    col = db.db.testdocs
-    col.insert_one({'i': 13})
-
-    doc = from_mongo(Doc, col.find_one({'i': 13}))
-    doc.i = 26
-
-    col.update_one({'_id': doc.id}, {'$set': {'b': True}})
-
-    db.save(doc, full=True)
-
-    assert doc.i == 26
     assert not hasattr(doc, 'b')
     assert db.db.testdocs.find().count() == 1
     assert db.db.testdocs.find()[0]['i'] == 26
-    assert 'b' not in db.db.testdocs.find()[0]
-    assert not doc.__changed__
+    assert Save(id=doc.id) in doc.__log__
     assert doc.__db__ is db
 
 

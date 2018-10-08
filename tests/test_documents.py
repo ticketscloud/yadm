@@ -2,6 +2,7 @@ import pytest
 from bson import ObjectId
 
 from yadm.documents import Document
+from yadm.log_items import Save, SetField
 from yadm.markers import AttributeNotSet
 from yadm.exceptions import NotLoadedError
 from yadm import fields
@@ -37,84 +38,52 @@ def test_inheritance_fields():
     assert InhDoc.__fields__['i'].document_class is InhDoc
 
 
-def test_changed(doc):
+def test_raw_cache_log(db, doc):
     assert not doc.__raw__
-    assert not doc.__cache__
-    assert doc.__changed__ == {'_id': AttributeNotSet,
-                               'i': AttributeNotSet,
-                               'b': AttributeNotSet}
+    assert not doc.__log__
+    assert doc.__cache__ == {'_id': AttributeNotSet,
+                             'i': AttributeNotSet,
+                             'b': AttributeNotSet}
 
     doc.i = 13
-    assert not doc.__raw__
-    assert not doc.__cache__
-    assert doc.__changed__ == {'_id': AttributeNotSet,
-                               'i': 13,
-                               'b': AttributeNotSet}
 
-    doc.b = True
     assert not doc.__raw__
-    assert not doc.__cache__
-    assert doc.__changed__ == {'_id': AttributeNotSet,
-                               'b': True,
-                               'i': 13}
-
-
-def test_changed_clear(doc):
-    doc.i = 13
-    doc.__changed_clear__()
-    assert not doc.__raw__
+    assert len(doc.__log__) == 1
+    assert doc.__log__[0] == SetField(name='i', value=13)
     assert doc.__cache__ == {'_id': AttributeNotSet,
                              'i': 13,
                              'b': AttributeNotSet}
-    assert not doc.__changed__
-
-
-def test_raw_cache_changed(db, doc):
-    assert not doc.__raw__
-    assert not doc.__cache__
-    assert doc.__changed__ == {'_id': AttributeNotSet,
-                               'i': AttributeNotSet,
-                               'b': AttributeNotSet}
-
-    doc.i = 13
-
-    assert not doc.__raw__
-    assert not doc.__cache__
-    assert doc.__changed__ == {'_id': AttributeNotSet,
-                               'i': 13,
-                               'b': AttributeNotSet}
 
     db.save(doc)
 
     assert not doc.__raw__
+    assert len(doc.__log__) == 3
+    assert doc.__log__[1] == SetField(name='_id', value=doc.id)
+    assert doc.__log__[2] == Save(id=doc.id)
     assert doc.__cache__ == {'_id': doc.id,
                              'i': 13,
                              'b': AttributeNotSet}
-    assert not doc.__changed__
 
     doc = db.reload(doc, new_instance=True)
 
     assert doc.__raw__ == {'i': 13, '_id': doc.id}
+    assert len(doc.__log__) == 0  # reload with new_instance=True
     assert doc.__cache__ == {'_id': doc.id}
-    assert not doc.__changed__
 
     doc.b = False
 
     assert doc.__raw__ == {'i': 13, '_id': doc.id}
-    assert doc.__cache__ == {'_id': doc.id}
-    assert doc.__changed__ == {'b': False}
+    assert doc.__cache__ == {'b': False, '_id': doc.id}
 
     assert doc.i == 13  # call descriptor's get
 
     assert doc.__raw__ == {'i': 13, '_id': doc.id}
-    assert doc.__cache__ == {'i': 13, '_id': doc.id}
-    assert doc.__changed__ == {'b': False}
+    assert doc.__cache__ == {'i': 13, 'b': False, '_id': doc.id}
 
     doc.i = 12  # call descriptor's set, for cover
 
     assert doc.__raw__ == {'i': 13, '_id': doc.id}
-    assert doc.__cache__ == {'i': 13, '_id': doc.id}
-    assert doc.__changed__ == {'i': 12, 'b': False}
+    assert doc.__cache__ == {'i': 12, 'b': False, '_id': doc.id}
 
 
 def test_eq():

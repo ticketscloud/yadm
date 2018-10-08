@@ -1,15 +1,34 @@
 """
 Base classes for containers.
 """
+from typing import NamedTuple, Any
+
 from yadm.markers import AttributeNotSet
 from yadm.fields.base import Field
 from yadm.documents import DocumentItemMixin
+from yadm.log_items import ChangeChild
+
+
+class ContainerSetItem(NamedTuple):
+    item: Any
+    value: Any
+    op: str = 'container_setitem'
+
+
+class ContainerDelitem(NamedTuple):
+    item: Any
+    op: str = 'container_delitem'
+
+
+class ContainerReload(NamedTuple):
+    op: str = 'container_reload'
 
 
 class Container(DocumentItemMixin):
     """ Base class for containers.
     """
     def __init__(self, field, parent, value):
+        super().__init__()
         self.__name__ = field.name
         self.__parent__ = parent
         self._field = field
@@ -27,11 +46,11 @@ class Container(DocumentItemMixin):
 
     def __setitem__(self, item, value):
         self._data[item] = self._prepare_item(item, value)
-        self._set_changed()
+        self.__log__.append(ContainerSetItem(item=item, value=value))
 
     def __delitem__(self, item):
         del self._data[item]
-        self._set_changed()
+        self.__log__.append(ContainerDelitem(item=item))
 
     def __contains__(self, item):
         return item in self._data
@@ -44,9 +63,6 @@ class Container(DocumentItemMixin):
             return self._data == other._data
         else:
             return self._data == other
-
-    def _set_changed(self):
-        self._field.set_parent_changed(self)
 
     def _prepare_item(self, item, value):
         return self._field.prepare_item(self, item, value)
@@ -70,6 +86,7 @@ class Container(DocumentItemMixin):
 
         doc = self._get_queryset().read_primary().find_one()
         self._data = self.__get_value__(doc)._data
+        self.__log__.append(ContainerReload())
 
 
 class ContainerField(Field):

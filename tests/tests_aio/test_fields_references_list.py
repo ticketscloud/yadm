@@ -38,12 +38,10 @@ def test_resolve(loop, db):
         assert len(doc.ref.ids) == 2
         assert len(doc.ref._documents) == 0
         assert not doc.ref.resolved
-        assert not doc.ref.changed
 
         await doc.ref.resolve()
 
         assert doc.ref.resolved
-        assert not doc.ref.changed
         assert len(doc.ref) == 2
         assert len(doc.ref.ids) == 2
         assert len(doc.ref._documents) == 2

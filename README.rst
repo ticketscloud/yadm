@@ -226,18 +226,21 @@ aggregations
 CHANGES
 -------
 
-2.0.0 (2017-06-XX)
+2.0.0 (2017-10-XX)
 ==================
 
-* Rewrite document logic:
+* A big rewrite document logic:
 
+    - ``Document.__raw__`` now contains only data from pymongo, without any ``AttributeNotSet`` or ``NotLoaded``;
+    - ``Document.__changed__`` is removed: all changes reflects to ``Document.__cache__``;
+    - ``Document.__not_loaded__`` frozenset of fields whitch not loaded by projection;
+    - ``Document.__new_document__`` flag is ``True`` for document's objects whitch created directly in your code;
+    - ``Document.__log__`` list-like container with log of document changes (unstable API at now);
+    - ``Document.__data__`` is removed as deprecated;
     - Now is not allow to set fields as classes;
-    - Remove deprecated ``Database.__data__``;
-    - ``Document.__not_loaded__`` set for fields whitch not loaded by projection;
-    - ``Document.__new_document__`` flag is ``True`` for document's whitch created directly in code without DB;
-    - Now defaults is not lazy and creates with instant the document;
+    - Defaults is not lazy and creates with document instance;
 
-* Simple interface for create lookups: ``QuerySet.lookup``;
+* Simple interface for build lookups: ``QuerySet.lookup``;
 
 * Update interface for new pymongo:
 

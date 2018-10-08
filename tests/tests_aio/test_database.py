@@ -5,6 +5,7 @@ from bson import ObjectId
 
 from yadm import fields
 from yadm.documents import Document
+from yadm.log_items import Save, Insert
 from yadm.serialize import from_mongo
 
 
@@ -25,7 +26,7 @@ def test_insert_one(loop, db):
         assert await db.db.testdocs.find().count() == 1
         assert (await db.db.testdocs.find_one())['i'] == 13
         assert isinstance(doc.id, ObjectId)
-        assert not doc.__changed__
+        assert Insert(id=doc.id) in doc.__log__
         assert doc.__db__ is db
 
     loop.run_until_complete(test())
@@ -70,8 +71,7 @@ def test_save_new(loop, db):
 
         assert await db.db.testdocs.find().count() == 1
         assert (await db.db.testdocs.find_one())['i'] == 13
-        assert isinstance(doc.id, ObjectId)
-        assert not doc.__changed__
+        assert Save(id=doc.id) in doc.__log__
         assert doc.__db__ is db
 
     loop.run_until_complete(test())
@@ -88,8 +88,7 @@ def test_save(loop, db):
 
         assert await db.db.testdocs.find().count() == 1
         assert (await db.db.testdocs.find_one())['i'] == 14
-        assert isinstance(doc.id, ObjectId)
-        assert not doc.__changed__
+        assert Save(id=doc.id) in doc.__log__
         assert doc.__db__ is db
 
     loop.run_until_complete(test())

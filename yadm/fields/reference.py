@@ -110,7 +110,7 @@ class ReferenceField(Field):
         if (rdc, value) in cache:
             return cache[(rdc, value)]
 
-        elif (isinstance(document, BaseDocument) and
+        elif (isinstance(document, Document) and
                 self.name in document.__yadm_lookups__):
             cache[(rdc, value)] = doc = from_mongo(
                 document_class=rdc,

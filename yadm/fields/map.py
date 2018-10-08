@@ -37,13 +37,25 @@ Map.
 
 """
 from collections import abc
+from typing import NamedTuple, Any, Callable
 
 from yadm.markers import AttributeNotSet
-from yadm.fields.base import pass_null
+from yadm.fields.base import Field, pass_null
 from yadm.fields.containers import (
     Container,
     ContainerField,
 )
+
+
+class MapSet(NamedTuple):
+    key: str
+    value: Any
+    op: str = 'map_set'
+
+
+class MapUnset(NamedTuple):
+    key: str
+    op: str = 'map_unset'
 
 
 class Map(Container, abc.MutableMapping):
@@ -52,16 +64,14 @@ class Map(Container, abc.MutableMapping):
     def set(self, key, value, reload=True):
         """ Set key directly in database.
 
-        :param key: key
-        :param value: value for `$set`
-
         See `$set` in MongoDB's `set`.
         """
         value = self._prepare_item(key, value)
         qs = self._get_queryset()
         fn = '.'.join([self.__field_name__, key])
-        qs.update({'$set': {fn: value}}, multi=False)
+        qs.update_one({'$set': {fn: value}})
         self._data[key] = value
+        self.__log__.append(MapSet(key=key, value=value))
 
         if reload:
             self.reload()
@@ -69,14 +79,13 @@ class Map(Container, abc.MutableMapping):
     def unset(self, key, reload=True):
         """ Unset key directly in database.
 
-        :param key: key
-
         See `$unset` in MongoDB's `unset`.
         """
         qs = self._get_queryset()
         fn = '.'.join([self.__field_name__, key])
-        qs.update({'$unset': {fn: True}}, multi=False)
+        qs.update_one({'$unset': {fn: True}})
         del self._data[key]
+        self.__log__.append(MapUnset(key=key))
 
         if reload:
             self.reload()
@@ -164,18 +173,14 @@ class MapCustomKeys(Map):
 
 class MapCustomKeysField(MapField):
     """ Field for maps with custom key type.
-
-    :param field item_field:
-    :param func key_factory: function, who return thue key
-        from raw string key
-    :param func key_to_str:
-    :param bool auto_create:
     """
     container = MapCustomKeys
 
-    def __init__(self, item_field, key_factory, *,
-                 key_to_str=str,
-                 auto_create=True,
+    def __init__(self,
+                 item_field: Field,
+                 key_factory: Callable[[str], Any], *,
+                 key_to_str: Callable[[Any], str] = str,
+                 auto_create: bool = True,
                  **kwargs):
         super().__init__(item_field, auto_create=auto_create, **kwargs)
         self.key_factory = key_factory

@@ -84,7 +84,9 @@ class EmbeddedDocumentField(BaseEmbeddedDocumentField):
         """
         if self.auto_create:
             ed_class = self.get_embedded_document_class(document)
-            return ed_class(__parent__=document, __name__=self.name)
+            ed = ed_class(__parent__=document, __name__=self.name)
+            setattr(document, self.name, ed)
+            return ed
         else:
             return super().get_if_attribute_not_set(document)
 

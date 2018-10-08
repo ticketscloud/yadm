@@ -44,13 +44,11 @@ def test_default_auto_not_save_empty(db):
 
     doc = db.save(TD())
     raw = db.db.testdoc.find_one(doc.id)
-    assert 'e' not in raw
     assert set(raw) == {'_id'}
 
     doc.e.i = 13
     db.save(doc)
     raw = db.db.testdoc.find_one(doc.id)
-    assert 'e' in raw
     assert raw == {'_id': doc.id, 'e': {'i': 13}}
 
 

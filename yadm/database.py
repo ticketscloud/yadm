@@ -25,7 +25,7 @@ import itertools
 
 import pymongo
 
-from yadm.markers import AttributeNotSet
+from yadm.log_items import Insert, Save, UpdateOne, DeleteOne, Reload
 from yadm.aggregation import Aggregator
 from yadm.queryset import QuerySet
 from yadm.bulk import Bulk
@@ -123,8 +123,7 @@ class Database(BaseDatabase):
         result = collection.insert_one(to_mongo(document))
 
         document._id = result.inserted_id
-        document.__changed_clear__()
-
+        document.__log__.append(Insert(id=result.inserted_id))
         return result
 
     def insert_many(self, documents, *, ordered=True, **collection_params):
@@ -132,14 +131,22 @@ class Database(BaseDatabase):
 
         Collection get from first document.
         """
+        def gen(documents):
+            for document in documents:
+                yield to_mongo(document)
+                document.__log__.append(Insert())
+
+        # TODO: rewrite this!
         if ordered:
             documents = list(documents)
             if documents:
                 collection = self._get_collection(documents[0].__class__,
                                                   collection_params)
 
-                _gen = (to_mongo(doc) for doc in documents)
-                result = collection.insert_many(_gen, ordered=ordered)
+                result = collection.insert_many(
+                    gen(documents),
+                    ordered=True,
+                )
 
                 for _id, document in zip(result.inserted_ids, documents):
                     document.__db__ = self
@@ -155,49 +162,19 @@ class Database(BaseDatabase):
             collection = self._get_collection(first.__class__,
                                               collection_params)
 
-            _gen = (to_mongo(doc) for doc in itertools.chain([first], iterator))
-            return collection.insert_many(_gen, ordered=ordered)
+            return collection.insert_many(
+                gen(itertools.chain([first], iterator)),
+                ordered=False,
+            )
 
-    def save(self, document, full=False, upsert=False, **collection_params):
+    def save(self, document, **collection_params):
         """ Save document to database.
-
-        :param Document document: document instance for save
-        :param bool full: fully resave document
-            (default: `False`)
-        :param bool upsert: see documentation for MongoDB's `update`
-            (default: `False`)
-        :param **collection_params: params for get_collection
-
-        If document has no `_id`
-        :py:meth:`insert <Database.insert>` new document.
         """
-        if hasattr(document, '_id'):
-            document.__db__ = self
-
-            if full:
-                self._get_collection(document, collection_params).update(
-                    {'_id': document.id},
-                    to_mongo(document),
-                    upsert=upsert,
-                    multi=False,
-                )
-                document.__changed_clear__()
-            else:
-                set_data = to_mongo(
-                    document,
-                    exclude=['_id'],
-                    include=list(document.__changed__),
-                )
-
-                unset_data = [f for f, v in document.__changed__.items()
-                              if v is AttributeNotSet]
-
-                self.update_one(document, set=set_data, unset=unset_data,
-                                **collection_params)
-
-        else:
-            self.insert_one(document, **collection_params)
-
+        document.__db__ = self
+        raw = to_mongo(document)
+        collection = self._get_collection(document, collection_params)
+        document.id = collection.save(raw)
+        document.__log__.append(Save(id=document.id))
         return document
 
     def update_one(self, document, *, reload=True,
@@ -216,6 +193,7 @@ class Database(BaseDatabase):
                 update_data,
                 upsert=False,
             )
+            document.__log__.append(UpdateOne(update_data=update_data))
         else:
             result = None
 
@@ -227,20 +205,16 @@ class Database(BaseDatabase):
     def delete_one(self, document, **collection_params):
         """ Remove a single document from database.
         """
-        col = self._get_collection(document.__class__, collection_params)
-        return col.delete_one({'_id': document._id})
+        collection = self._get_collection(document.__class__, collection_params)
+        res = collection.delete_one({'_id': document._id})
+        document.__log__.append(DeleteOne())
+        return res
 
     def reload(self, document, new_instance=False, *,
                projection=None,
                read_preference=RPS.PrimaryPreferred(),
                **collection_params):
         """ Reload document.
-
-        :param Document document: instance for reload
-        :param bool new_instance: if `True` return new instance of document,
-            else change data in given document (default: `False`)
-        :param dict projection: projection for query
-        :param **collection_params: params for get_collection
         """
         collection_params['read_preference'] = read_preference
         qs = self.get_queryset(document.__class__,
@@ -258,7 +232,7 @@ class Database(BaseDatabase):
             document.__raw__.clear()
             document.__raw__.update(new.__raw__)
             document.__cache__.clear()
-            document.__changed__.clear()
+            document.__log__.append(Reload())
             document.__not_loaded__ = new.__not_loaded__
             return document
 
@@ -268,12 +242,6 @@ class Database(BaseDatabase):
                      read_preference=RPS.PrimaryPreferred(),
                      **collection_params):
         """ Get document for it _id.
-
-        :param document_class: :class:`yadm.documents.Document`
-        :param _id: document's _id
-        :param dict projection: projection for query
-        :param Exception exc: raise given exception if not found
-        :param **collection_params: params for get_collection
 
         Default ReadPreference is PrimaryPreferred.
         """
@@ -298,7 +266,6 @@ class Database(BaseDatabase):
 
         elif exc is not None:
             raise exc((document_class, _id, collection_params))
-
         else:
             return None
 
@@ -307,11 +274,6 @@ class Database(BaseDatabase):
                      cache=None,
                      **collection_params):
         """ Return queryset for document class.
-
-        :param document_class: :class:`yadm.documents.Document`
-        :param dict projection:
-        :param cache: cache for share with other querysets
-        :param **collection_params: params for get_collection
 
         This create instance of :class:`yadm.queryset.QuerySet`
         with presetted document's collection information.

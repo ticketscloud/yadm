@@ -19,11 +19,10 @@ def to_mongo(document,
 
     1. Lookup in exclude;
     2. Lookup in include;
-    3. Lookup in __changed__;
-    4. Lookup in __cache__;
-    5. Lookup in __raw__;
-    6. Lookup in __not_loaded__;
-    7. Process values with '.' from include;
+    3. Lookup in __cache__;
+    4. Lookup in __raw__;
+    5. Lookup in __not_loaded__;
+    6. Process values with '.' from include;
     """
     result = {}
 
@@ -33,13 +32,6 @@ def to_mongo(document,
 
         elif include and name not in include:
             continue
-
-        elif name in document.__changed__:
-            value = document.__changed__[name]
-            if value is not AttributeNotSet:
-                raw = field.to_mongo(document, value)
-                if raw is not AttributeNotSet:
-                    result[name] = raw
 
         elif name in document.__cache__:
             value = document.__cache__[name]

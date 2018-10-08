@@ -1,8 +1,6 @@
 """
 Basic documents classes for build models.
 
-.. code-block:: python
-
     class User(Document):
         __collection__ = 'users'
 
@@ -13,17 +11,25 @@ Basic documents classes for build models.
 
 All fields placed in :py:mod:`yadm.fields` package.
 """
+from typing import Union, Optional, Any, Generator, Dict
 
 from bson import ObjectId
+from faker import Faker
 
 from yadm.fields.base import Field
 from yadm.fields.simple import ObjectIdField
+from yadm.document_item import DocumentItemMixin
+from yadm.log_items import BaseLog
+
+
+class DocumentLog(BaseLog):
+    pass
 
 
 class MetaDocument(type):
     """ Metaclass for documents.
     """
-    def __init__(cls, name, bases, cls_dict):  # noqa
+    def __init__(cls, name: str, bases: tuple, cls_dict: dict):  # noqa
         cls.__fields__ = {}
 
         for base in bases:
@@ -48,13 +54,13 @@ class MetaDocument(type):
 class BaseDocument(metaclass=MetaDocument):
     """ Base class for all documents.
     """
-    __raw__ = None
-    __cache__ = None
-    __changed__ = None
-    __not_loaded__ = None
-    __yadm_lookups__ = None
+    __raw__: dict
+    __cache__: dict
 
-    def __init__(self, *args, __new_document__=True, **kwargs):
+    def __init__(self,
+                 *args,
+                 __new_document__: bool = True,
+                 **kwargs):
         if args:
             if len(args) != 1:
                 raise TypeError("only one positional argument accepted!")
@@ -73,27 +79,25 @@ class BaseDocument(metaclass=MetaDocument):
 
         self.__raw__ = {}
         self.__cache__ = {}
-        self.__changed__ = {}
-        self.__not_loaded__ = set()
-        self.__yadm_lookups__ = {}
 
         for key, field in self.__fields__.items():
             if key in data:
                 setattr(self, key, data[key])
             elif __new_document__:  # default values for new objects
-                self.__changed__[key] = field.get_default(self)
+                self.__cache__[key] = field.get_default(self)
 
-    def __changed_clear__(self):
-        self.__cache__.update(self.__changed__)
-        self.__changed__.clear()
-
-    def __str__(self):
+    def __str__(self) -> str:
         return repr(self)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '{}({})'.format(self.__class__.__name__, str(hex(id(self))))
 
-    def __fake__(self, values, faker, depth):
+    def __fake__(
+        self,
+        values: dict,
+        faker: Faker,
+        depth: int,
+    ) -> Optional[Generator[Optional[dict], None, None]]:
         """ Fake data customizer.
         """
         # # pre pocessor and prepare values
@@ -111,31 +115,41 @@ class BaseDocument(metaclass=MetaDocument):
             'raw': self.__raw__,
             'not_loaded': self.__not_loaded__,
             'cache': self.__cache__,
-            'changed': self.__changed__,
+            'log': self.__log__,
         })
 
 
 class Document(BaseDocument):
     """ Class for build first level documents.
     """
-    __collection__ = None
-    __default_projection__ = None
-    __new_document__ = None
-    __db__ = None
-    __qs__ = None
+    __collection__: str
+    __default_projection__: Optional[Dict[str, Any]] = None
+    __new_document__: bool = True
+    __log__: DocumentLog
+    __db__: 'yadm.database.BaseDatabase'
+    __qs__: 'QuerySet'
+
+    __not_loaded__: frozenset = frozenset()
+    __yadm_lookups__: dict
 
     _id = ObjectIdField()
 
-    def __init__(self, *args, __db__=None, __new_document__=True, **kwargs):
+    def __init__(self,
+                 *args,
+                 __db__: Optional['yadm.database.BaseDatabase'] = None,
+                 __new_document__: bool = True,
+                 **kwargs):
         self.__db__ = __db__
         self.__new_document__ = __new_document__
+        self.__yadm_lookups__ = {}
+        self.__log__ = DocumentLog()
         super().__init__(*args, __new_document__=__new_document__, **kwargs)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         _id = getattr(self, '_id', '<new>')
         return '{}({})'.format(self.__class__.__name__, _id)
 
-    def __eq__(self, other):
+    def __eq__(self, other: Union['Document', ObjectId]) -> bool:
         if isinstance(other, Document):
             return self.id == other.id
         elif isinstance(other, ObjectId):
@@ -143,129 +157,34 @@ class Document(BaseDocument):
         else:
             return False
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.id)
 
     @property
-    def id(self):
+    def id(self) -> Optional[ObjectId]:
         return self._id
 
     @id.setter
-    def id(self, id):
+    def id(self, id: ObjectId):
         self._id = id
 
     @id.deleter
-    def id(self, id):
+    def id(self):  # noqa
         del self._id
-
-
-class DocumentItemMixin:
-    """ Mixin for custom all fields values, such as EmbeddedDocument,
-        yadm.fields.containers.Container.
-    """
-    __parent__ = None
-    __name__ = None
-    __qs__ = None
-
-    @property
-    def __document__(self):
-        """ Root document.
-
-        .. code-block:: python
-
-                assert doc.f.l[0].__document__ is doc
-        """
-        obj = self
-
-        while getattr(obj, '__parent__', None) is not None:
-            obj = obj.__parent__
-
-        if obj is not self:
-            return obj
-        else:
-            return None
-
-    @property
-    def __db__(self):
-        """ Database object.
-
-        .. code-block:: python
-
-            assert doc.f.l[0].__db__ is doc.__db__
-        """
-        document = self.__document__
-        if document is not None:
-            return document.__db__
-        else:
-            return None
-
-    @property
-    def __qs__(self):
-        """ Queryset object.
-        """
-        document = self.__document__
-        if document is not None:
-            return document.__qs__
-        else:
-            return None
-
-    @property
-    def __path__(self):
-        """ Path to root generator.
-
-        .. code-block:: python
-
-            assert list(doc.f.l[0].__path__) == [doc.f.l[0], doc.f.l, doc.f]
-        """
-        obj = self
-
-        while getattr(obj, '__parent__', None) is not None:
-            yield obj
-            obj = obj.__parent__
-
-    @property
-    def __path_names__(self):
-        """ Path to root generator.
-
-        .. code-block:: python
-
-            assert list(doc.f.l[0].__path__) == [0, 'l', 'f']
-        """
-        for item in self.__path__:
-            yield item.__name__
-
-    @property
-    def __field_name__(self):
-        """ Dotted field name for MongoDB opperations, like as $set, $push and other...
-
-        .. code-block:: python
-
-            assert doc.f.l[0].__field_name__ == 'f.l.0'
-        """
-        return '.'.join(reversed([str(i) for i in self.__path_names__]))
-
-    def __get_value__(self, document):
-        """ Get value from document with path to self.
-        """
-        obj = document
-
-        for name in reversed(list(self.__path_names__)):
-            if isinstance(name, int):
-                obj = obj[name]
-            else:
-                obj = getattr(obj, name)
-
-        return obj
 
 
 class EmbeddedDocument(DocumentItemMixin, BaseDocument):
     """ Class for build embedded documents.
     """
-    def __init__(self, *args, __parent__=None, __name__=None, **kwargs):
+    def __init__(self,
+                 *args,
+                 __parent__: Union[BaseDocument, DocumentItemMixin, None] = None,
+                 __name__: Optional[str] = None,
+                 **kwargs):
         self.__parent__ = __parent__
         self.__name__ = __name__
         super().__init__(*args, **kwargs)
 
     @property
-    def __new_document__(self):
+    def __new_document__(self) -> bool:
         return self.__document__.__new_document__

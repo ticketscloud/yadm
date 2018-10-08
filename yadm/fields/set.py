@@ -4,9 +4,35 @@ Field with sets.
 Similar as :py:mod:`yadm.fields.list`.
 """
 from collections import abc
+from typing import NamedTuple, Any
 
 from yadm.fields.containers import Container
 from yadm.fields.list import ListField
+
+
+class SetAdd(NamedTuple):
+    value: Any
+    op: str = 'set_add'
+
+
+class SetDiscard(NamedTuple):
+    value: Any
+    op: str = 'set_discard'
+
+
+class SetRemove(NamedTuple):
+    value: Any
+    op: str = 'set_remove'
+
+
+class SetAddToSet(NamedTuple):
+    value: Any
+    op: str = 'set_add_to_set'
+
+
+class SetPull(NamedTuple):
+    query: Any
+    op: str = 'set_pull'
 
 
 class Set(Container, abc.MutableSet):
@@ -33,20 +59,15 @@ class Set(Container, abc.MutableSet):
     def add(self, item):
         """ Append item to set.
 
-        :param item: item for add
-
         This method does not save object!
         """
         item = self._prepare_item(len(self), item)
         if item not in self._data:
             self._data.append(item)
-
-        self._set_changed()
+            self.__log__.append(SetAdd(value=item))
 
     def discard(self, item):
         """ Remove item from the set if it is present.
-
-        :param item: item for discard
 
         This method does not save object!
         """
@@ -54,13 +75,11 @@ class Set(Container, abc.MutableSet):
             self._data.remove(item)
         except ValueError:
             pass
-
-        self._set_changed()
+        else:
+            self.__log__.append(SetDiscard(value=item))
 
     def remove(self, item):
         """ Remove item from set.
-
-        :param item: item for remove
 
         This method does not save object!
         """
@@ -68,14 +87,11 @@ class Set(Container, abc.MutableSet):
             self._data.remove(item)
         except ValueError as exc:
             raise KeyError from exc
-
-        self._set_changed()
+        else:
+            self.__log__.append(SetRemove(value=item))
 
     def add_to_set(self, item, reload=True):
         """ Add item directly to database.
-
-        :param item: item for `$addToSet`
-        :param bool reload: automatically reload all values from database
 
         See `$addToSet` in MongoDB's `update`.
         """
@@ -85,7 +101,12 @@ class Set(Container, abc.MutableSet):
 
         qs = self._get_queryset()
         qs.update({'$addToSet': {self.__field_name__: data}}, multi=False)
-        self.add(item)
+
+        item = self._prepare_item(len(self), item)
+        if item not in self._data:
+            self._data.append(item)
+
+        self.__log__.append(SetAddToSet(value=item))
 
         if reload:
             self.reload()
@@ -93,13 +114,12 @@ class Set(Container, abc.MutableSet):
     def pull(self, query, reload=True):
         """ Pull item from database.
 
-        :param query: query for `$pull` on this field
-        :param bool reload: automatically reload all values from database
-
         See `$pull` in MongoDB's `update`.
         """
         qs = self._get_queryset()
         qs.update({'$pull': {self.__field_name__: query}}, multi=False)
+
+        self.__log__.append(SetPull(query=query))
 
         if reload:
             self.reload()

@@ -7,7 +7,7 @@ Usage:
 
 
     doc = db(Doc).find_one(...)
-    doc.ref.resolve()  # resolve all documents in with query
+    doc.ref.resolve()  # resolve all documents in with one query
     for ref_doc in doc.ref:
         ...
 
@@ -21,8 +21,20 @@ But without resolving NotResolved raised for any actions with it
 
 """
 from collections.abc import MutableSequence
+from typing import (
+    NamedTuple,
+    Any,
+    Optional,
+    Union,
+    List,
+    Iterator,
+    Coroutine,
+)
 
-from yadm.documents import DocumentItemMixin
+from bson import ObjectId
+
+from yadm.documents import MetaDocument, BaseDocument, Document
+from yadm.document_item import DocumentItemMixin
 from yadm.queryset import NotFoundBehavior
 from yadm.fields.base import Field
 
@@ -35,12 +47,46 @@ class AlreadyResolved(Exception):
     pass
 
 
+class ReferencesListSetitem(NamedTuple):
+    index: int
+    document: Document
+    op: str = 'references_list_setitem'
+
+
+class ReferencesListDelitem(NamedTuple):
+    index: int
+    op: str = 'references_list_delitem'
+
+
+class ReferencesListInsert(NamedTuple):
+    index: int
+    document: Document
+    op: str = 'references_list_insert'
+
+
+class ReferencesListAppend(NamedTuple):
+    document: Document
+    op: str = 'references_list_append'
+
+
+class ReferencesListPop(NamedTuple):
+    index: int
+    op: str = 'references_list_pop'
+
+
+class ReferencesListResolve(NamedTuple):
+    op: str = 'references_list_resolve'
+
+
 class ReferencesList(MutableSequence, DocumentItemMixin):
     _resolved = False
-    _changed = False
 
-    def __init__(self, reference_document_class, ids: list,
-                 field=None, parent=None):
+    def __init__(self,
+                 reference_document_class: MetaDocument,
+                 ids: Optional[List[ObjectId]] = None,
+                 field: Optional[Field] = None,
+                 parent: Union[BaseDocument, DocumentItemMixin, None] = None):
+        super().__init__()
         self._reference_document_class = reference_document_class
         self.__parent__ = parent
         self._field = field
@@ -59,42 +105,42 @@ class ReferencesList(MutableSequence, DocumentItemMixin):
         if len(items) > 200:  # pragma: nocover
             items = items[:75] + ' ... ' + items[-75:]
 
-        return "{cname}({rdc} {resolved}{changed} {len} [{items}])".format(
+        return "{cname}({rdc} {resolved} {len} [{items}])".format(
             cname=self.__class__.__name__,
             rdc=self._reference_document_class.__name__,
-            resolved='r' if self.resolved else '',
-            changed='c' if self.changed else '',
+            resolved='resolved' if self.resolved else '',
             len=len(self),
             items=items,
         )
 
-    def __getitem__(self, idx: int):
+    def __getitem__(self, idx: int) -> Document:
         self._check_resolved_and_rise()
         return self._documents[idx]
 
-    def __setitem__(self, idx: int, document: 'Document'):
+    def __setitem__(self, idx: int, document: Document):
         self._check_resolved_and_rise()
-        self._set_changed()
         self._ids[idx] = document
         self._documents[idx] = document
+        self.__log__.append(ReferencesListSetitem(index=idx,
+                                                  document=document))
 
     def __delitem__(self, idx: int):
         self._check_resolved_and_rise()
-        self._set_changed()
         del self._ids[idx]
         del self._documents[idx]
+        self.__log__.append(ReferencesListDelitem(index=idx))
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._ids)
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return bool(self._ids)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator:
         self._check_resolved_and_rise()
         return iter(self._documents)
 
-    def __eq__(self, other):  # pragma: nocover
+    def __eq__(self, other) -> bool:  # pragma: nocover
         if isinstance(other, ReferencesList):
             return self._ids == other._ids
         else:
@@ -105,35 +151,32 @@ class ReferencesList(MutableSequence, DocumentItemMixin):
         return self._resolved
 
     @property
-    def changed(self) -> bool:
-        return self._changed
-
-    @property
     def ids(self) -> list:
         return self._ids.copy()
 
-    def insert(self, idx: int, document: 'Document'):
+    def insert(self, idx: int, document: Document):
         self._check_resolved_and_rise()
-        self._set_changed()
         self._ids.insert(idx, document.id)
         self._documents.insert(idx, document)
+        self.__log__.append(ReferencesListInsert(index=idx, document=document))
 
-    def append(self, document: 'Document'):
+    def append(self, document: Document):
         self._check_resolved_and_rise()
-        self._set_changed()
         self._ids.append(document.id)
         self._documents.append(document)
+        self.__log__.append(ReferencesListAppend(document=document))
 
-    def pop(self, idx: int=-1):
+    def pop(self, idx: int=-1) -> Document:
         self._check_resolved_and_rise()
-        self._set_changed()
         del self._ids[idx]
-        return self._documents.pop(idx)
+        doc = self._documents.pop(idx)
+        self.__log__.append(ReferencesListPop(index=idx))
+        return doc
 
-    def resolve(self):
+    def resolve(self) -> Optional[Coroutine]:
         """ Resolve ids to documents.
 
-        This method can be used with "await".
+        This method can be used with "await" if AioDatabase.
         """
         if self._resolved:
             raise AlreadyResolved()
@@ -147,14 +190,17 @@ class ReferencesList(MutableSequence, DocumentItemMixin):
                 not_found=NotFoundBehavior.NONE
             ))
             self._resolved = True
-        else:
-            async def resolver_coro(self):
-                accumulator = []
-                async for doc in qs.find_in(self._ids):
-                    accumulator.append(doc)
+            self.__log__.append(ReferencesListResolve())
 
-                self._documents = accumulator
+        else:
+            async def resolver_coro(self) -> None:
+                documents = []
+                async for doc in qs.find_in(self._ids):
+                    documents.append(doc)
+
+                self._documents = documents
                 self._resolved = True
+                self.__log__.append(ReferencesListResolve())
 
             return resolver_coro(self)
 
@@ -162,40 +208,43 @@ class ReferencesList(MutableSequence, DocumentItemMixin):
         if not self._resolved:
             raise NotResolved()
 
-    def _set_changed(self):
-        if not self._changed:
-            self._changed = True
-
-            # if self.__parent__ is not None:
-            #     self._field.set_parent_changed(self)
-
 
 class ReferencesListField(Field):
     def __init__(self, reference_document_class):
         self._reference_document_class = reference_document_class
 
-    def copy(self):  # pragma: no cover
+    def copy(self) -> 'ReferencesListField':  # pragma: no cover
         return self.__class__()
 
-    def get_if_attribute_not_set(self, document):  # pragma: no cover
-        return ReferencesList(
+    def get_if_attribute_not_set(
+        self,
+        document: Document,
+    ) -> ReferencesList:  # pragma: no cover
+        rl = ReferencesList(
             self._reference_document_class, [],
             field=self,
             parent=document,
         )
+        setattr(document, self.name, rl)
+        return rl
 
-    def get_default(self, document):
-        return ReferencesList(
+    def get_default(self, document: Document) -> ReferencesList:
+        rl = ReferencesList(
             self._reference_document_class, [],
             field=self,
             parent=document,
         )
+        setattr(document, self.name, rl)
+        return rl
 
-    def prepare_value(self, document, value):
+    def prepare_value(
+        self,
+        document: Document,
+        value: Union[ReferencesList, List[Document]],
+    ) -> ReferencesList:
         if isinstance(value, ReferencesList):
             value._field = self
             value.__parent__ = document
-            self.set_parent_changed(value)
             return value
 
         elif isinstance(value, list):
@@ -207,18 +256,21 @@ class ReferencesListField(Field):
             )
             res._resolved = True
             res._documents = value
-            self.set_parent_changed(res)
             return res
 
         else:  # pragma: no cover
             raise TypeError(value)
 
-    def from_mongo(self, document, value: list):
+    def from_mongo(self,
+                   document: Document,
+                   value: list) -> ReferencesList:
         return ReferencesList(
             self._reference_document_class, value,
             field=self,
             parent=document,
         )
 
-    def to_mongo(self, document, value: ReferencesList):
+    def to_mongo(self,
+                 document: Document,
+                 value: ReferencesList) -> List[ObjectId]:
         return value._ids

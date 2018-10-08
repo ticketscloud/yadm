@@ -5,6 +5,8 @@ import functools
 
 from yadm.exceptions import NotLoadedError
 from yadm.markers import AttributeNotSet
+from yadm.document_item import DocumentItemMixin
+from yadm.log_items import SetField, ChangeChild
 
 
 def pass_null(method):
@@ -42,50 +44,37 @@ class FieldDescriptor:
     def __get__(self, instance, owner):
         """ Get python value from document.
 
-        1. Lookup in __changed__;
-        2. Lookup in __cache__;
-        3. Lookup in __raw__;
-        4. Lookup in __not_loaded__;
-        5. Field.get_if_attribute_not_set();
+        1. Lookup in __cache__;
+        2. Lookup in __raw__;
+        3. Lookup in __not_loaded__;
+        4. Field.get_if_attribute_not_set();
 
         ...
 
-        1. Lookup in __changed__:
+        1. Lookup in __cache__:
 
             - if AttributeNotSet: Field.get_if_attribute_not_set();
             - return;
 
-        2. Lookup in __cache__:
-
-            - if AttributeNotSet: Field.get_if_attribute_not_set();
-            - return;
-
-        3. Lookup in __raw__:
+        2. Lookup in __raw__:
 
             - Field.from_mongo();
             - if DocumentItemMixin -- set __name__ and __parent__;
             - save to __cache__;
             - return;
 
-        4. Lookup in __not_loaded__:
+        3. Lookup in __not_loaded__:
 
             - Fiels.get_if_not_loaded();
             - if AttributeNotSet: Field.get_if_attribute_not_set();
             - return;
 
-        5. return Field.get_if_attribute_not_set();
+        4. return Field.get_if_attribute_not_set();
         """
         name = self.name
 
         if instance is None:
             return self.field
-
-        elif name in instance.__changed__:
-            value = instance.__changed__[name]
-            if value is not AttributeNotSet:
-                return value
-            else:
-                return self.field.get_if_attribute_not_set(instance)
 
         elif name in instance.__cache__:
             value = instance.__cache__[name]
@@ -97,7 +86,6 @@ class FieldDescriptor:
         elif name in instance.__raw__:
             value = self.field.from_mongo(instance, instance.__raw__[name])
 
-            from yadm.documents import DocumentItemMixin
             if isinstance(value, DocumentItemMixin):
                 value.__name__ = self.field.name
                 value.__parent__ = instance
@@ -115,8 +103,7 @@ class FieldDescriptor:
         """ Set value to document.
 
         1. Call Field.prepare_value for cast value;
-        2. Save in Document.__changed__;
-        3. Call Field.set_parent_changed.
+        2. Save in Document.__cache__;
         """
         if not isinstance(instance, type):
             value = self.field.prepare_value(instance, value)
@@ -124,13 +111,23 @@ class FieldDescriptor:
             name = self.name
 
             if value is AttributeNotSet:
-                instance.__changed__[name] = AttributeNotSet
-                self.field.set_parent_changed(instance)
+                instance.__cache__[name] = AttributeNotSet
+                set_field_log_item = SetField(name=self.name, value=value)
+                instance.__log__.append(set_field_log_item)
+
+                if isinstance(instance, DocumentItemMixin):
+                    root = instance.__document__
+                    if root is not None:
+                        root.__log__.append(
+                            ChangeChild(
+                                path=instance.__field_name__,
+                                name=self.name,
+                                log_item=set_field_log_item,
+                            ),
+                        )
 
             else:
-                if name in instance.__changed__:
-                    value_old = instance.__changed__[name]
-                elif name in instance.__cache__:
+                if name in instance.__cache__:
                     value_old = instance.__cache__[name]
                 elif name in instance.__raw__:
                     value_old = getattr(instance, name)
@@ -138,8 +135,20 @@ class FieldDescriptor:
                     value_old = AttributeNotSet
 
                 if value != value_old:
-                    instance.__changed__[name] = value
-                    self.field.set_parent_changed(instance)
+                    instance.__cache__[name] = value
+                    set_field_log_item = SetField(name=self.name, value=value)
+                    instance.__log__.append(set_field_log_item)
+
+                    if isinstance(instance, DocumentItemMixin):
+                        root = instance.__document__
+                        if root is not None:
+                            root.__log__.append(
+                                ChangeChild(
+                                    path=instance.__field_name__,
+                                    name=self.name,
+                                    log_item=set_field_log_item,
+                                ),
+                            )
 
         else:
             raise TypeError("can't set field directly")  # pragma: no cover
@@ -197,16 +206,6 @@ class Field:
         self.document_class = document_class
         self.document_class.__fields__[name] = self
         setattr(document_class, name, self.descriptor_class(name, self))
-
-    def set_parent_changed(self, instance):
-        from yadm.documents import DocumentItemMixin
-        if (isinstance(instance, DocumentItemMixin) and
-                instance.__parent__ is not None):
-
-            first = list(instance.__path__)[-1]
-            first_name = first.__name__
-            instance.__document__.__changed__[first_name] = first
-            # TODO: update __changed__ for full path
 
     def copy(self):
         """ Return copy of field.

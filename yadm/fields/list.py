@@ -37,6 +37,7 @@ List of objects.
 
 """
 from collections import abc
+from typing import NamedTuple, Any
 
 from yadm.fields.base import pass_null
 from yadm.fields.containers import (
@@ -45,30 +46,51 @@ from yadm.fields.containers import (
 )
 
 
+class ListInsert(NamedTuple):
+    index: int
+    value: Any
+    op: str = 'list_insert'
+
+
+class ListAppend(NamedTuple):
+    value: Any
+    op: str = 'list_append'
+
+
+class ListRemove(NamedTuple):
+    index: int
+    op: str = 'list_remove'
+
+
+class ListPush(NamedTuple):
+    value: Any
+    op: str = 'list_push'
+
+
+class ListPull(NamedTuple):
+    query: Any
+    op: str = 'list_pull'
+
+
 class List(Container, abc.MutableSequence):
     """ Container for list.
     """
     def insert(self, index, item):
         """ Append item to list.
 
-        :param int index:
-        :param item: item for insert
-
         This method does not save object!
         """
         self._data.insert(index, self._prepare_item(index, item))
-        self._set_changed()
+        self.__log__.append(ListInsert(index=index, value=item))
 
     def append(self, item):
         """ Append item to list.
-
-        :param item: item for append
 
         This method does not save object!
         """
         index = len(self)
         self._data.append(self._prepare_item(index, item))
-        self._set_changed()
+        self.__log__.append(ListAppend(value=item))
 
     def remove(self, item):
         """ Remove item from list.
@@ -78,13 +100,10 @@ class List(Container, abc.MutableSequence):
         This method does not save object!
         """
         self._data.remove(item)
-        self._set_changed()
+        self.__log__.append(ListRemove(index=item))
 
     def push(self, item, reload=True):
         """ Push item directly to database.
-
-        :param item: item for `$push`
-        :param bool reload: automatically reload all values from database
 
         See `$push` in MongoDB's `update`.
         """
@@ -95,6 +114,7 @@ class List(Container, abc.MutableSequence):
         qs = self._get_queryset()
         qs.update({'$push': {self.__field_name__: data}}, multi=False)
         self._data.append(item)
+        self.__log__.append(ListPush(value=item))
 
         if reload:
             self.reload()
@@ -109,6 +129,7 @@ class List(Container, abc.MutableSequence):
         """
         qs = self._get_queryset()
         qs.update({'$pull': {self.__field_name__: query}}, multi=False)
+        self.__log__.append(ListPull(query=query))
 
         if reload:
             self.reload()

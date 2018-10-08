@@ -94,11 +94,9 @@ def test_resolve(db, docs):
     assert len(doc.ref.ids) == 2
     assert len(doc.ref._documents) == 0
     assert not doc.ref.resolved
-    assert not doc.ref.changed
 
     doc.ref.resolve()
     assert doc.ref.resolved
-    assert not doc.ref.changed
     assert len(doc.ref) == 2
     assert len(doc.ref.ids) == 2
     assert len(doc.ref._documents) == 2
@@ -139,7 +137,6 @@ def test_not_resolved(db, docs):
             pass
 
     assert not doc.ref.resolved
-    assert not doc.ref.changed
 
 
 def test_repr(db, docs):
