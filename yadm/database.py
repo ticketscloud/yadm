@@ -28,7 +28,6 @@ import pymongo
 from yadm.log_items import Insert, Save, UpdateOne, DeleteOne, Reload
 from yadm.aggregation import Aggregator
 from yadm.queryset import QuerySet
-from yadm.bulk import Bulk
 from yadm.bulk_writer import BulkWriter, BATCH_SIZE as BULK_BATCH_SIZE
 from yadm.serialize import to_mongo, from_mongo
 from yadm.common import build_update_query
@@ -307,13 +306,6 @@ class Database(BaseDatabase):
         return BulkWriter(self, document_class,
                           ordered=ordered, batch_size=batch_size,
                           collection_params=collection_params)
-
-    def bulk(self, document_class, *,
-             ordered=False, raise_on_errors=True,
-             **collection_params):
-        # Deprecated
-        return Bulk(self, document_class, ordered,
-                    raise_on_errors, collection_params)
 
     def insert(self, document, **collection_params):
         # Deprecated

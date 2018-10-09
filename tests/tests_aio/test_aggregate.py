@@ -15,11 +15,12 @@ class Doc(Document):
 @pytest.fixture(scope='function')
 def docs(loop, db):
     async def gen_docs():
-        docs = []
-        for n in range(randint(10, 20)):
-            doc = Doc(i=randint(-666, 666))
-            await db.insert_one(doc)
-            docs.append(doc)
+        async with db.bulk_write(Doc) as writer:
+            docs = []
+            for n in range(randint(10, 20)):
+                doc = Doc(i=randint(-666, 666))
+                await writer.insert_one(doc)
+                docs.append(doc)
 
         return docs
 

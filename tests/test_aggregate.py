@@ -15,11 +15,11 @@ class Doc(Document):
 
 @pytest.fixture(scope='function')
 def docs(db):
-    with db.bulk(Doc) as bulk:
+    with db.bulk_write(Doc) as writer:
         docs = []
         for n in range(randint(10, 20)):
             doc = Doc(i=randint(-666, 666))
-            bulk.insert(doc)
+            writer.insert_one(doc)
             docs.append(doc)
 
     return docs
