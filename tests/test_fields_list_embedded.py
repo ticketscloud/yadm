@@ -1,5 +1,3 @@
-from unittest import SkipTest
-
 import pytest
 
 from yadm import fields
@@ -31,7 +29,7 @@ def test_save(db):
 
     db.insert_one(doc)
 
-    data = db.db.docs.find_one()
+    data = db.db['docs'].find_one()
 
     assert 'li' in data
     assert len(data['li']) == 2
@@ -41,7 +39,7 @@ def test_save(db):
 
 
 def test_load(db):
-    db.db.docs.insert_one({'li': [{'i': 13}, {'i': 42}]})
+    db.db['docs'].insert_one({'li': [{'i': 13}, {'i': 42}]})
 
     doc = db.get_queryset(Doc).find_one()
 
@@ -65,7 +63,7 @@ def test_push_reload(db):
     edoc.i = 13
     doc.li.push(edoc)
 
-    db.db.docs.update({}, {'$push': {'li': {'i': 32}}})
+    db.db['docs'].update_one({}, {'$push': {'li': {'i': 32}}})
     assert len(doc.li) == 1
 
     edoc = EDoc()
@@ -77,7 +75,7 @@ def test_push_reload(db):
     assert doc.li[1].i == 32
     assert doc.li[2].i == 42
 
-    data = db.db.docs.find_one()
+    data = db.db['docs'].find_one()
 
     assert data['li'][0]['i'] == 13
     assert data['li'][1]['i'] == 32
@@ -92,7 +90,7 @@ def test_push_no_reload(db):
     edoc.i = 13
     doc.li.push(edoc)
 
-    db.db.docs.update({}, {'$push': {'li': {'i': 32}}})
+    db.db['docs'].update_one({}, {'$push': {'li': {'i': 32}}})
     assert len(doc.li) == 1
 
     edoc = EDoc()
@@ -103,7 +101,7 @@ def test_push_no_reload(db):
     assert doc.li[0].i == 13
     assert doc.li[1].i == 42
 
-    data = db.db.docs.find_one()
+    data = db.db['docs'].find_one()
 
     assert data['li'][0]['i'] == 13
     assert data['li'][1]['i'] == 32
@@ -118,7 +116,7 @@ def test_replace(db):
 
     doc.li.replace({'i': 13}, EDoc(i=26))
 
-    data = db.db.docs.find_one()
+    data = db.db['docs'].find_one()
 
     assert 'li' in data
     assert len(data['li']) == 2
@@ -137,7 +135,7 @@ def test_update(db):
 
     doc.li.update({'i': 13}, {'i': 26})
 
-    data = db.db.docs.find_one()
+    data = db.db['docs'].find_one()
 
     assert 'li' in data
     assert len(data['li']) == 2
@@ -172,7 +170,7 @@ def test_deep_save(db):
 
     db.save(doc)
 
-    data = db.db.docs.find_one()
+    data = db.db['docs'].find_one()
 
     assert 'li' in data
     assert len(data['li']) == 1
@@ -183,7 +181,7 @@ def test_deep_save(db):
 
 
 def test_deep_load(db):
-    db.db.docs.insert_one({'li': [{'lie': [{'i': 13}]}]})
+    db.db['docs'].insert_one({'li': [{'lie': [{'i': 13}]}]})
 
     doc = db.get_queryset(DeepDoc).find_one()
 
@@ -206,7 +204,7 @@ def test_deep_push(db):
     doc.li[0].lie.push(eedoc, reload=False)
     db.reload(doc)
 
-    data = db.db.docs.find_one()
+    data = db.db['docs'].find_one()
 
     assert 'li' in data
     assert len(data['li']) == 1
@@ -230,7 +228,7 @@ def test_deep_push_valueerror(db):
 
 
 def test_deep_pull(db):
-    _id = db.db.docs.insert_one({
+    _id = db.db['docs'].insert_one({
         'li': [{'lie': [{'i': 13}, {'i': 42}]}]
     }).inserted_id
     doc = db.get_queryset(DeepDoc).find_one({'_id': _id})
@@ -238,7 +236,7 @@ def test_deep_pull(db):
     doc.li[0].lie.pull({'i': 42}, reload=False)
     db.reload(doc)
 
-    data = db.db.docs.find_one({'_id': _id})
+    data = db.db['docs'].find_one({'_id': _id})
 
     assert 'li' in data
     assert len(data['li']) == 1

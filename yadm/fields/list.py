@@ -1,8 +1,6 @@
 """
 List of objects.
 
-.. code-block:: python
-
     class Doc(Document):
         __collection__ = 'docs'
         integers = fields.ListField(fields.IntegerField)
@@ -95,8 +93,6 @@ class List(Container, abc.MutableSequence):
     def remove(self, item):
         """ Remove item from list.
 
-        :param item: item for remove
-
         This method does not save object!
         """
         self._data.remove(item)
@@ -105,14 +101,14 @@ class List(Container, abc.MutableSequence):
     def push(self, item, reload=True):
         """ Push item directly to database.
 
-        See `$push` in MongoDB's `update`.
+        See `$push` in MongoDB's `update_one`.
         """
         index = len(self)
         item = self._prepare_item(index, item)
         data = self._item_field.to_mongo(self, item)
 
         qs = self._get_queryset()
-        qs.update({'$push': {self.__field_name__: data}}, multi=False)
+        qs.update_one({'$push': {self.__field_name__: data}})
         self._data.append(item)
         self.__log__.append(ListPush(value=item))
 
@@ -122,13 +118,10 @@ class List(Container, abc.MutableSequence):
     def pull(self, query, reload=True):
         """ Pull item from database.
 
-        :param query: query for `$pull` on this field
-        :param bool reload: automatically reload all values from database
-
-        See `$pull` in MongoDB's `update`.
+        See `$pull` in MongoDB's `update_one`.
         """
         qs = self._get_queryset()
-        qs.update({'$pull': {self.__field_name__: query}}, multi=False)
+        qs.update_one({'$pull': {self.__field_name__: query}})
         self.__log__.append(ListPull(query=query))
 
         if reload:
@@ -136,11 +129,6 @@ class List(Container, abc.MutableSequence):
 
     def replace(self, query, item, reload=True):
         """ Replace list elements.
-
-        :param query: query for `update`.
-            Keys of this query is relative.
-        :param item: embedded document or dict
-        :param bool reload: automatically reload all values from database
         """
         data = self._item_field.to_mongo(self, item)
 
@@ -150,18 +138,13 @@ class List(Container, abc.MutableSequence):
 
         qs = self._get_queryset()
         qs = qs.find(processed_query)
-        qs.update({'$set': {'.'.join([self.__field_name__, '$']): data}})
+        qs.update_one({'$set': {'.'.join([self.__field_name__, '$']): data}})
 
         if reload:
             self.reload()
 
     def update(self, query, values, reload=True):
         """ Update fields in embedded documents.
-
-        :param query: query for `update`.
-            Keys of this query is relative.
-        :param values: dict of new values
-        :param bool reload: automatically reload all values from database
         """
         processed_query = {}
         for key, value in query.items():
@@ -173,7 +156,7 @@ class List(Container, abc.MutableSequence):
 
         qs = self._get_queryset()
         qs = qs.find(processed_query)
-        qs.update({'$set': data})
+        qs.update_one({'$set': data})
 
         if reload:
             self.reload()
@@ -183,8 +166,6 @@ class ListField(ContainerField):
     """ Field for list values.
 
     For example, document with list of integers:
-
-    .. code-block:: python
 
         class TestDoc(Document):
             __collection__ = 'testdoc'

@@ -93,14 +93,14 @@ class Set(Container, abc.MutableSet):
     def add_to_set(self, item, reload=True):
         """ Add item directly to database.
 
-        See `$addToSet` in MongoDB's `update`.
+        See `$addToSet` in MongoDB's `update_one`.
         """
         index = len(self)
         item = self._prepare_item(index, item)
         data = self._field.item_field.to_mongo(self.__document__, item)
 
         qs = self._get_queryset()
-        qs.update({'$addToSet': {self.__field_name__: data}}, multi=False)
+        qs.update_one({'$addToSet': {self.__field_name__: data}})
 
         item = self._prepare_item(len(self), item)
         if item not in self._data:
@@ -114,10 +114,10 @@ class Set(Container, abc.MutableSet):
     def pull(self, query, reload=True):
         """ Pull item from database.
 
-        See `$pull` in MongoDB's `update`.
+        See `$pull` in MongoDB's `update_one`.
         """
         qs = self._get_queryset()
-        qs.update({'$pull': {self.__field_name__: query}}, multi=False)
+        qs.update_one({'$pull': {self.__field_name__: query}})
 
         self.__log__.append(SetPull(query=query))
 

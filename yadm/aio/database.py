@@ -1,6 +1,7 @@
 import itertools
 
 import pymongo
+from bson import ObjectId
 
 import yadm.abc as abc
 from yadm.log_items import Insert, Save, UpdateOne, DeleteOne, Reload
@@ -72,9 +73,17 @@ class AioDatabase(BaseDatabase):
 
     async def save(self, document, **collection_params):
         document.__db__ = self
+        if not hasattr(document, 'id'):
+            document.id = ObjectId()
+
         raw = to_mongo(document)
         collection = self._get_collection(document, collection_params)
-        document.id = await collection.save(raw)
+        await collection.find_one_and_replace(
+            filter={'_id': document.id},
+            replacement=raw,
+            return_document=pymongo.collection.ReturnDocument.AFTER,
+            upsert=True,
+        )
         document.__log__.append(Save(id=document.id))
         return document
 

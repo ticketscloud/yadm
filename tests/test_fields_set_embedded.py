@@ -41,9 +41,9 @@ def test_save(db):
 
 
 def test_load(db):
-    _id = db.db.testdocs.insert_one({'li': []}).inserted_id
-    db.db.testdocs.update({'_id': _id}, {'$addToSet': {'li': {'i': 13}}})
-    db.db.testdocs.update({'_id': _id}, {'$addToSet': {'li': {'i': 42}}})
+    _id = db.db['testdocs'].insert_one({'li': []}).inserted_id
+    db.db['testdocs'].update_one({'_id': _id}, {'$addToSet': {'li': {'i': 13}}})
+    db.db['testdocs'].update_one({'_id': _id}, {'$addToSet': {'li': {'i': 42}}})
 
     doc = db.get_queryset(Doc).find_one()
 

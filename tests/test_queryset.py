@@ -20,7 +20,7 @@ class Doc(Document):
 @pytest.fixture
 def qs(db):
     for n in range(10):
-        db.db.testdocs.insert_one({
+        db.db['testdocs'].insert_one({
             'i': n,
             's': 'str({})'.format(n),
         })
@@ -34,7 +34,7 @@ def test_repr(qs):
 
 def test_count(qs):
     qs = qs.find({'i': {'$gte': 6}})
-    assert qs.count() == 4
+    assert qs.count_documents() == 4
 
 
 def test_len(qs):
@@ -107,7 +107,7 @@ def test_find(qs):
 def test_find_with_collisium(qs):
     qs = qs.find({'i': {'$gt': 4}})
     qs = qs.find({'i': {'$lt': 6}})
-    assert qs.count() == 1
+    assert qs.count_documents() == 1
     assert qs[0].i == 5
 
 
@@ -119,15 +119,15 @@ def test_update_many(db, qs):
     assert result.matched_count == result.modified_count == 4
     assert result.upserted_id is None
 
-    assert db.db.testdocs.count() == 10
-    assert {d['i'] for d in db.db.testdocs.find()} == set(range(10))
-    assert db.db.testdocs.find({'s': 'test'}).count() == 4
+    assert db.db['testdocs'].count_documents({}) == 10
+    assert {d['i'] for d in db.db['testdocs'].find()} == set(range(10))
+    assert db.db['testdocs'].count_documents({'s': 'test'}) == 4
 
-    for doc in db.db.testdocs.find({'i': {'$lt': 6}}):
+    for doc in db.db['testdocs'].find({'i': {'$lt': 6}}):
         assert doc['s'] != 'test'
         assert doc['s'].startswith('str(')
 
-    for doc in db.db.testdocs.find({'i': {'$gte': 6}}):
+    for doc in db.db['testdocs'].find({'i': {'$gte': 6}}):
         assert doc['s'] == 'test'
 
 
@@ -139,9 +139,9 @@ def test_update_one(db, qs):
     assert result.matched_count == result.modified_count == 1
     assert result.upserted_id is None
 
-    assert db.db.testdocs.count() == 10
-    assert {d['i'] for d in db.db.testdocs.find()} == set(range(10))
-    assert db.db.testdocs.find({'s': 'test'}).count() == 1
+    assert db.db['testdocs'].count_documents({}) == 10
+    assert {d['i'] for d in db.db['testdocs'].find()} == set(range(10))
+    assert db.db['testdocs'].count_documents({'s': 'test'}) == 1
 
 
 def test_delete_many(db, qs):
@@ -154,8 +154,8 @@ def test_delete_many(db, qs):
     assert len([d for d in qs]) == 6
     assert {d.i for d in qs} == set(range(6))
 
-    assert db.db.testdocs.count() == 6
-    assert {d['i'] for d in db.db.testdocs.find()} == set(range(6))
+    assert db.db['testdocs'].count_documents({}) == 6
+    assert {d['i'] for d in db.db['testdocs'].find()} == set(range(6))
 
 
 def test_delete_one(db, qs):
@@ -166,7 +166,7 @@ def test_delete_one(db, qs):
     assert result.deleted_count == 1
 
     assert len([d for d in qs]) == 9
-    assert db.db.testdocs.count() == 9
+    assert db.db['testdocs'].count_documents({}) == 9
 
 
 @pytest.mark.parametrize('return_document, i', [

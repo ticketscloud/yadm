@@ -42,7 +42,7 @@ def test_get_queryset(db):
 
 
 def test_get_document(db):
-    col = db.db.testdocs
+    col = db.db['testdocs']
     ids = [col.insert_one({'i': i}).inserted_id for i in range(10)]
 
     _id = ids[5]
@@ -55,7 +55,7 @@ def test_get_document(db):
 
 
 def test_get_document_w_projection(db):
-    col = db.db.testdocs
+    col = db.db['testdocs']
     ids = [col.insert_one({'i': i, 'b': bool(i % 2)}).inserted_id
            for i in range(10)]
 
@@ -72,7 +72,7 @@ def test_get_document_w_projection(db):
 
 
 def test_get_document__not_found(db):
-    col = db.db.testdocs
+    col = db.db['testdocs']
     [col.insert_one({'i': i}).inserted_id for i in range(10)]
 
     doc = db.get_document(Doc, ObjectId())
@@ -81,7 +81,7 @@ def test_get_document__not_found(db):
 
 
 def test_get_document__not_found_exc(db):
-    col = db.db.testdocs
+    col = db.db['testdocs']
     [col.insert_one({'i': i}).inserted_id for i in range(10)]
 
     class Exc(Exception):
@@ -97,8 +97,8 @@ def test_insert_one(db):
 
     db.insert_one(doc)
 
-    assert db.db.testdocs.find().count() == 1
-    assert db.db.testdocs.find()[0]['i'] == 13
+    assert db.db['testdocs'].count_documents({}) == 1
+    assert db.db['testdocs'].find()[0]['i'] == 13
     assert Insert(id=doc.id) in doc.__log__
     assert doc.__db__ is db
 
@@ -133,14 +133,14 @@ def test_save_new(db):
 
     db.save(doc)
 
-    assert db.db.testdocs.find().count() == 1
-    assert db.db.testdocs.find()[0]['i'] == 13
+    assert db.db['testdocs'].count_documents({}) == 1
+    assert db.db['testdocs'].find()[0]['i'] == 13
     assert Save(id=doc.id) in doc.__log__
     assert doc.__db__ is db
 
 
 def test_save(db):
-    col = db.db.testdocs
+    col = db.db['testdocs']
     col.insert_one({'i': 13})
 
     doc = from_mongo(Doc, col.find_one({'i': 13}))
@@ -152,8 +152,8 @@ def test_save(db):
 
     assert doc.i == 26
     assert not hasattr(doc, 'b')
-    assert db.db.testdocs.find().count() == 1
-    assert db.db.testdocs.find()[0]['i'] == 26
+    assert db.db['testdocs'].count_documents({}) == 1
+    assert db.db['testdocs'].find()[0]['i'] == 26
     assert Save(id=doc.id) in doc.__log__
     assert doc.__db__ is db
 
@@ -200,15 +200,15 @@ def test_update_one(db, doc, kwargs, result):
     assert raw_doc == result
 
 
-def test_remove(db):
-    col = db.db.testdocs
+def test_delete_one(db):
+    col = db.db['testdocs']
     col.insert_one({'i': 13})
 
     doc = from_mongo(Doc, col.find_one({'i': 13}))
 
-    assert col.count() == 1
-    db.remove(doc)
-    assert col.count() == 0
+    assert col.count_documents({}) == 1
+    db.delete_one(doc)
+    assert col.count_documents({}) == 0
 
 
 def test_reload(db):
@@ -216,7 +216,7 @@ def test_reload(db):
     doc.i = 1
     db.insert_one(doc)
 
-    db.db.testdocs.update_one({'_id': doc.id}, {'$set': {'i': 2}})
+    db.db['testdocs'].update_one({'_id': doc.id}, {'$set': {'i': 2}})
 
     assert doc.i == 1
     new = db.reload(doc)
@@ -229,7 +229,7 @@ def test_reload_new_instance(db):
     doc.i = 1
     db.insert_one(doc)
 
-    db.db.testdocs.update_one({'_id': doc.id}, {'$set': {'i': 2}})
+    db.db['testdocs'].update_one({'_id': doc.id}, {'$set': {'i': 2}})
 
     assert doc.i == 1
     new = db.reload(doc, new_instance=True)
@@ -244,7 +244,7 @@ def test_reload_w_projection(db):
     doc.b = True
     db.insert_one(doc)
 
-    db.db.testdocs.update_one({'_id': doc.id}, {'$set': {'i': 2}})
+    db.db['testdocs'].update_one({'_id': doc.id}, {'$set': {'i': 2}})
 
     assert doc.i == 1
     assert doc.b is True

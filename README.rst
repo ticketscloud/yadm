@@ -237,7 +237,7 @@ CHANGES
 2.0.0 (2017-10-XX)
 ==================
 
-* A big rewrite document logic:
+* A `Big Rewrite <https://www.youtube.com/watch?v=xCGu5Z_vaps>`_ document logic:
     - ``Document.__raw__`` now contains only data from pymongo, without any ``AttributeNotSet`` or ``NotLoaded``;
     - ``Document.__changed__`` is removed: all changes reflects to ``Document.__cache__``;
     - ``Document.__not_loaded__`` frozenset of fields whitch not loaded by projection;
@@ -247,18 +247,20 @@ CHANGES
     - Now is not allow to set fields as classes;
     - Defaults is not lazy and creates with document instance;
 
-* Simple interface for build lookups: ``QuerySet.lookup``;
-
-* Update interface for new pymongo:
+* Update for minimal versions of pymongo (3.7) and motor (2.0):
     - Add ``Database.bulk_write``;
     - Add ``Database.insert_one``, ``Database.insert_many`` and ``Database.delete_one``;
     - Deprecate ``Database.insert``, ``Database.remove``;
     - Remove ``Database.bulk`` (without deprecation period, sorry);
+    - Add ``QuerySet.count_documents``;
     - Add ``QuerySet.update_one`` and ``QuerySet.update_many``;
     - Add ``QuerySet.delete_one`` and ``QuerySet.delete_many``;
     - Add ``QuerySet.find_one_and_update``, ``QuerySet.find_one_and_replace`` and ``QuerySet.find_one_and_delete``;
+    - Deprecate ``QuerySet.count``;
     - Deprecate ``QuerySet.update``, ``QuerySet.remove`` and ``QuerySet.find_and_modify``;
     - Remove deprecated ``QuerySet.with_id``;
+
+* Simple interface for build lookups: ``QuerySet.lookup``;
 
 
 1.5.0 (2017-12-31)

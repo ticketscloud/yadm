@@ -48,7 +48,7 @@ def test_simple(db):
     assert '@' in doc.e
     assert '@' in doc.email
 
-    assert db(SimpleDoc).count() == 0
+    assert db(SimpleDoc).count_documents() == 0
 
 
 def test_simple_save(db):
@@ -68,7 +68,7 @@ def test_simple_save(db):
 
     assert len(doc.s) > 0
 
-    assert db(SimpleDoc).count() == 1
+    assert db(SimpleDoc).count_documents() == 1
     assert db(SimpleDoc).find_one(doc.id)
 
 
@@ -106,8 +106,8 @@ def test_reference(db):
     assert hasattr(doc.ref, 's')
     assert isinstance(doc.ref.s, str)
 
-    assert db(WithReferenceDoc).count() == 0
-    assert db(SimpleDoc).count() == 0
+    assert db(WithReferenceDoc).count_documents() == 0
+    assert db(SimpleDoc).count_documents() == 0
 
 
 def test_reference_save(db):
@@ -117,8 +117,8 @@ def test_reference_save(db):
     assert hasattr(doc.ref, 's')
     assert isinstance(doc.ref.s, str)
 
-    assert db(WithReferenceDoc).count() == 1
-    assert db(SimpleDoc).count() == 1
+    assert db(WithReferenceDoc).count_documents() == 1
+    assert db(SimpleDoc).count_documents() == 1
 
 
 class WithReferenceCircleDoc(Document):
@@ -130,7 +130,7 @@ class WithReferenceCircleDoc(Document):
 def test_reference_circle(db):
     doc = create_fake(WithReferenceCircleDoc, __db__=db, __depth__=2)
 
-    assert db(WithReferenceCircleDoc).count() == 3
+    assert db(WithReferenceCircleDoc).count_documents() == 3
 
     assert hasattr(doc, 'self')
     assert hasattr(doc.self, 'self')

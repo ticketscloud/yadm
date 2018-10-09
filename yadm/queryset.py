@@ -1,4 +1,5 @@
 from enum import Enum
+import warnings
 
 from pymongo import read_preferences, ReturnDocument
 from bson import ObjectId
@@ -367,8 +368,13 @@ class BaseQuerySet:
     def find_one_and_delete(self):
         raise NotImplementedError
 
-    def count(self):
+    def count(self):  # pragma: no cover
+        warnings.warn("Use count_documents!", DeprecationWarning)
+        return self.count_documents()
+
+    def count_documents(self):
         raise NotImplementedError
+
 
     def distinct(self, field):
         raise NotImplementedError
@@ -390,7 +396,7 @@ class QuerySet(BaseQuerySet):
             yield self._from_mongo_one(raw)
 
     def __len__(self):
-        return self.count()
+        return self.count_documents()
 
     def __contains__(self, document):
         return self.find_one(document.id) is not None
@@ -503,10 +509,11 @@ class QuerySet(BaseQuerySet):
 
         return self._from_mongo_one(data, projection=self._projection)
 
-    def count(self):
+    def count_documents(self):
         """ Count documents in queryset.
         """
-        return self._cursor.count()
+        return self._collection.count_documents(self._criteria)
+
 
     def distinct(self, field):
         """ Distinct query.
@@ -598,18 +605,14 @@ class QuerySet(BaseQuerySet):
                                         "".format(field, cmp_item))
 
     def update(self, update, *, multi=True, upsert=False):  # pragma: no cover
-        # Deprecated
-        import warnings
-        warnings.warn("This is deprecated for use!", DeprecationWarning)
+        warnings.warn("Use update_one or update_many!", DeprecationWarning)
         if multi:
             return self.update_many(update, upsert=upsert)
         else:
             return self.update_one(update, upsert=upsert)
 
     def remove(self, *, multi=True):  # pragma: no cover
-        # Deprecated
-        import warnings
-        warnings.warn("This is deprecated for use!", DeprecationWarning)
+        warnings.warn("Use remove_one or remove_many", DeprecationWarning)
         if multi:
             return self.remove_many()
         else:
@@ -619,9 +622,7 @@ class QuerySet(BaseQuerySet):
             self, update=None, *, upsert=False,
             full_response=False, new=False,
             **kwargs):  # pragma: no cover
-        # Deprecated
-        import warnings
-        warnings.warn("This is deprecated for use!", DeprecationWarning)
+        warnings.warn("Use find_one_and_* functions", DeprecationWarning)
         result = self._collection.find_and_modify(
             query=self._criteria,
             update=update,

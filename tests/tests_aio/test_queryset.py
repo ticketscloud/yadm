@@ -20,7 +20,7 @@ class Doc(Document):
 def qs(loop, db):
     async def fixture():
         for n in range(10):
-            await db.db.testdocs.insert_one({
+            await db.db['testdocs'].insert_one({
                 'i': n,
                 's': 'str({})'.format(n),
             })
@@ -86,10 +86,10 @@ def test_get_one__index_error(loop, qs):
     loop.run_until_complete(test())
 
 
-def test_count(loop, qs):
+def test_count_documents(loop, qs):
     async def test(qs=qs):
         qs = qs.find({'i': {'$gte': 6}})
-        assert await qs.count() == 4
+        assert await qs.count_documents() == 4
 
     loop.run_until_complete(test())
 
@@ -147,15 +147,15 @@ def test_update_many(loop, db, qs):
         assert result.matched_count == result.modified_count == 4
         assert result.upserted_id is None
 
-        assert (await db.db.testdocs.count()) == 10
-        assert {d['i'] async for d in db.db.testdocs.find()} == set(range(10))
-        assert (await db.db.testdocs.find({'s': 'test'}).count()) == 4
+        assert (await db.db['testdocs'].count_documents({})) == 10
+        assert {d['i'] async for d in db.db['testdocs'].find()} == set(range(10))
+        assert (await db.db['testdocs'].count_documents({'s': 'test'})) == 4
 
-        async for doc in db.db.testdocs.find({'i': {'$lt': 6}}):
+        async for doc in db.db['testdocs'].find({'i': {'$lt': 6}}):
             assert doc['s'] != 'test'
             assert doc['s'].startswith('str(')
 
-        async for doc in db.db.testdocs.find({'i': {'$gte': 6}}):
+        async for doc in db.db['testdocs'].find({'i': {'$gte': 6}}):
             assert doc['s'] == 'test'
 
     loop.run_until_complete(test())
@@ -169,11 +169,11 @@ def test_delete_many(loop, db, qs):
         assert result.acknowledged
         assert result.deleted_count == 4
 
-        assert (await qs.count()) == 6
+        assert (await qs.count_documents()) == 6
         assert {d.i async for d in qs} == set(range(6))
 
-        assert await db.db.testdocs.count() == 6
-        assert {d['i'] async for d in db.db.testdocs.find()} == set(range(6))
+        assert await db.db['testdocs'].count_documents({}) == 6
+        assert {d['i'] async for d in db.db['testdocs'].find()} == set(range(6))
 
     loop.run_until_complete(test())
 
@@ -186,12 +186,12 @@ def test_delete_one(loop, db, qs):
         assert result.acknowledged
         assert result.deleted_count == 1
 
-        assert (await qs.count()) == 9
+        assert (await qs.count_documents()) == 9
 
         removed = list(set(range(10)) - {d.i async for d in qs})[0]
 
-        assert await db.db.testdocs.count() == 9
-        assert (await db.db.testdocs.find_one({'i': removed})) is None
+        assert await db.db['testdocs'].count_documents({}) == 9
+        assert (await db.db['testdocs'].find_one({'i': removed})) is None
 
     loop.run_until_complete(test())
 

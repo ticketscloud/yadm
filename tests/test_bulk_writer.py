@@ -26,7 +26,7 @@ def test_insert_one(db, batch_size):
             writer.insert_one(doc)
 
     assert writer.result.inserted_count == 10
-    assert db.db['testdocs'].count() == 10
+    assert db.db['testdocs'].count_documents({}) == 10
 
 
 @pytest.mark.skipif(sys.version_info[:2] < (3, 6),
@@ -54,4 +54,4 @@ def test_complex(client, db, inserted, batch_size):
     assert writer.result.modified_count == 6
     assert writer.result.upserted_count == 0
 
-    assert db.db['testdocs'].count() == 14
+    assert db.db['testdocs'].count_documents({}) == 14

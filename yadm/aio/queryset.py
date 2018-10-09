@@ -103,8 +103,8 @@ class AioQuerySet(BaseQuerySet):
 
         return self._from_mongo_one(data, projection=self._projection)
 
-    async def count(self):
-        return await self._cursor.count()
+    async def count_documents(self):
+        return await self._collection.count_documents(self._criteria)
 
     async def distinct(self, field):
         return await self._cursor.distinct(field)

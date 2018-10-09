@@ -23,8 +23,8 @@ def test_insert_one(loop, db):
 
         await db.insert_one(doc)
 
-        assert await db.db.testdocs.find().count() == 1
-        assert (await db.db.testdocs.find_one())['i'] == 13
+        assert await db.db['testdocs'].count_documents({}) == 1
+        assert (await db.db['testdocs'].find_one())['i'] == 13
         assert isinstance(doc.id, ObjectId)
         assert Insert(id=doc.id) in doc.__log__
         assert doc.__db__ is db
@@ -69,8 +69,8 @@ def test_save_new(loop, db):
 
         await db.save(doc)
 
-        assert await db.db.testdocs.find().count() == 1
-        assert (await db.db.testdocs.find_one())['i'] == 13
+        assert await db.db['testdocs'].count_documents({}) == 1
+        assert (await db.db['testdocs'].find_one())['i'] == 13
         assert Save(id=doc.id) in doc.__log__
         assert doc.__db__ is db
 
@@ -86,8 +86,8 @@ def test_save(loop, db):
         doc.i = 14
         await db.save(doc)
 
-        assert await db.db.testdocs.find().count() == 1
-        assert (await db.db.testdocs.find_one())['i'] == 14
+        assert await db.db['testdocs'].count_documents({}) == 1
+        assert (await db.db['testdocs'].find_one())['i'] == 14
         assert Save(id=doc.id) in doc.__log__
         assert doc.__db__ is db
 
@@ -144,13 +144,13 @@ def test_update_one(loop, db, doc, kwargs, result):
 
 def test_delete_one(loop, db):
     async def test():
-        col = db.db.testdocs
+        col = db.db['testdocs']
         await col.insert_one({'i': 13})
 
         doc = from_mongo(Doc, await col.find_one({'i': 13}))
 
-        assert await col.count() == 1
+        assert await col.count_documents({}) == 1
         await db.delete_one(doc)
-        assert await col.count() == 0
+        assert await col.count_documents({}) == 0
 
     loop.run_until_complete(test())

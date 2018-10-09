@@ -22,8 +22,10 @@ This module for provide work with MongoDB database.
         print(doc)
 """
 import itertools
+import warnings
 
 import pymongo
+from bson import ObjectId
 
 from yadm.log_items import Insert, Save, UpdateOne, DeleteOne, Reload
 from yadm.aggregation import Aggregator
@@ -170,9 +172,17 @@ class Database(BaseDatabase):
         """ Save document to database.
         """
         document.__db__ = self
+        if not hasattr(document, 'id'):
+            document.id = ObjectId()
+
         raw = to_mongo(document)
         collection = self._get_collection(document, collection_params)
-        document.id = collection.save(raw)
+        collection.find_one_and_replace(
+            filter={'_id': document.id},
+            replacement=raw,
+            return_document=pymongo.collection.ReturnDocument.AFTER,
+            upsert=True,
+        )
         document.__log__.append(Save(id=document.id))
         return document
 
@@ -307,11 +317,11 @@ class Database(BaseDatabase):
                           ordered=ordered, batch_size=batch_size,
                           collection_params=collection_params)
 
-    def insert(self, document, **collection_params):
-        # Deprecated
+    def insert(self, document, **collection_params):  # pragma: no cover
+        warnings.warn("Use insert_one!", DeprecationWarning)
         self.insert_one(document, **collection_params)
         return document
 
-    def remove(self, document, **collection_params):
-        # Deprecated
+    def remove(self, document, **collection_params):  # pragma: no cover
+        warnings.warn("Use delete_one!", DeprecationWarning)
         return self.delete_one(document, **collection_params)

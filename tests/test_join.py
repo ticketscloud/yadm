@@ -64,5 +64,5 @@ def test_join(join, id_ref_1, id_ref_2):
 def test_get_queryset(db, qs, id_ref_1, id_ref_2):
     db.db.testdocs_ref.insert_one({'i': 3})
     qs = qs.join().get_queryset('ref')
-    assert qs.count() == 2
+    assert qs.count_documents() == 2
     assert {d.id for d in qs} == {id_ref_1, id_ref_2}

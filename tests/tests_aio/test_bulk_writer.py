@@ -26,7 +26,7 @@ def test_insert_one(loop, db, batch_size):
                 await writer.insert_one(doc)
 
         assert writer.result.inserted_count == 10
-        assert await db.db['testdocs'].count() == 10
+        assert await db.db['testdocs'].count_documents({}) == 10
 
     loop.run_until_complete(test())
 
@@ -55,6 +55,6 @@ def test_complex(loop, db, inserted, batch_size):
         assert writer.result.modified_count == 6
         assert writer.result.upserted_count == 0
 
-        assert await db.db['testdocs'].count() == 14
+        assert await db.db['testdocs'].count_documents({}) == 14
 
     loop.run_until_complete(test())
