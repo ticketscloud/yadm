@@ -4,19 +4,14 @@ dist: xenial
 language: python
 python:
     - "3.6"
-    # - "3.7"
+    - "3.7"
 
 services:
     - docker
 
 env:
-    - MONGO=3.2 PYMONGO=">=3.4,<3.6" MOTOR=">=1.1,<1.2"
-    - MONGO=3.2 PYMONGO=">=3.6,<4"   MOTOR=">=1.2,<2"
-
-    - MONGO=3.4 PYMONGO=">=3.4,<3.6" MOTOR=">=1.1,<1.2"
-    - MONGO=3.4 PYMONGO=">=3.6,<4"   MOTOR=">=1.2,<2"
-
-    - MONGO=3.6 PYMONGO=">=3.6,<4"   MOTOR=">=1.2,<2"
+    - MONGO=3.6 PYMONGO=">=3.7,<4" MOTOR=">=2.0.0,<2.1.0"
+    - MONGO=4.0 PYMONGO=">=3.7,<4" MOTOR=">=2.0.0,<2.1.0"
 
 before_install:
     - docker run -d -p 127.0.0.1:27017:27017 mongo:$MONGO
