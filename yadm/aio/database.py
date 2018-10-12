@@ -3,7 +3,6 @@ import itertools
 import pymongo
 from bson import ObjectId
 
-import yadm.abc as abc
 from yadm.log_items import Insert, Save, UpdateOne, DeleteOne, Reload
 from yadm.database import BaseDatabase
 from yadm.serialize import to_mongo, from_mongo
@@ -19,7 +18,6 @@ PYMONGO_VERSION = pymongo.version_tuple
 RPS = pymongo.read_preferences
 
 
-@abc.Database.register
 class AioDatabase(BaseDatabase):
     aio = True
 
