@@ -13,8 +13,7 @@ LOOKUPS_KEY = '__yadm_lookups__'
 
 def to_mongo(document,
              exclude=None, include=None,
-             skip_not_loaded=False,
-             skip_default=False):
+             skip_not_loaded=False):
     """ Serialize document to MongoDB data.
 
     1. Lookup in exclude;
@@ -25,6 +24,11 @@ def to_mongo(document,
     6. Process values with '.' from include;
     """
     result = {}
+
+    not_loaded = set()
+    if document.__not_loaded__:
+        for fn in document.__not_loaded__:
+            not_loaded.add(fn.split('.')[0])  # first level only
 
     for name, field in document.__fields__.items():
         if exclude and name in exclude:
@@ -40,11 +44,14 @@ def to_mongo(document,
                 if raw is not AttributeNotSet:
                     result[name] = raw
 
+        elif name in not_loaded:
+            if skip_not_loaded:
+                continue
+            else:
+                raise NotLoadedError(field, document)
+
         elif name in document.__raw__:
             result[name] = document.__raw__[name]
-
-        elif (not skip_not_loaded) and (name in document.__not_loaded__):
-            raise NotLoadedError(field, document)
 
         else:
             continue

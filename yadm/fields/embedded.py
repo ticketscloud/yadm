@@ -53,7 +53,18 @@ class BaseEmbeddedDocumentField(Field):
     @pass_null
     def from_mongo(self, document, value):
         ed_class = self.get_embedded_document_class(document, value)
-        return from_mongo(ed_class, value, parent=document, name=self.name)
+        not_loaded = set()
+
+        if getattr(document, '__not_loaded__', None):
+            _sw = self.name + '.'
+            for field_name in document.__not_loaded__:
+                if field_name.startswith(_sw):
+                    not_loaded.add(field_name[len(_sw):])
+
+        return from_mongo(ed_class, value,
+                          not_loaded=not_loaded,
+                          parent=document,
+                          name=self.name)
 
 
 class EmbeddedDocumentField(BaseEmbeddedDocumentField):

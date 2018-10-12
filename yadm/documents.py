@@ -56,6 +56,7 @@ class BaseDocument(metaclass=MetaDocument):
     """
     __raw__: dict
     __cache__: dict
+    __not_loaded__: frozenset = frozenset()
 
     def __init__(self,
                  *args,
@@ -89,7 +90,7 @@ class BaseDocument(metaclass=MetaDocument):
     def __str__(self) -> str:
         return repr(self)
 
-    def __repr__(self) -> str:
+    def __repr__(self) -> str:  # pragma: no cover
         return '{}({})'.format(self.__class__.__name__, str(hex(id(self))))
 
     def __fake__(
@@ -106,7 +107,7 @@ class BaseDocument(metaclass=MetaDocument):
         # yield
         # # post save processor
 
-    def __debug_print__(self):
+    def __debug_print__(self):  # pragma: no cover
         """ Print debug information.
         """
         from pprint import pprint
@@ -129,7 +130,6 @@ class Document(BaseDocument):
     __db__: 'yadm.database.BaseDatabase'
     __qs__: 'QuerySet'
 
-    __not_loaded__: frozenset = frozenset()
     __yadm_lookups__: dict
 
     _id = ObjectIdField()
@@ -169,7 +169,7 @@ class Document(BaseDocument):
         self._id = id
 
     @id.deleter
-    def id(self):  # noqa
+    def id(self):  # pragma: no cover
         del self._id
 
 
@@ -186,5 +186,5 @@ class EmbeddedDocument(DocumentItemMixin, BaseDocument):
         super().__init__(*args, **kwargs)
 
     @property
-    def __new_document__(self) -> bool:
+    def __new_document__(self) -> bool:  # pragma: no cover
         return self.__document__.__new_document__
