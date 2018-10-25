@@ -13,7 +13,7 @@ def pass_null(method):
     @functools.wraps(method)
     def wrapper(self, document, value):
         if value is None:
-            return None
+            return None  # pragma: no cover
         else:
             return method(self, document, value)
 
@@ -207,7 +207,7 @@ class Field:
         self.document_class.__fields__[name] = self
         setattr(document_class, name, self.descriptor_class(name, self))
 
-    def copy(self):
+    def copy(self):  # pragma: no cover
         """ Return copy of field.
         """
         return self.__class__(smart_null=self.smart_null)

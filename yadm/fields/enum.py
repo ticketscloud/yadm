@@ -41,7 +41,7 @@ class EnumStateField(EnumField):
         if rules is not None:
             self.rules = rules
 
-        if not self.rules:
+        if not self.rules:  # pragma: no cover
             raise ValueError("Rules list is empty")
 
     def copy(self):

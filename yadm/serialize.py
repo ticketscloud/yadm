@@ -3,7 +3,10 @@ Functions for serialize and deserialize data.
 """
 
 from collections import defaultdict
+from typing import Any, Union, Optional, Container, Iterable, Dict
 
+from yadm.documents import MetaDocument, BaseDocument
+from yadm.document_item import DocumentItemMixin
 from yadm.exceptions import NotLoadedError
 from yadm.markers import AttributeNotSet
 
@@ -11,9 +14,13 @@ from yadm.markers import AttributeNotSet
 LOOKUPS_KEY = '__yadm_lookups__'
 
 
-def to_mongo(document,
-             exclude=None, include=None,
-             skip_not_loaded=False):
+TRaw = Dict[str, Any]
+
+
+def to_mongo(document: BaseDocument,
+             exclude: Optional[Container[str]] = None,
+             include: Optional[Container[str]] = None,
+             skip_not_loaded: bool = False) -> TRaw:
     """ Serialize document to MongoDB data.
 
     1. Lookup in exclude;
@@ -54,7 +61,7 @@ def to_mongo(document,
             result[name] = document.__raw__[name]
 
         else:
-            continue
+            continue  # pragma: no cover
 
     if include:
         # we need to go deeper (usable with $set)
@@ -71,9 +78,10 @@ def to_mongo(document,
     return result
 
 
-def from_mongo(document_class, raw,
-               not_loaded=None,
-               parent=None, name=None):
+def from_mongo(document_class: MetaDocument, raw: TRaw,
+               not_loaded: Optional[Iterable[str]] = None,
+               parent: Union[BaseDocument, DocumentItemMixin, None] = None,
+               name: Optional[str] = None) -> BaseDocument:
     """ Deserialize MongoDB raw data to document.
     """
     document = document_class(__new_document__=False)
@@ -81,9 +89,9 @@ def from_mongo(document_class, raw,
     document.__not_loaded__ = frozenset(not_loaded or frozenset())
 
     for field_name, field in document_class.__fields__.items():
-        if field_name not in raw:
-            if field_name not in document.__not_loaded__ and field.smart_null:
-                document.__cache__[field_name] = None
+        if (field_name not in raw and
+                field_name not in document.__not_loaded__ and field.smart_null):
+            document.__cache__[field_name] = None
 
     if LOOKUPS_KEY in raw:
         document.__yadm_lookups__ = raw.pop(LOOKUPS_KEY)

@@ -1,5 +1,4 @@
-"""
-Field for decimal numbers
+""" Field for decimal numbers.
 
 .. code block: python
 
@@ -56,7 +55,7 @@ class DecimalField(DefaultMixin, Field):
     def context(self, value):
         self._context = value
 
-    def get_fake(self, document, faker, depth):
+    def get_fake(self, document, faker, depth):  # pragma: no cover
         return faker.pydecimal()
 
     @staticmethod
@@ -78,7 +77,7 @@ class DecimalField(DefaultMixin, Field):
             return value
         elif isinstance(value, (str, int)):
             return Decimal(value, context=self.context)
-        else:
+        else:  # pragma: no cover
             raise TypeError(value)
 
     @pass_null
@@ -112,5 +111,5 @@ class DecimalField(DefaultMixin, Field):
         elif isinstance(value, Decimal):
             return value
 
-        else:
+        else:  # pragma: no cover
             raise TypeError(value)

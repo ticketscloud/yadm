@@ -22,7 +22,7 @@ class StaticField(Field):
         raise RuntimeError("value for {} not exist in database"
                            "".format(self.__class__.__name__))
 
-    def copy(self):
+    def copy(self):  # pragma: no cover
         return self.__class__(self.data)
 
     def get_fake(self, document, faker, depth):
@@ -34,9 +34,10 @@ class StaticField(Field):
 
     def to_mongo(self, document, value):
         if value != self.data:
-            raise RuntimeError("bad value for {}: {!r} != {!r}"
+            raise RuntimeError("bad value for {}: {!r} != {!r}"  # pragma: no cover
                                "".format(self.__class__.__name__,
-                                         value, self.data))
+                                         value,
+                                         self.data))
         else:
             return self.data
 
@@ -55,11 +56,11 @@ class SimpleField(DefaultMixin, Field):
     :param default: default value
     :param set choices: set of possible values
     """
-    type = NotImplemented
+    type = None
     choices = None
 
     def __init__(self, default=AttributeNotSet, *, choices=None, **kwargs):
-        if self.type is NotImplemented:
+        if self.type is None:  # pragma: no cover
             raise NotImplementedError("Attribute 'type' is not implemented!")
 
         self.choices = choices
@@ -70,7 +71,7 @@ class SimpleField(DefaultMixin, Field):
         if default is not AttributeNotSet:
             self._check_choices(default)
 
-    def get_fake(self, document, faker, depth):
+    def get_fake(self, document, faker, depth):  # pragma: no cover
         if self.choices is not None:
             return choice(self.choices)
         else:
@@ -90,7 +91,7 @@ class SimpleField(DefaultMixin, Field):
     @pass_null
     def from_mongo(self, document, value):
         if value is AttributeNotSet:
-            return AttributeNotSet
+            return AttributeNotSet  # pragma: no cover
 
         elif not isinstance(value, self.type):
             value = self.type(value)
@@ -142,7 +143,7 @@ class IntegerField(SimpleField):
     """
     type = int
 
-    def get_fake(self, document, faker, depth):
+    def get_fake(self, document, faker, depth):  # pragma: no cover
         if self.choices is not None:
             return choice(self.choices)
         else:
@@ -154,7 +155,7 @@ class FloatField(SimpleField):
     """
     type = float
 
-    def get_fake(self, document, faker, depth):
+    def get_fake(self, document, faker, depth):  # pragma: no cover
         if self.choices is not None:
             return choice(self.choices)
         else:
@@ -166,7 +167,7 @@ class StringField(SimpleField):
     """
     type = str
 
-    def get_fake(self, document, faker, depth):
+    def get_fake(self, document, faker, depth):  # pragma: no cover
         if self.choices is not None:
             return choice(self.choices)
 

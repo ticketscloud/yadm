@@ -123,3 +123,23 @@ def test_notloaded(db):
 
     with pytest.raises(NotLoadedError):
         doc.b
+
+
+def test_field_not_instant():
+    with pytest.raises(TypeError):
+        class Doc(Document):
+            field = fields.Field
+
+
+def test_instant_document_errors():
+    with pytest.raises(TypeError):
+        Doc({}, {})  # a lot of positional arguments
+
+    with pytest.raises(TypeError):
+        Doc(1)  # not a dict
+
+
+def test_str():
+    doc = Doc()
+    assert str(doc)
+    assert str(doc) == repr(doc)

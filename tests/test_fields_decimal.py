@@ -1,6 +1,7 @@
+from decimal import Decimal, Context, getcontext
 import random
 
-from decimal import Decimal, Context, getcontext
+from bson import Decimal128
 
 from yadm import fields
 from yadm.documents import Document
@@ -17,8 +18,19 @@ def test_to_mongo():
 
 def test_from_mongo():
     field = fields.DecimalField()
-
     dec = field.from_mongo(None, {'i': 12345, 'e': -2})
+    assert dec == Decimal('123.45')
+
+
+def test_from_mongo__decimal128():
+    field = fields.DecimalField()
+    dec = field.from_mongo(None, Decimal128('123.45'))
+    assert dec == Decimal('123.45')
+
+
+def test_from_mongo__decimal():
+    field = fields.DecimalField()
+    dec = field.from_mongo(None, Decimal('123.45'))
     assert dec == Decimal('123.45')
 
 

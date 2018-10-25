@@ -9,14 +9,6 @@ from yadm.fields.reference import ReferenceField
 
 class Join(abc.Sequence):
     """ Helper for build client-side joins.
-
-    .. code:: python
-
-        # Doc.ref is instance of ReferenceField
-        qs = db(Doc).find({'k': 1})  # queryset filter
-        join = qs.join('ref')  # create join query in this place
-        for doc in join:
-            print(doc.ref)  # do not create query to database
     """
     def __init__(self, qs):
         self._qs = qs
@@ -32,22 +24,22 @@ class Join(abc.Sequence):
 
     # abc.Sequence method
 
-    def __iter__(self):
-        return (i for i in self._data)
+    def __iter__(self):  # pragma: no cover
+        return iter(self._data)
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx):  # pragma: no cover
         return self._data[idx]
 
-    def __contains__(self, item):
+    def __contains__(self, item):  # pragma: no cover
         return item in self._data
 
-    def __len__(self):
+    def __len__(self):  # pragma: no cover
         return len(self._data)
 
-    def __reversed__(self):
+    def __reversed__(self):  # pragma: no cover
         return reversed(self._data)
 
-    def index(self, item):
+    def index(self, item):  # pragma: no cover
         return self._data.index(item)
 
     # end abc.Sequence
@@ -71,12 +63,12 @@ class Join(abc.Sequence):
     def _get_field(self, field_name):
         document_fields = self._document_class.__fields__
         if field_name not in document_fields:
-            raise ValueError(field_name)
+            raise ValueError("field not exists: {!r}".format(field_name))
 
         field = document_fields[field_name]
 
         if not isinstance(field, ReferenceField):
-            raise RuntimeError('bad field type: {!r}'.format(field_name))
+            raise ValueError("bad field type: {!r}".format(field_name))
 
         return field
 

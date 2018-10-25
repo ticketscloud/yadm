@@ -1,5 +1,4 @@
-"""
-Fields for geo data
+""" Fields for geo data.
 
 See: http://docs.mongodb.org/manual/applications/geospatial-indexes/
 
@@ -30,7 +29,7 @@ class Geo(DocumentItemMixin):
 class GeoCoordinates(Geo):
     """ Base class for GeoJSON data with coordinates.
     """
-    def get_coordinates(self):
+    def get_coordinates(self):  # pragma: no cover
         raise NotImplementedError('get_coordinates must be implemented')
 
     def to_mongo(self):
@@ -62,12 +61,12 @@ class Point(GeoCoordinates):
     def from_mongo(cls, data):
         try:
             coordinates = data['coordinates']
-        except KeyError:
+        except KeyError:  # pragma: no cover
             raise ValueError('coordinates not found in data: "{!r}"'.format(data))
 
         try:
             longitude, latitude = coordinates
-        except IndexError:
+        except IndexError:  # pragma: no cover
             raise ValueError('wrong coordinates in data: "{!r}"'.format(data))
 
         return cls(longitude, latitude)
@@ -87,8 +86,8 @@ class MultiPoint(GeoCoordinates, Sequence):
     def __len__(self):
         return len(self._points)
 
-    def __iter__(self):
-        return self._points
+    def __iter__(self):  # pragma: no cover
+        return iter(self._points)
 
     def __getitem__(self, item):
         return self._points[item]
@@ -100,7 +99,7 @@ class MultiPoint(GeoCoordinates, Sequence):
     def from_mongo(cls, data):
         try:
             coordinates = data['coordinates']
-        except KeyError:
+        except KeyError:  # pragma: no cover
             raise ValueError('coordinates not found in data: "{!r}"'.format(data))
 
         return cls([Point(*c) for c in coordinates])
@@ -122,7 +121,7 @@ class GeoField(Field):
     def from_mongo(self, document, data):
         geo_type = self.types_dict.get(data['type'])
 
-        if geo_type is None:
+        if geo_type is None:  # pragma: no cover
             raise ValueError('unknown type in data: "{!r}"'.format(data))
 
         return geo_type.from_mongo(data)
@@ -136,7 +135,7 @@ class GeoOneTypeField(GeoField):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        if self.type is None:
+        if self.type is None:  # pragma: no cover
             raise NotImplementedError('attribute "type" must be implemented')
 
         self.types = [self.type]
@@ -148,10 +147,10 @@ class GeoOneTypeField(GeoField):
             return value
         elif isinstance(value, dict):
             return self.type.from_mongo(value)
-        else:
+        else:  # pragma: no cover
             raise TypeError(value)
 
-    def _get_fake_point(self, faker):
+    def _get_fake_point(self, faker):  # pragma: no cover
         return Point(float(faker.longitude()), float(faker.latitude()))
 
 
@@ -160,7 +159,7 @@ class PointField(GeoOneTypeField):
     """
     type = Point
 
-    def get_fake(self, document, faker, depth):
+    def get_fake(self, document, faker, depth):  # pragma: no cover
         return self._get_fake_point(faker)
 
 
@@ -169,5 +168,5 @@ class MultiPointField(GeoOneTypeField):
     """
     type = MultiPoint
 
-    def get_fake(self, document, faker, depth):
+    def get_fake(self, document, faker, depth):  # pragma: no cover
         return [self._get_fake_point(faker) for _ in range(4)]

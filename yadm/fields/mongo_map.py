@@ -16,7 +16,7 @@ class UnmutableMap(Mapping):
     def __len__(self):
         return len(self._data)
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return repr("{}({!r})".format(self.__class__.__name__, self._data))
 
 

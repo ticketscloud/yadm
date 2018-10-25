@@ -66,3 +66,13 @@ def test_get_queryset(db, qs, id_ref_1, id_ref_2):
     qs = qs.join().get_queryset('ref')
     assert qs.count_documents() == 2
     assert {d.id for d in qs} == {id_ref_1, id_ref_2}
+
+
+def test_get_queryset__bad_field_name(db, qs):
+    with pytest.raises(ValueError):
+        qs.join().get_queryset('bad_field')
+
+
+def test_get_queryset__bad_field_type(db, qs):
+    with pytest.raises(ValueError):
+        qs.join().get_queryset('i')

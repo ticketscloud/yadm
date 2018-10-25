@@ -36,7 +36,7 @@ def create_fake(__document_class__,
         (default 4)
     :return yadm.documents.BaseDocument: __document_class__ instance with fake data
     """
-    if not issubclass(__document_class__, BaseDocument):
+    if not issubclass(__document_class__, BaseDocument):  # pragma: no cover
         raise TypeError("only BaseDocument subclasses is allowed")
 
     create_fake.counter[__document_class__] += 1

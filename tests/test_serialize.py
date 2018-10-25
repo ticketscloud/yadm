@@ -144,3 +144,14 @@ def test_from__not_loaded():
     assert isinstance(doc.e, EDoc)
     assert doc.e.ss == raw['e']['ss']
     assert doc.e.__not_loaded__ == frozenset({'ii'})
+
+
+def test_from__smart_null():
+    class Doc(Document):
+        i = fields.IntegerField(smart_null=True)
+        s = fields.StringField()
+
+    doc = from_mongo(Doc, {'s': 'string'})
+
+    assert doc.s == 'string'
+    assert doc.i is None

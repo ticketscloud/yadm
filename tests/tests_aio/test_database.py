@@ -6,7 +6,8 @@ from bson import ObjectId
 from yadm import fields
 from yadm.documents import Document
 from yadm.log_items import Save, Insert
-from yadm.serialize import from_mongo
+from yadm.serialize import from_mongo, to_mongo
+from yadm.testing import create_fake
 
 
 class Doc(Document):
@@ -43,6 +44,14 @@ def test_insert_many(loop, db):
             assert doc.id == _id
 
         assert len(result.inserted_ids) == len(documents)
+
+    loop.run_until_complete(test())
+
+
+def test_insert_many__empty(loop, db):
+    async def test():
+        result = await db.insert_many([])
+        assert len(result.inserted_ids) == 0
 
     loop.run_until_complete(test())
 
@@ -142,6 +151,14 @@ def test_update_one(loop, db, doc, kwargs, result):
     loop.run_until_complete(test())
 
 
+def test_update_one__empty_query(loop, db, doc):
+    async def test():
+        assert (await db.update_one(doc)) is None
+        assert (await db.db['testdocs'].find_one(doc.id)) == to_mongo(doc)
+
+    loop.run_until_complete(test())
+
+
 def test_delete_one(loop, db):
     async def test():
         col = db.db['testdocs']
@@ -152,5 +169,103 @@ def test_delete_one(loop, db):
         assert await col.count_documents({}) == 1
         await db.delete_one(doc)
         assert await col.count_documents({}) == 0
+
+    loop.run_until_complete(test())
+
+
+def test_reload(loop, db):
+    async def test():
+        doc = create_fake(Doc)
+        b = doc.b
+        await db.insert_one(doc)
+
+        await db.db['testdocs'].update_one({'_id': doc.id},
+                                           {'$set': {'b': not doc.b}})
+
+        assert doc.b == b
+        new_doc = await db.reload(doc)
+        assert new_doc is doc
+        assert doc.b != b
+        assert doc.i
+
+    loop.run_until_complete(test())
+
+
+def test_reload__projection(loop, db):
+    async def test():
+        doc = create_fake(Doc)
+        b = doc.b
+        await db.insert_one(doc)
+
+        await db.db['testdocs'].update_one({'_id': doc.id},
+                                           {'$set': {'b': not doc.b}})
+
+        assert doc.b == b
+        new_doc = await db.reload(doc, projection={'b': True})
+        assert new_doc is doc
+        assert doc.b != b
+        assert 'i' in doc.__not_loaded__
+
+    loop.run_until_complete(test())
+
+
+def test_reload__new_instance(loop, db):
+    async def test():
+        doc = create_fake(Doc)
+        b = doc.b
+        await db.insert_one(doc)
+
+        await db.db['testdocs'].update_one({'_id': doc.id},
+                                           {'$set': {'b': not doc.b}})
+
+        assert doc.b == b
+        new_doc = await db.reload(doc, new_instance=True)
+        assert new_doc is not doc
+        assert doc.b == b
+        assert new_doc.b != b
+
+    loop.run_until_complete(test())
+
+
+def test_get_document(loop, db):
+    async def test():
+        documents = [Doc(i=i) for i in range(5)]
+        result = await db.db['testdocs'].insert_many((to_mongo(d) for d in documents))
+        assert len(result.inserted_ids) == len(documents)
+        for _id in result.inserted_ids:
+            doc = await db.get_document(Doc, _id)
+            assert doc.id == _id
+
+    loop.run_until_complete(test())
+
+
+def test_get_document__projection(loop, db):
+    async def test():
+        documents = [Doc(i=i) for i in range(5)]
+        result = await db.db['testdocs'].insert_many((to_mongo(d) for d in documents))
+        assert len(result.inserted_ids) == len(documents)
+        for _id in result.inserted_ids:
+            doc = await db.get_document(Doc, _id, projection={'i': False})
+            assert doc.id == _id
+            assert 'i' in doc.__not_loaded__
+
+    loop.run_until_complete(test())
+
+
+def test_get_document__not_found(loop, db):
+    async def test():
+        doc = await db.get_document(Doc, ObjectId())
+        assert doc is None
+
+    loop.run_until_complete(test())
+
+
+def test_get_document__exc(loop, db):
+    async def test():
+        class NotFound(Exception):
+            pass
+
+        with pytest.raises(NotFound):
+            await db.get_document(Doc, ObjectId(), exc=NotFound)
 
     loop.run_until_complete(test())

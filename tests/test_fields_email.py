@@ -15,8 +15,9 @@ def test_ok():
     assert doc.e == 'e@ma.il'
 
 
-def test_error():
+@pytest.mark.parametrize('bad_email', ['EmA.iL', 'E@mA@iL', 'EmAiL@'])
+def test_error(bad_email):
     doc = Doc()
 
     with pytest.raises(InvalidEmail):
-        doc.e = 'EmA.iL'
+        doc.e = bad_email

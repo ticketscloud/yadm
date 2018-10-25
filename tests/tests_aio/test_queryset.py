@@ -134,6 +134,35 @@ def test_find_one__nf_exc(loop, qs):
     loop.run_until_complete(test())
 
 
+def test_update_one(loop, db, qs):
+    async def test():
+        result = await qs.find({
+            'i': {'$in': [3, 7]},
+        }).update_one({
+            '$set': {'s': 'test'}
+        })
+
+        assert isinstance(result, pymongo.results.UpdateResult)
+        assert result.acknowledged
+        assert result.matched_count == result.modified_count == 1
+        assert result.upserted_id is None
+
+        assert (await db.db['testdocs'].count_documents({})) == 10
+        assert {d['i'] async for d in db.db['testdocs'].find()} == set(range(10))
+        assert (await db.db['testdocs'].count_documents({'s': 'test'})) == 1
+
+        async for doc in db.db['testdocs'].find({'i': {'$nin': [3, 7]}}):
+            assert doc['s'] != 'test'
+            assert doc['s'].startswith('str(')
+
+        doc_3 = await db.db['testdocs'].find_one({'i': 3})
+        doc_7 = await db.db['testdocs'].find_one({'i': 7})
+        assert doc_3['s'] == 'test' or doc_7['s'] == 'test'
+        assert doc_3['s'] != 'test' or doc_7['s'] != 'test'
+
+    loop.run_until_complete(test())
+
+
 def test_update_many(loop, db, qs):
     async def test():
         result = await qs.find({

@@ -335,60 +335,60 @@ class BaseQuerySet:
             return qs
 
     def __iter__(self):
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     def __contains__(self, document):
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
-    def __bool__(self):  # pragma: no cover
-        raise NotImplementedError
+    def __bool__(self):
+        raise NotImplementedError  # pragma: no cover
 
     def find_one(self, criteria=None, projection=None, *, exc=None):
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     def update_many(self, update, *, upsert=False):
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     def update_one(self, update, *, upsert=False):
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     def delete_one(self):
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     def delete_many(self):
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     def find_one_and_update(self, update, *,
                             return_document=ReturnDocument.BEFORE):
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     def find_one_and_replace(self, document, *,
                              return_document=ReturnDocument.BEFORE):
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     def find_one_and_delete(self):
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     def count(self):  # pragma: no cover
         warnings.warn("Use count_documents!", DeprecationWarning)
         return self.count_documents()
 
     def count_documents(self):
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
 
     def distinct(self, field):
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     def ids(self):
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     def join(self, *field_names):
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     def find_in(self, comparable, field='_id', *,
                 not_found=NotFoundBehavior.SKIP):
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
 
 class QuerySet(BaseQuerySet):

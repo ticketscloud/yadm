@@ -29,7 +29,7 @@ class DatetimeField(DefaultMixin, Field):
         else:
             return super().default
 
-    def get_fake(self, document, faker, depth):
+    def get_fake(self, document, faker, depth):  # pragma: no cover
         if self.auto_now:
             return datetime.now(pytz.utc)
         else:
@@ -44,14 +44,14 @@ class DatetimeField(DefaultMixin, Field):
         elif isinstance(value, date):
             return datetime(
                 *value.timetuple()[:3],
-                tz=pytz.utc
+                tzinfo=pytz.utc
             )
 
         elif isinstance(value, str):
             value = dateutil.parser.parse(value)
             return cls._fix_timezone(value)
 
-        else:
+        else:  # pragma: no cover
             raise TypeError("First value must be datetime,"
                             " date or string, but {!r}".format(type(value)))
 

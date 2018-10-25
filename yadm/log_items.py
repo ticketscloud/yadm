@@ -3,7 +3,7 @@ from typing import NamedTuple, Optional, Any, Dict
 from bson import ObjectId
 
 
-class BaseLog:
+class BaseLog:  # pragma: no cover
     def __init__(self):
         self.items = []
 

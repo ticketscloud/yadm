@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, date, timedelta
 
 import pytest
 
@@ -15,10 +15,23 @@ class TestDatetimeField:
         dt = fields.DatetimeField()
         now = fields.DatetimeField(auto_now=True)
 
-    def test_cast(self):
+    def test_cast__iso(self):
         doc = self.Doc()
         doc.dt = datetime(1970, 1, 1, tzinfo=pytz.utc).isoformat()
         assert isinstance(doc.dt, datetime)
+        assert doc.dt.tzinfo is not None
+
+    def test_cast__date(self):
+        doc = self.Doc()
+        doc.dt = date(1970, 1, 1)
+        assert isinstance(doc.dt, datetime)
+        assert doc.dt == datetime(1970, 1, 1, tzinfo=pytz.utc)
+
+    def test_cast__fix_tz(self):
+        doc = self.Doc()
+        doc.dt = datetime(1970, 1, 1)
+        assert isinstance(doc.dt, datetime)
+        assert doc.dt.tzinfo == pytz.utc
 
     def test_default_none(self):
         doc = self.Doc()

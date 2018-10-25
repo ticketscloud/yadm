@@ -63,7 +63,7 @@ class DocumentItemMixin:
         if document is not None:
             return document.__db__
         else:
-            return None
+            return None  # pragma: no cover
 
     @property
     def __qs__(self):
@@ -73,7 +73,7 @@ class DocumentItemMixin:
         if document is not None:
             return document.__qs__
         else:
-            return None
+            return None  # pragma: no cover
 
     @property
     def __path__(self):

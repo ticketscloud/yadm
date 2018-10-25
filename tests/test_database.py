@@ -54,7 +54,7 @@ def test_get_document(db):
     assert doc.__db__ is db
 
 
-def test_get_document_w_projection(db):
+def test_get_document__projection(db):
     col = db.db['testdocs']
     ids = [col.insert_one({'i': i, 'b': bool(i % 2)}).inserted_id
            for i in range(10)]
@@ -125,6 +125,11 @@ def test_insert_many__unordered(db):
         assert not hasattr(doc, 'id')
 
     assert len(result.inserted_ids) == len(documents)
+
+
+def test_insert_many__empty(db):
+    result = db.insert_many([])
+    assert len(result.inserted_ids) == 0
 
 
 def test_save_new(db):
@@ -198,6 +203,10 @@ def test_update_one(db, doc, kwargs, result):
     assert raw_doc
     del raw_doc['_id']
     assert raw_doc == result
+
+
+def test_update_one__not_found(db, doc):
+    assert db.update_one(doc) is None
 
 
 def test_delete_one(db):

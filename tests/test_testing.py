@@ -1,6 +1,7 @@
 from bson import ObjectId
 
 from yadm.documents import Document, EmbeddedDocument
+from yadm.markers import AttributeNotSet
 from yadm.testing import create_fake
 from yadm.fields import (
     BooleanField, StringField, IntegerField, ObjectIdField, EmailField,
@@ -17,6 +18,13 @@ class SimpleDoc(Document):
     i = IntegerField()
     e = EmailField()
     email = StringField()
+    not_set = StringField()
+
+    def __fake__email__(self, faker, depth):
+        return faker.email()
+
+    def __fake__not_set__(self, faker, depth):
+        return AttributeNotSet
 
 
 class EmbeddedDoc(EmbeddedDocument):
@@ -36,6 +44,7 @@ def test_simple(db):
     assert hasattr(doc, 'i')
     assert hasattr(doc, 'e')
     assert hasattr(doc, 'email')
+    assert not hasattr(doc, 'not_set')
 
     assert isinstance(doc.oid, ObjectId)
     assert isinstance(doc.b, bool)
@@ -60,6 +69,7 @@ def test_simple_save(db):
     assert hasattr(doc, 'b')
     assert hasattr(doc, 's')
     assert hasattr(doc, 'i')
+    assert not hasattr(doc, 'not_set')
 
     assert isinstance(doc.oid, ObjectId)
     assert isinstance(doc.b, bool)
@@ -135,3 +145,42 @@ def test_reference_circle(db):
     assert hasattr(doc, 'self')
     assert hasattr(doc.self, 'self')
     assert not hasattr(doc.self.self, 'self')
+
+
+def test_complex_fake_generator():
+    class Doc(Document):
+        i = IntegerField()
+        s = StringField()
+
+        def __fake__(self, values, faker, depth):
+            assert values['i'] == 13
+            assert 's' not in values
+            new_values = values.copy()
+            new_values['i'] += 1
+            yield new_values
+            self.s = 'string'
+            yield
+
+    doc = create_fake(Doc, i=13)
+
+    assert doc.i == 14
+    assert doc.s == 'string'
+
+
+def test_complex_fake_dict():
+    class Doc(Document):
+        i = IntegerField()
+        s = StringField()
+
+        def __fake__(self, values, faker, depth):
+            assert values['i'] == 13
+            assert 's' not in values
+            new_values = values.copy()
+            new_values['i'] += 1
+            new_values['s'] = 'string'
+            return new_values
+
+    doc = create_fake(Doc, i=13)
+
+    assert doc.i == 14
+    assert doc.s == 'string'
