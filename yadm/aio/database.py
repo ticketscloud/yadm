@@ -13,8 +13,6 @@ from .queryset import AioQuerySet
 from .aggregation import AioAggregator
 from .bulk_writer import AioBulkWriter
 
-PYMONGO_VERSION = pymongo.version_tuple
-
 RPS = pymongo.read_preferences
 
 

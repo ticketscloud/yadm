@@ -6,10 +6,6 @@ Mongo Aggregation Framework helper.
     cur = db.aggregate(Doc).match({'i': {'$gt': 13}}).project(a='$i').limit(8)
 """
 
-import pymongo
-
-PYMONGO_VERSION = pymongo.version_tuple
-
 
 class BaseAggregator:
     def __init__(self, db, document_class, *,
@@ -32,11 +28,7 @@ class BaseAggregator:
         """ pymongo aggregate cursor.
         """
         collection = self._db._get_collection(self._document_class)
-        cur = collection.aggregate(self._pipeline)
-        if PYMONGO_VERSION < (3, 0):
-            return cur['result']
-        else:
-            return cur
+        return collection.aggregate(self._pipeline)
 
 
 class Aggregator(BaseAggregator):

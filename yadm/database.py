@@ -35,12 +35,10 @@ from yadm.serialize import to_mongo, from_mongo
 from yadm.common import build_update_query
 
 
-PYMONGO_VERSION = pymongo.version_tuple
-
 RPS = pymongo.read_preferences
 
 
-class BaseDatabase:
+class BaseDatabase:  # pragma: no cover
     aio = None
 
     def __init__(self, client, name, **database_params):
