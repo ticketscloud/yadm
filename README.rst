@@ -263,6 +263,7 @@ CHANGES
 
 * Simple interface for build lookups: ``QuerySet.lookup``;
 * Remove ``bcc`` argument from ``MoneyField``;
+* Add ``Decimal128Field``;
 
 
 1.5.0 (2017-12-31)

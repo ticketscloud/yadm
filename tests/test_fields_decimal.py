@@ -7,6 +7,12 @@ from yadm import fields
 from yadm.documents import Document
 
 
+class Doc(Document):
+    __collection__ = 'testdocs'
+    dec = fields.DecimalField()
+    dec128 = fields.Decimal128Field()
+
+
 def test_to_mongo():
     field = fields.DecimalField()
 
@@ -69,11 +75,6 @@ def test_context_init():
     assert field.context == context
 
 
-class Doc(Document):
-    __collection__ = 'testdocs'
-    dec = fields.DecimalField()
-
-
 def test_save(db):
     doc = Doc()
     doc.dec = Decimal('3.14')
@@ -95,3 +96,13 @@ def test_load(db):
     assert hasattr(doc, 'dec')
     assert isinstance(doc.dec, Decimal)
     assert doc.dec == Decimal('3.14')
+
+
+def test_d128_set():
+    doc = Doc()
+
+    doc.dec128 = Decimal128('3.14')
+    assert doc.dec128 == Decimal128('3.14')
+
+    doc.dec128 = '13'
+    assert doc.dec128 == Decimal128('13')

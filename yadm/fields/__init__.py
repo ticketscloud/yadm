@@ -19,7 +19,7 @@ from yadm.fields.datetime import (  # noqa
     DatetimeField,
     TimedeltaField,
 )
-from yadm.fields.decimal import DecimalField  # noqa
+from yadm.fields.decimal import DecimalField, Decimal128Field  # noqa
 from yadm.fields.money import (  # noqa
     Money,
     MoneyField,
