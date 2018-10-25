@@ -262,6 +262,7 @@ CHANGES
     - Remove deprecated ``QuerySet.with_id``;
 
 * Simple interface for build lookups: ``QuerySet.lookup``;
+* Remove ``bcc`` argument from ``MoneyField``;
 
 
 1.5.0 (2017-12-31)

@@ -209,7 +209,7 @@ class CurrencyStorage(dict):
         elif isinstance(item, Currency):
             return self[item.code]
 
-        else:
+        else:  # pragma: no cover
             raise TypeError("{!r} is invalid type value of CurrencyStorage."
                             "".format(type(item)))
 
@@ -224,15 +224,15 @@ class CurrencyField(DefaultMixin, Field):
         self._currency_storage = currency_storage
 
         if default is AttributeNotSet:
-            pass
+            pass  # pragma: no cover
         elif isinstance(default, (Currency, str, int)):
             default = self._currency_storage[default]
-        else:
+        else:  # pragma: no cover
             raise TypeError("Bad type for default.")
 
         super().__init__(default=default)
 
-    def get_fake(self, document, faker, depth):
+    def get_fake(self, document, faker, depth):  # pragma: no cover
         return random.choice(list(DEFAULT_CURRENCY_STORAGE.values()))
 
     @pass_null

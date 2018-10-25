@@ -26,6 +26,9 @@ class TestMoney:
         with pytest.raises(TypeError):
             fields.Money(r1, 'RUB')
 
+        with pytest.raises(TypeError):
+            fields.Money('10')
+
     def test_from_string(self):
         assert fields.Money.from_string('1.00 USD') == fields.Money(1, 'USD')
         assert fields.Money.from_string('  1.2345  USD') == fields.Money('1.2345', 'USD')
@@ -248,7 +251,13 @@ class TestCurrencyStorage:
 class TestMoneyField:
     class Doc(Document):
         __collection__ = 'testdocs'
-        money = fields.MoneyField(bcc='RUB')
+        money = fields.MoneyField()
+
+    def test_set__error(self):
+        doc = self.Doc()
+
+        with pytest.raises(TypeError):
+            doc.money = '10 RUB'
 
     @pytest.mark.parametrize('value, currency, v, c', [
         ('3.14', 'USD', 314, 840),
@@ -297,15 +306,6 @@ class TestMoneyField:
         assert isinstance(data['money'], list)
         assert data['money'] == [1050, 643]
 
-    def test_load_and_save_bbc(self, db):
-        db.db.testdocs.insert_one({'money': 1234})
-
-        doc = db(self.Doc).find_one()
-
-        assert hasattr(doc, 'money')
-        assert isinstance(doc.money, fields.Money)
-        assert doc.money == fields.Money('12.34', 'RUB')
-
     def test_serialize_cycle(self, db):
         doc = self.Doc()
         doc.money = fields.Money(1, 'RUB')
@@ -337,17 +337,27 @@ class TestCurrencyField:
         with pytest.raises(ValueError):
             doc.currency = value
 
-    @pytest.mark.parametrize('currency', ['USD', 'RUB', 'IQD'])
+    @pytest.mark.parametrize('currency', [
+        'USD',
+        'RUB',
+        'IQD',
+        DEFAULT_CURRENCY_STORAGE['USD'],
+        DEFAULT_CURRENCY_STORAGE['RUB'],
+        DEFAULT_CURRENCY_STORAGE['IQD'],
+    ])
     def test_save(self, db, currency):
         doc = self.Doc()
-        doc.currency = DEFAULT_CURRENCY_STORAGE[currency]
+        doc.currency = currency
         db.save(doc)
 
         data = db.db.testdocs.find_one()
 
         assert 'currency' in data
         assert isinstance(data['currency'], str)
-        assert data['currency'] == currency
+        if isinstance(currency, str):
+            assert data['currency'] == currency
+        else:
+            assert data['currency'] == currency.string
 
     @pytest.mark.parametrize('currency', ['USD', 'RUB', 'IQD'])
     def test_load(self, db, currency):

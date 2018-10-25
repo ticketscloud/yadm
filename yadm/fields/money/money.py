@@ -65,7 +65,7 @@ def _special_comparison(method):
             else:
                 return method(self.value, value.value)
 
-        else:
+        else:  # pragma: no cover
             return NotImplemented
 
     return wrapper
@@ -85,7 +85,7 @@ class Money:
 
         else:
             if currency is None:
-                raise TypeError("Curency not set.")
+                raise TypeError("Curency is not set.")
             else:
                 self._currency = currency = DEFAULT_CURRENCY_STORAGE[currency]
 
@@ -226,15 +226,7 @@ class Money:
 class MoneyField(DefaultMixin, Field):
     """ Field to storage money values.
     """
-    def __init__(self, bcc=None, **kwargs):
-        """ Field for save Money.
-
-        bcc - str,int or Currency value to backward compatibility.
-        """
-        super().__init__(**kwargs)
-        self._bcc = bcc
-
-    def get_fake(self, document, faker, depth):
+    def get_fake(self, document, faker, depth):  # pragma: no cover
         value = faker.pydecimal(left_digits=5, right_digits=2, positive=True)
         currency = random.choice(list(DEFAULT_CURRENCY_STORAGE.values()))
         return Money(value, currency)
@@ -252,27 +244,12 @@ class MoneyField(DefaultMixin, Field):
 
     @pass_null
     def from_mongo(self, document, data):
-        if data is AttributeNotSet:
+        if data is AttributeNotSet:  # pragma: no cover
             return AttributeNotSet
-
-        if isinstance(data, int):
-            if not self._bcc:
-                raise ValueError("Backward compatibility currency not set in MoneyField.")
-            else:
-                currency_key = self._bcc
-                value = data
-
         elif isinstance(data, list):
             value, currency_key = data
-
-        elif isinstance(data, dict):  # b/c for version 1.3.0
-            currency_key = data['c']
-            value = data['v']
-
-        else:
+            currency = DEFAULT_CURRENCY_STORAGE[currency_key]
+            new_value = Decimal(value) / (10 ** currency.precision)
+            return Money(new_value, currency)
+        else:  # pragma: no cover
             raise TypeError("Incorrect type of value {!r} for Money".format(type(data)))
-
-        currency = DEFAULT_CURRENCY_STORAGE[currency_key]
-        new_value = Decimal(value) / (10 ** currency.precision)
-
-        return Money(new_value, currency)
