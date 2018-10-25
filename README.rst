@@ -235,7 +235,7 @@ Or traditional MongoDB syntax:
 CHANGES
 -------
 
-2.0.0 (2017-10-XX)
+2.0.0 (2018-10-25)
 ==================
 
 * A `Big Rewrite <https://www.youtube.com/watch?v=xCGu5Z_vaps>`_ document logic:
