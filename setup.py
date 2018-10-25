@@ -12,7 +12,7 @@ setup(
     version=version,
     description=description,
     long_description=long_description,
-    author='Zelenyak "ZZZ" Aleksander',
+    author='Zelenyak "ZZZ" Alexander',
     author_email='zzz.sochi@gmail.com',
     url='https://github.com/zzzsochi/yadm',
     license='BSD',
