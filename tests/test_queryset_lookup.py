@@ -1,7 +1,7 @@
 from bson import ObjectId
 
 from yadm.documents import Document
-from yadm.fields import StringField, ReferenceField
+from yadm.fields import IntegerField, StringField, ReferenceField
 from yadm.serialize import LOOKUPS_KEY
 
 
@@ -14,6 +14,7 @@ class RefDoc(Document):
 class Doc(Document):
     __collection__ = 'docs'
 
+    i = IntegerField()
     s = StringField()
     ref = ReferenceField(RefDoc)
 
@@ -21,14 +22,16 @@ class Doc(Document):
 def test_lookup(db):
     for n in range(10):
         db.db['docs'].insert_one({
+            'i': n,
             's': 'doc-{}'.format(n),
             'ref': db.db['refs'].insert_one({'s': 'ref-{}'.format(n)}).inserted_id,
         })
 
-    qs = db(Doc).lookup('ref')
-    docs = [d for d in qs]
+    qs = db(Doc).find({'i': {'$gte': 6}}).fields('s', 'ref')
+    qs = qs.sort(('i', 1)).batch_size(10)
+    docs = [d for d in qs.lookup('ref')]
 
-    assert len(docs) == 10
+    assert len(docs) == 4
 
     for doc in docs:
         assert isinstance(doc.__raw__['ref'], ObjectId)

@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from enum import Enum
 import warnings
 
@@ -172,7 +173,7 @@ class BaseQuerySet:
 
 
         if sort:
-            pipeline.append({'$sort': sort})
+            pipeline.append({'$sort': OrderedDict(sort)})
 
         cursor = collection.aggregate(pipeline)
 
@@ -315,9 +316,9 @@ class BaseQuerySet:
                 if hasattr(field, 'reference_document_class'):
                     col_name = field.reference_document_class.__collection__
                     items.add((col_name, field_name))
-                else:
+                else:  # pragma: no cover
                     raise ValueError(f"Field {field_name!r} is not a ReferenceField")
-            else:
+            else:  # pragma: no cover
                 raise ValueError(f"Field {field_name!r}"
                                  f" not found in {self._document_class!r}")
 
