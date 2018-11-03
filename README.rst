@@ -235,6 +235,12 @@ Or traditional MongoDB syntax:
 CHANGES
 -------
 
+2.0.1 (2018-11-04)
+==================
+
+* Add ``QuerySet.hint`` for specify index for query.
+
+
 2.0.0 (2018-10-25)
 ==================
 
@@ -263,7 +269,7 @@ CHANGES
 
 * Simple interface for build lookups: ``QuerySet.lookup``;
 * Remove ``bcc`` argument from ``MoneyField``;
-* Add ``Decimal128Field``;
+* Add ``Decimal128Field``.
 
 
 1.5.0 (2017-12-31)

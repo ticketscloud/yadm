@@ -103,8 +103,12 @@ class AioQuerySet(BaseQuerySet):
 
         return self._from_mongo_one(data, projection=self._projection)
 
-    async def count_documents(self):
-        return await self._collection.count_documents(self._criteria)
+    async def count_documents(self) -> int:
+        kwargs = {}
+        if self._hint is not None:
+            kwargs['hint'] = self._hint
+
+        return await self._collection.count_documents(self._criteria, **kwargs)
 
     async def distinct(self, field):
         return await self._cursor.distinct(field)

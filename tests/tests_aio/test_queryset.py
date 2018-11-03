@@ -262,6 +262,30 @@ def test_find_one_and_delete(loop, db, qs):
     loop.run_until_complete(test())
 
 
+def test_hint(loop, db, qs):
+    async def test(qs=qs):
+        db.db[Doc.__collection__].create_index([('i', -1)])
+        db.db[Doc.__collection__].create_index([('s', 1)])
+
+        _qs = qs.hint([('i', -1)])
+        async for doc in _qs:
+            assert doc
+
+        _qs = qs.hint([('s', 1)])
+        assert await _qs.count_documents()
+
+        _qs = qs.hint([('wrong', 1)])
+        with pytest.raises(pymongo.errors.OperationFailure):
+            async for doc in _qs:
+                assert False
+
+        _qs = qs.hint([('wrong', 1)])
+        with pytest.raises(pymongo.errors.OperationFailure):
+            await _qs.count_documents()
+
+    loop.run_until_complete(test())
+
+
 def test_distinct(loop, db, qs):
     async def test():
         res = await qs.distinct('i')

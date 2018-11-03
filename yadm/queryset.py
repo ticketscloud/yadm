@@ -1,5 +1,6 @@
 from collections import OrderedDict
 from enum import Enum
+from typing import Union, Dict, List, Tuple
 import warnings
 
 from pymongo import read_preferences, ReturnDocument
@@ -29,7 +30,7 @@ class BaseQuerySet:
     """ Query builder.
     """
     def __init__(self, db, document_class, *,
-                 cache=None, criteria=None, projection=None, sort=None,
+                 cache=None, criteria=None, projection=None, hint=None, sort=None,
                  lookup=None, slice=None,
                  batch_size=None, collection_params=None):
 
@@ -38,6 +39,7 @@ class BaseQuerySet:
         self._cache = cache
         self._criteria = criteria or {}
         self._projection = projection
+        self._hint = hint
         self._sort = sort
         self._lookup = lookup or frozenset()
         self._slice = slice
@@ -46,7 +48,7 @@ class BaseQuerySet:
 
     def __repr__(self):
         return ("{s.__class__.__name__}({s._document_class.__collection__}"
-                " {s._criteria!r} {s._projection!r} {s._sort!r})"
+                " {s._criteria!r} {s._projection!r} {s._hint!r} {s._sort!r})"
                 "".format(s=self))
 
     def __call__(self, criteria=None, projection=None):  # pragma: no cover
@@ -116,11 +118,16 @@ class BaseQuerySet:
                 self._collection,
                 self._criteria,
                 self._projection or None,
+                self._hint,
                 self._sort,
                 self._slice,
                 self._batch_size,
             )
         else:
+            if self._hint is not None:  # pragma: no cover
+                raise NotImplementedError(
+                    "hint() is not implemented for lookup queries")
+
             return self._get_cursor_aggregation(
                 self._collection,
                 self._criteria,
@@ -133,8 +140,11 @@ class BaseQuerySet:
 
     @staticmethod
     def _get_cursor_find(collection, criteria, projection,
-                         sort, slice, batch_size):
+                         hint, sort, slice, batch_size):
         cursor = collection.find(criteria, projection)
+
+        if hint is not None:
+            cursor = cursor.hint(hint)
 
         if sort is not None:
             cursor = cursor.sort(sort)
@@ -192,7 +202,7 @@ class BaseQuerySet:
         return self._cache
 
     def copy(self, *, cache=None, criteria=None, projection=None,
-             sort=None, lookup=None, slice=None,
+             hint=None, sort=None, lookup=None, slice=None,
              batch_size=None, collection_params=None):
         """ Copy queryset with new parameters.
 
@@ -204,6 +214,7 @@ class BaseQuerySet:
             cache=cache or self._cache,
             criteria=criteria or self._criteria,
             projection=projection or self._projection,
+            hint=hint or self._hint,
             sort=sort or self._sort,
             lookup=lookup or self._lookup,
             slice=slice or self._slice,
@@ -290,15 +301,17 @@ class BaseQuerySet:
         qs._projection = None
         return qs
 
-    def sort(self, *sort):
+    def hint(self, index: Union[str, List[Tuple[str, int]]]) -> 'BaseQuerySet':
+        """ Return queryset with hinting.
+
+            qs = qs.hint([('field', 1)])
+        """
+        return self.copy(hint=index)
+
+    def sort(self, *sort: Tuple[Tuple[str, int]]) -> 'BaseQuerySet':
         """ Return queryset with sorting.
 
-        :param tuples sort: tuples with two items:
-            `('field_name', sort_order_as_int)`.
-
-        .. code:: python
-
-            qs.sort(('field_1', 1), ('field_2', -1))
+            qs = qs.sort(('field_1', 1), ('field_2', -1))
         """
         sort = list(sort)
 
@@ -510,10 +523,14 @@ class QuerySet(BaseQuerySet):
 
         return self._from_mongo_one(data, projection=self._projection)
 
-    def count_documents(self):
+    def count_documents(self) -> int:
         """ Count documents in queryset.
         """
-        return self._collection.count_documents(self._criteria)
+        kwargs = {}
+        if self._hint is not None:
+            kwargs['hint'] = self._hint
+
+        return self._collection.count_documents(self._criteria, **kwargs)
 
 
     def distinct(self, field):

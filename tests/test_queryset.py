@@ -197,6 +197,25 @@ def test_find_one_and_delete(db, qs):
     assert doc.i == 9
 
 
+def test_hint(db, qs):
+    db.db[Doc.__collection__].create_index([('i', -1)])
+    db.db[Doc.__collection__].create_index([('s', 1)])
+
+    _qs = qs.hint([('i', -1)])
+    assert list(_qs)
+
+    _qs = qs.hint([('s', 1)])
+    assert len(_qs)
+
+    _qs = qs.hint([('wrong', 1)])
+    with pytest.raises(pymongo.errors.OperationFailure):
+        list(_qs)
+
+    _qs = qs.hint([('wrong', 1)])
+    with pytest.raises(pymongo.errors.OperationFailure):
+        len(_qs)
+
+
 def test_sort(qs):
     qs = qs.find({'i': {'$gte': 6}}).sort(('i', -1))
     assert [d.i for d in qs] == [9, 8, 7, 6]
