@@ -128,7 +128,7 @@ class Document(BaseDocument):
     __new_document__: bool = True
     __log__: DocumentLog
     __db__: 'yadm.database.BaseDatabase'
-    __qs__: 'QuerySet'
+    __qs__: 'QuerySet' = None
 
     __yadm_lookups__: dict
 
