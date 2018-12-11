@@ -30,6 +30,14 @@ class EnumStateSetError(Exception):
         super().__init__(self.message)
 
 
+class EnumStateInvalidInitial(Exception):
+    def __init__(self, initial_value):
+        self.message = ("{} is not allowed as initial value in rules "
+                        "".format(initial_value))
+
+        super().__init__(self.message)
+
+
 class EnumStateField(EnumField):
     """ Simple state machine with states are enum.Enum .
     """
@@ -54,11 +62,13 @@ class EnumStateField(EnumField):
         current_value = getattr(document, self.name, AttributeNotSet)
         new_value = super().prepare_value(document, value)
 
-        if all([
-            current_value is not AttributeNotSet,
-            new_value != current_value,
-            new_value not in self.rules.get(current_value, []),
-        ]):
-            raise EnumStateSetError(current_value, new_value)
+        if current_value is AttributeNotSet:
+            if new_value != self.default:
+                raise EnumStateInvalidInitial(new_value)
+
+        else:
+            if (new_value != current_value and
+                    new_value not in self.rules.get(current_value, [])):
+                raise EnumStateSetError(current_value, new_value)
 
         return new_value
