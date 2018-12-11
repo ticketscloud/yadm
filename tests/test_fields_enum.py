@@ -3,7 +3,7 @@ from enum import Enum
 import pytest
 
 from yadm import fields
-from yadm.fields.enum import EnumStateSetError
+from yadm.fields.enum import EnumStateSetError, EnumStateInvalidInitial
 from yadm.documents import Document
 
 
@@ -88,3 +88,11 @@ class TestEnumStateField:
 
         doc.e = WordsEnum.a
         assert doc.e == WordsEnum.a
+
+    def test_initial_value(self):
+        doc = self.Doc(e=WordsEnum.a)
+        assert doc.e == WordsEnum.a
+
+    def test_initial_value__raises(self):
+        with pytest.raises(EnumStateInvalidInitial):
+            doc = self.Doc(e=WordsEnum.b)
