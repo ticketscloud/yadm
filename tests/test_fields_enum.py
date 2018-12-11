@@ -88,3 +88,7 @@ class TestEnumStateField:
 
         doc.e = WordsEnum.a
         assert doc.e == WordsEnum.a
+
+    def test_initial_value(self):
+        doc = self.Doc(e=WordsEnum.a)
+        assert doc.e == WordsEnum.a

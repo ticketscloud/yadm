@@ -54,8 +54,11 @@ class EnumStateField(EnumField):
         current_value = getattr(document, self.name, AttributeNotSet)
         new_value = super().prepare_value(document, value)
 
-        if (new_value != current_value and
-                new_value not in self.rules.get(current_value, [])):
+        if all([
+            current_value is not AttributeNotSet,
+            new_value != current_value,
+            new_value not in self.rules.get(current_value, []),
+        ]):
             raise EnumStateSetError(current_value, new_value)
 
         return new_value
