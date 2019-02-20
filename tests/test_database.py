@@ -91,6 +91,13 @@ def test_get_document__not_found_exc(db):
         db.get_document(Doc, ObjectId(), exc=Exc)
 
 
+def test_estimated_document_count(db):
+    col = db.db['testdocs']
+    ids = [col.insert_one({'i': i}).inserted_id for i in range(10)]
+    count = db.estimated_document_count(Doc)
+    assert count == len(ids) == 10
+
+
 def test_insert_one(db):
     doc = Doc()
     doc.i = 13

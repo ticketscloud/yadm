@@ -177,6 +177,13 @@ class AioDatabase(BaseDatabase):
                            cache=cache,
                            collection_params=collection_params)
 
+    async def estimated_document_count(self, document_class,
+                                       **collection_params):
+        """ Get an estimate of the number of documents in this collection.
+        """
+        collection = self._get_collection(document_class, collection_params)
+        return await collection.estimated_document_count()
+
     def aggregate(self, document_class, *, pipeline=None, **collection_params):
         return AioAggregator(self, document_class,
                              pipeline=pipeline,

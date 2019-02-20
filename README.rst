@@ -235,6 +235,12 @@ Or traditional MongoDB syntax:
 CHANGES
 -------
 
+2.0.4 (2019-02-20)
+==================
+
+* Add ``Database.estimated_document_count`` method for quickly count documents in the collection.
+
+
 2.0.1 (2018-11-04)
 ==================
 

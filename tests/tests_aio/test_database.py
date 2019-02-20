@@ -17,6 +17,17 @@ class Doc(Document):
     l = fields.ListField(fields.IntegerField())
 
 
+def test_estimated_document_count(db):
+    async def test():
+        col = db.db['testdocs']
+        ids = []
+        for i in range(10):
+            ids.append(col.insert_one({'i': i}).inserted_id)
+
+        count = await db.estimated_document_count(Doc)
+        assert count == len(ids) == 10
+
+
 def test_insert_one(loop, db):
     async def test():
         doc = Doc()
