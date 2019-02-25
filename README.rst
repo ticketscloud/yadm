@@ -235,6 +235,12 @@ Or traditional MongoDB syntax:
 CHANGES
 -------
 
+2.0.5 (2019-02-25)
+==================
+
+* Add ``Aggregation.hint`` method.
+
+
 2.0.4 (2019-02-20)
 ==================
 

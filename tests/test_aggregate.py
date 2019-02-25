@@ -3,6 +3,7 @@ from unittest.mock import Mock, MagicMock
 
 import pytest
 
+import pymongo
 from yadm import Document
 from yadm import fields
 from yadm.aggregation import Aggregator, AgOperator
@@ -99,6 +100,26 @@ def test_for(db, docs):
         count += 1
 
     assert count == len([d.i for d in docs if d.i > 0])
+
+
+def test_hint(db, docs):
+    db.db[Doc.__collection__].create_index([('i', -1)])
+    agg = db.aggregate(Doc).match(i={'$gt': 0}).project(n='$i').hint({'i': -1})
+    count = 0
+
+    for item in agg:
+        assert item['n'] > 0
+        count += 1
+
+    assert count == len([d.i for d in docs if d.i > 0])
+
+
+def test_hint_error(db, docs):
+    db.db[Doc.__collection__].create_index([('i', -1)])
+    agg = db.aggregate(Doc).match(i={'$gt': 0}).project(n='$i').hint({'i': 1})
+
+    with pytest.raises(pymongo.errors.OperationFailure):
+        list(agg)
 
 
 def test_repr(fake_aggregator):

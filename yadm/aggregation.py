@@ -9,10 +9,11 @@ Mongo Aggregation Framework helper.
 
 class BaseAggregator:
     def __init__(self, db, document_class, *,
-                 pipeline=None, collection_params=None):
+                 pipeline=None, hint=None, collection_params=None):
         self._db = db
         self._document_class = document_class
         self._pipeline = [] if pipeline is None else pipeline
+        self._hint = hint
         self._collection_params = collection_params
 
     def __repr__(self):
@@ -27,8 +28,18 @@ class BaseAggregator:
     def _cursor(self):  # noqa
         """ pymongo aggregate cursor.
         """
+        options = {}
+        if self._hint is not None:
+            options['hint'] = self._hint
+
         collection = self._db._get_collection(self._document_class)
-        return collection.aggregate(self._pipeline)
+        return collection.aggregate(self._pipeline, **options)
+
+    def hint(self, hint):
+        return self.__class__(self._db, self._document_class,
+                              pipeline=self._pipeline,
+                              hint=hint,
+                              collection_params=self._collection_params)
 
 
 class Aggregator(BaseAggregator):
@@ -82,9 +93,13 @@ class AgOperator:
 
         pipeline = self._aggregate._pipeline.copy()
         pipeline.append({self._op: value})
-        return self._aggregate.__class__(self._aggregate._db,
-                                         self._aggregate._document_class,
-                                         pipeline=pipeline)
+        return self._aggregate.__class__(
+            self._aggregate._db,
+            self._aggregate._document_class,
+            pipeline=pipeline,
+            hint=self._aggregate._hint,
+            collection_params=self._aggregate._collection_params,
+        )
 
     def __repr__(self):
         return ("{s.__class__.__name__}"
