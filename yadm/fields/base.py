@@ -210,7 +210,10 @@ class Field:
     def copy(self):  # pragma: no cover
         """ Return copy of field.
         """
-        return self.__class__(smart_null=self.smart_null)
+        return self.__class__(
+            item_field=self.item_field,
+            smart_null=self.smart_null,
+        )
 
     def get_default(self, document):
         """ Return default value.
