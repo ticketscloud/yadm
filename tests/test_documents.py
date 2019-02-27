@@ -14,6 +14,15 @@ class Doc(Document):
     b = fields.BooleanField()
 
 
+class BaseDoc(Document):
+    __collection__ = 'testa'
+    l1 = fields.ListField(fields.ObjectIdField())
+
+
+class ChildDoc(BaseDoc):
+    l2 = fields.ListField(fields.ObjectIdField())
+
+
 @pytest.fixture
 def doc():
     return Doc()
@@ -143,3 +152,13 @@ def test_str():
     doc = Doc()
     assert str(doc)
     assert str(doc) == repr(doc)
+
+
+def test_inheritance_docs_with_list(db):
+    assert BaseDoc.__fields__['l1'].item_field is not None
+    assert ChildDoc.__fields__['l2'].item_field is not None
+    assert ChildDoc.__fields__['l1'].item_field is not None
+
+    doc = ChildDoc()
+    db.save(doc)
+    assert doc
