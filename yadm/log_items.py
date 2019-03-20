@@ -65,4 +65,4 @@ class ChangeChild(NamedTuple):
     path: str
     name: str
     log_item: NamedTuple
-    op: str = 'change_chind'
+    op: str = 'change_child'
