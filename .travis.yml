@@ -10,8 +10,8 @@ services:
     - docker
 
 env:
-    - MONGO=3.6 PYMONGO=">=3.7,<4" MOTOR=">=2.0.0,<2.1.0"
-    - MONGO=4.0 PYMONGO=">=3.7,<4" MOTOR=">=2.0.0,<2.1.0"
+    - MONGO=3.6
+    - MONGO=4.0
 
 before_install:
     - docker run -d -p 127.0.0.1:27017:27017 mongo:$MONGO
@@ -19,9 +19,7 @@ before_install:
 install:
     - travis_retry pip install --retries=30 --timeout=5 --no-cache-dir --disable-pip-version-check -U setuptools
     - travis_retry pip install --retries=30 --timeout=5 --no-cache-dir --disable-pip-version-check -U pip
-    - travis_retry pip install --retries=30 --timeout=5 --no-cache-dir --disable-pip-version-check -U pytest pytest-cov coveralls
-    - travis_retry pip install --retries=30 --timeout=5 --no-cache-dir --disable-pip-version-check pymongo$PYMONGO motor$MOTOR
-    - travis_retry pip install --retries=30 --timeout=5 --no-cache-dir --disable-pip-version-check .
+    - travis_retry pip install --retries=30 --timeout=5 --no-cache-dir --disable-pip-version-check '.[asyncio,test]'
 
 script:
     - py.test -v --cov yadm --cov-report term-missing
