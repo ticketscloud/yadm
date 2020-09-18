@@ -4,10 +4,7 @@ from collections import Counter
 from types import GeneratorType
 
 import pymongo
-try:
-    from faker import Faker
-except ImportError:
-    Faker = None
+from faker import Faker
 
 from yadm.documents import BaseDocument, Document, EmbeddedDocument
 from yadm.markers import AttributeNotSet

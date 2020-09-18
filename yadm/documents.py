@@ -14,11 +14,7 @@ All fields placed in :py:mod:`yadm.fields` package.
 from typing import Union, Optional, Any, Generator, Dict
 
 from bson import ObjectId
-
-try:
-    from faker import Faker
-except ImportError:
-    Faker = None
+from faker import Faker
 
 from yadm.fields.base import Field
 from yadm.fields.simple import ObjectIdField

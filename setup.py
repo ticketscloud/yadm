@@ -22,13 +22,13 @@ setup(
         'zope.dottedname',
         'python-dateutil',
         'pytz',
+        'Faker',
     ],
     extras_require={
         'asyncio': [
             'motor>=2.0.0',
         ],
         'test': [
-            'Faker',
             'pytest',
             'pytest-cov',
             'coveralls'
