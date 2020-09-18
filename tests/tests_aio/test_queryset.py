@@ -264,8 +264,8 @@ def test_find_one_and_delete(loop, db, qs):
 
 def test_hint(loop, db, qs):
     async def test(qs=qs):
-        db.db[Doc.__collection__].create_index([('i', -1)])
-        db.db[Doc.__collection__].create_index([('s', 1)])
+        await db.db[Doc.__collection__].create_index([('i', -1)])
+        await db.db[Doc.__collection__].create_index([('s', 1)])
 
         _qs = qs.hint([('i', -1)])
         async for doc in _qs:
