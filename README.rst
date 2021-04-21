@@ -320,7 +320,7 @@ CHANGES
 
 
 1.4.10 (2017-07-07)
-==================
+===================
 
 * ``ReferenceField.from_mongo`` try to get document from primary
     if not found by default.
