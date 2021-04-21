@@ -235,6 +235,12 @@ Or traditional MongoDB syntax:
 CHANGES
 -------
 
+2.0.7 (2021-04-21)
+==================
+
+* Some bugfixes.
+
+
 2.0.5 (2019-02-25)
 ==================
 
