@@ -1,17 +1,17 @@
 os: linux
-dist: xenial
+dist: focal
 
 language: python
 python:
-    - "3.6"
-    - "3.7"
+    - "3.8"
+    - "3.9"
 
 services:
     - docker
 
 env:
-    - MONGO=3.6
-    - MONGO=4.0
+    - MONGO=4.2
+    - MONGO=4.4
 
 before_install:
     - docker run -d -p 127.0.0.1:27017:27017 mongo:$MONGO
