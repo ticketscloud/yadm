@@ -179,7 +179,7 @@ class Database(BaseDatabase):
 
         raw = to_mongo(document)
         collection = self._get_collection(document, collection_params)
-        collection.find_one_and_replace(
+        document = collection.find_one_and_replace(
             filter={'_id': document.id},
             replacement=raw,
             return_document=pymongo.collection.ReturnDocument.AFTER,

@@ -74,7 +74,7 @@ class AioDatabase(BaseDatabase):
 
         raw = to_mongo(document)
         collection = self._get_collection(document, collection_params)
-        await collection.find_one_and_replace(
+        document = await collection.find_one_and_replace(
             filter={'_id': document.id},
             replacement=raw,
             return_document=pymongo.collection.ReturnDocument.AFTER,
