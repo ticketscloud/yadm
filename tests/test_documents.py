@@ -65,7 +65,7 @@ def test_raw_cache_log(db, doc):
 
     db.save(doc)
 
-    assert not doc.__raw__
+    assert doc.__raw__
     assert len(doc.__log__) == 3
     assert doc.__log__[1] == SetField(name='_id', value=doc.id)
     assert doc.__log__[2] == Save(id=doc.id)
