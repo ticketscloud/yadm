@@ -34,3 +34,18 @@ def test_get(loop, db):
         assert doc.__qs__.cache[(DocRef, ref.id)] is doc.ref
 
     loop.run_until_complete(test())
+
+
+def test_get_reference_from_new_instance(loop, db):
+    async def test():
+        _id = (await db.db.testdocs_ref.insert_one({'i': 13})).inserted_id
+        doc_ref = await db(DocRef).find_one({'_id': _id})
+
+        doc = Doc()
+        doc.ref = doc_ref
+
+        await db.insert_one(doc)
+
+        assert (await doc.ref).id == _id
+
+    loop.run_until_complete(test())

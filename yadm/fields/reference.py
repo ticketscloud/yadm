@@ -32,12 +32,11 @@ Or with asyncio:
 
 """
 from bson import ObjectId
-from bson.errors import InvalidId
 
 from yadm.common import EnclosedDocDescriptor
 from yadm.markers import AttributeNotSet
-from yadm.documents import BaseDocument, Document, DocumentItemMixin
-from yadm.fields.base import Field, pass_null
+from yadm.documents import Document, DocumentItemMixin
+from yadm.fields.base import Field, FieldDescriptor, pass_null
 from yadm.serialize import from_mongo
 from yadm.testing import create_fake
 
@@ -53,11 +52,30 @@ class NotBindingToDatabase(Exception):  # noqa
     """
 
 
+class ReferenceFieldDescriptor(FieldDescriptor):
+
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self.field
+
+        name = self.name
+        if (instance.__db__ is not None
+                and name in instance.__cache__
+                and instance.__db__.aio
+                and isinstance(instance.__cache__[name], Document)):
+            ref = Reference(instance.__cache__[name].id, instance, instance.__class__)
+            ref.document = instance.__cache__[name]
+            return ref
+        else:
+            return super().__get__(instance, owner)
+
+
 class ReferenceField(Field):
     """ Field for work with references.
 
     :param reference_document_class: class for refered documents
     """
+    descriptor_class = ReferenceFieldDescriptor
     reference_document_class = EnclosedDocDescriptor('reference')
 
     def __init__(self, reference_document_class, **kwargs):
@@ -121,7 +139,11 @@ class ReferenceField(Field):
 
         elif document.__db__ is not None:
             if document.__db__.aio:
-                cache[(rdc, value)] = ref = Reference(value, document, self)
+                cache[(rdc, value)] = ref = Reference(
+                    value,
+                    document,
+                    self.reference_document_class,
+                )
                 return ref
             else:
                 qs = document.__db__.get_queryset(rdc, cache=cache)
@@ -152,12 +174,11 @@ class Reference(ObjectId):
     def __init__(self,
                  _id: ObjectId,
                  parent: DocumentItemMixin,
-                 field: ReferenceField):
+                 document_class):
         super().__init__(_id)
         self.parent = parent
-        self.field = field
         self.db = parent.__db__
-        self.document_class = field.reference_document_class
+        self.document_class = document_class
 
     def __repr__(self):
         n = self.__class__.__name__
@@ -168,7 +189,7 @@ class Reference(ObjectId):
     def __await__(self):
         return self.get().__await__()
 
-    async def get(self, force: bool=False):
+    async def get(self, force: bool = False):
         if self.document is None or force:
             self.document = await self.db(self.document_class).find_one(self)
             if self.document is None:  # pragma: no cover
