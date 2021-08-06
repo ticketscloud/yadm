@@ -39,6 +39,7 @@ from yadm.documents import Document, DocumentItemMixin
 from yadm.fields.base import Field, FieldDescriptor, pass_null
 from yadm.serialize import from_mongo
 from yadm.testing import create_fake
+from yadm.aio.testing import aio_create_fake
 
 
 class BrokenReference(Exception):
@@ -88,13 +89,25 @@ class ReferenceField(Field):
         else:
             return AttributeNotSet
 
-    def get_fake(self, document, faker, depth):
-        """ Try create referenced document.
-        """
+    def _get_fake(self, document, faker, depth):
         return create_fake(self.reference_document_class,
                            __db__=document.__db__,
                            __faker__=faker,
                            __depth__=depth)
+
+    async def _get_fake_aio(self, document, faker, depth):
+        return await aio_create_fake(self.reference_document_class,
+                                     __db__=document.__db__,
+                                     __faker__=faker,
+                                     __depth__=depth)
+
+    def get_fake(self, document, faker, depth):
+        """ Try create referenced document.
+        """
+        if document.__db__ is not None and document.__db__.aio:
+            return self._get_fake_aio(document, faker, depth)
+        else:
+            return self._get_fake(document, faker, depth)
 
     def copy(self):
         return self.__class__(self.reference_document_class,
