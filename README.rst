@@ -235,6 +235,12 @@ Or traditional MongoDB syntax:
 CHANGES
 -------
 
+2.0.8 (2021-09-23)
+==================
+
+* Asyncio support for testing.
+
+
 2.0.7 (2021-04-21)
 ==================
 
