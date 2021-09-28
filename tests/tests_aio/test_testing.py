@@ -34,6 +34,20 @@ class EmbeddedDoc(EmbeddedDocument):
     name = StringField()
 
 
+class EmbeddedRefDoc(EmbeddedDocument):
+    __collection__ = 'testdocs'
+
+    ref = ReferenceField('tests.tests_aio.test_testing.SimpleDoc')
+    name = StringField()
+
+
+class EmbeddedRefCircleDoc(EmbeddedDocument):
+    __collection__ = 'testdocs'
+
+    ref = ReferenceField('tests.tests_aio.test_testing.EmbeddedRefCircleDoc')
+    doc = ReferenceField('tests.tests_aio.test_testing.SimpleDoc')
+
+
 @pytest.mark.asyncio()
 async def test_simple(db):
     doc = await create_fake(SimpleDoc)
@@ -91,6 +105,12 @@ class WithEmbeddedDoc(Document):
     emb = EmbeddedDocumentField(EmbeddedDoc)
 
 
+class WithReferenceEmbeddedDoc(Document):
+    __collection__ = 'with_ref_testdocs'
+
+    emb = EmbeddedDocumentField(EmbeddedRefDoc)
+
+
 @pytest.mark.asyncio()
 async def test_embedded():
     doc = await create_fake(WithEmbeddedDoc)
@@ -111,7 +131,7 @@ async def test_embedded_depth_limit():
 class WithReferenceDoc(Document):
     __collection__ = 'with_ref_testdocs'
 
-    ref = ReferenceField('tests.test_testing.SimpleDoc')
+    ref = ReferenceField('tests.tests_aio.test_testing.SimpleDoc')
 
 
 @pytest.mark.asyncio()
@@ -141,7 +161,7 @@ async def test_reference_save(db):
 class WithReferenceCircleDoc(Document):
     __collection__ = 'testdocs'
 
-    self = ReferenceField('tests.test_testing.WithReferenceCircleDoc')
+    self = ReferenceField('tests.tests_aio.test_testing.WithReferenceCircleDoc')
 
 
 @pytest.mark.asyncio()
@@ -194,3 +214,78 @@ async def test_complex_fake_dict():
 
     assert doc.i == 14
     assert doc.s == 'string'
+
+
+@pytest.mark.asyncio()
+async def test_embedded_with_ref():
+    doc = await create_fake(WithReferenceEmbeddedDoc)
+
+    ref_doc = doc.emb.ref
+    assert isinstance(ref_doc.b, bool)
+
+
+@pytest.mark.asyncio()
+async def test_embedded_with_ref_with_save(db):
+    doc_id = (await create_fake(WithReferenceEmbeddedDoc, db)).id
+
+    assert await db(WithReferenceEmbeddedDoc).count_documents() == 1
+    assert await db(SimpleDoc).count_documents() == 1
+
+    doc = await db(WithReferenceEmbeddedDoc).find_one(doc_id)
+
+    ref_doc = await doc.emb.ref
+    assert isinstance(ref_doc.b, bool)
+
+
+class EmbeddedLevel2RefDoc(EmbeddedDocument):
+    ref = ReferenceField('tests.tests_aio.test_testing.SimpleDoc')
+    name = StringField()
+
+
+class EmbeddedLevel1RefDoc(EmbeddedDocument):
+    emb = EmbeddedDocumentField(EmbeddedLevel2RefDoc)
+    ref = ReferenceField('tests.tests_aio.test_testing.SimpleDoc')
+    name = StringField()
+
+
+class WithReferenceDeepEmbeddedDoc(Document):
+    __collection__ = 'with_ref_testdocs'
+
+    emb = EmbeddedDocumentField(EmbeddedLevel1RefDoc)
+    name = StringField()
+
+
+@pytest.mark.asyncio()
+async def test_embedded_with_ref_deep_with_save(db):
+    doc_id = (await create_fake(WithReferenceDeepEmbeddedDoc, db, __depth__=3)).id
+
+    assert await db(WithReferenceDeepEmbeddedDoc).count_documents() == 1
+    assert await db(SimpleDoc).count_documents() == 2
+
+    doc = await db(WithReferenceDeepEmbeddedDoc).find_one(doc_id)
+
+    ref_doc = await doc.emb.ref
+    assert isinstance(ref_doc.b, bool)
+
+    ref_doc = await doc.emb.emb.ref
+    assert isinstance(ref_doc.b, bool)
+
+
+#
+class SimpleEmbedded(EmbeddedDocument):
+    first_name = StringField()
+    last_name = StringField()
+
+
+class WithSyncEmbeddedDoc(Document):
+    __collection__ = 'testdocs'
+    emb = EmbeddedDocumentField(EmbeddedLevel2RefDoc)
+    names = EmbeddedDocumentField(SimpleEmbedded)
+
+
+@pytest.mark.asyncio()
+async def test_embedded_2(db):
+    doc_id = (await create_fake(WithSyncEmbeddedDoc, db)).id
+
+    doc = await db(WithSyncEmbeddedDoc).find_one(doc_id)
+    assert isinstance(doc.names.first_name, str)
