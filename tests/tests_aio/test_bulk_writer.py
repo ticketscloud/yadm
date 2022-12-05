@@ -32,6 +32,7 @@ async def test_insert_one(db, batch_size):
 @pytest.mark.parametrize('batch_size', [3, BATCH_SIZE])
 @pytest.mark.asyncio
 async def test_complex(db, inserted, batch_size):
+    inserted = await inserted
     async with db.bulk_write(Doc, batch_size=batch_size) as writer:
         for doc in (Doc(i=i) for i in range(10, 20)):
             await writer.insert_one(doc)

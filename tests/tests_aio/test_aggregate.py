@@ -32,4 +32,11 @@ async def test_async_for(db, docs):
         assert item['n'] > 0
         count += 1
 
+    assert count == 0
+
+    docs = await docs
+    async for item in agg:
+        assert item['n'] > 0
+        count += 1
+
     assert count == len([d.i for d in docs if d.i > 0])
