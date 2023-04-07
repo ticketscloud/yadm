@@ -96,3 +96,9 @@ class TestEnumStateField:
     def test_initial_value__raises(self):
         with pytest.raises(EnumStateInvalidInitial):
             doc = self.Doc(e=WordsEnum.b)
+
+    def test_derive(self):
+        class Derived(self.__class__.Doc):
+            pass
+        doc = Derived()
+        assert doc.e == WordsEnum.a

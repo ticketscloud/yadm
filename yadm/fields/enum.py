@@ -44,7 +44,10 @@ class EnumStateField(EnumField):
     rules = None
 
     def __init__(self, enum, rules=None, start=AttributeNotSet, **kwargs):
-        super().__init__(enum, default=start, **kwargs)
+        if 'default' not in kwargs:
+            kwargs = {'default': start, **kwargs}
+
+        super().__init__(enum, **kwargs)
 
         if rules is not None:
             self.rules = rules
