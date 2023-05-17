@@ -15,7 +15,7 @@ setup(
     author='Zelenyak "ZZZ" Alexander',
     author_email='zzz.sochi@gmail.com',
     url='https://github.com/zzzsochi/yadm',
-    license='BSD',
+    license='MIT',
     platforms='any',
     install_requires=[
         'pymongo>=3.7.0',
