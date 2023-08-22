@@ -9,11 +9,12 @@ Mongo Aggregation Framework helper.
 
 class BaseAggregator:
     def __init__(self, db, document_class, *,
-                 pipeline=None, hint=None, collection_params=None):
+                 pipeline=None, hint=None, comment=None, collection_params=None):
         self._db = db
         self._document_class = document_class
         self._pipeline = [] if pipeline is None else pipeline
         self._hint = hint
+        self._comment = comment
         self._collection_params = collection_params
 
     def __repr__(self):
@@ -32,6 +33,9 @@ class BaseAggregator:
         if self._hint is not None:
             options['hint'] = self._hint
 
+        if self._comment is not None:
+            options['comment'] = self._comment
+
         collection = self._db._get_collection(self._document_class)
         return collection.aggregate(self._pipeline, **options)
 
@@ -39,6 +43,14 @@ class BaseAggregator:
         return self.__class__(self._db, self._document_class,
                               pipeline=self._pipeline,
                               hint=hint,
+                              comment=self._comment,
+                              collection_params=self._collection_params)
+
+    def comment(self, comment):
+        return self.__class__(self._db, self._document_class,
+                              pipeline=self._pipeline,
+                              hint=self._hint,
+                              comment=comment,
                               collection_params=self._collection_params)
 
 
@@ -98,6 +110,7 @@ class AgOperator:
             self._aggregate._document_class,
             pipeline=pipeline,
             hint=self._aggregate._hint,
+            comment=self._aggregate._comment,
             collection_params=self._aggregate._collection_params,
         )
 

@@ -28,7 +28,7 @@ def test_lookup(db):
         })
 
     qs = db(Doc).find({'i': {'$gte': 6}}).fields('s', 'ref')
-    qs = qs.sort(('i', 1)).batch_size(10)
+    qs = qs.comment('qwerty').sort(('i', 1)).batch_size(10)
     docs = [d for d in qs.lookup('ref')]
 
     assert len(docs) == 4

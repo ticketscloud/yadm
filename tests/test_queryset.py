@@ -216,6 +216,14 @@ def test_hint(db, qs):
         len(_qs)
 
 
+def test_comment(db, qs):
+    _qs = qs.comment('qwerty')
+    assert list(_qs)
+
+    _qs = qs.comment(None)
+    assert list(_qs)
+
+
 def test_sort(qs):
     qs = qs.find({'i': {'$gte': 6}}).sort(('i', -1))
     assert [d.i for d in qs] == [9, 8, 7, 6]

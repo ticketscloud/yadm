@@ -1,6 +1,7 @@
 from random import randint
 
 import pytest
+import pytest_asyncio
 
 from yadm import Document
 from yadm import fields
@@ -11,8 +12,8 @@ class Doc(Document):
     i = fields.IntegerField()
 
 
-@pytest.fixture(scope='function')
-async def docs(db):
+@pytest_asyncio.fixture(scope='function')
+async def docs2(db):
     async with db.bulk_write(Doc) as writer:
         docs = []
         for n in range(randint(10, 20)):
@@ -24,12 +25,13 @@ async def docs(db):
 
 
 @pytest.mark.asyncio
-async def test_async_for(db, docs):
+async def test_async_for(event_loop, db, docs2):
     agg = db.aggregate(Doc).match(i={'$gt': 0}).project(n='$i')
+    agg = agg.comment('qwerty')
     count = 0
 
     async for item in agg:
         assert item['n'] > 0
         count += 1
 
-    assert count == len([d.i for d in docs if d.i > 0])
+    assert count == len([d.i for d in docs2 if d.i > 0])

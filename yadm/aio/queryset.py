@@ -108,6 +108,9 @@ class AioQuerySet(BaseQuerySet):
         if self._hint is not None:
             kwargs['hint'] = self._hint
 
+        if self._comment is not None:
+            kwargs['comment'] = self._comment
+
         return await self._collection.count_documents(self._criteria, **kwargs)
 
     async def distinct(self, field):
