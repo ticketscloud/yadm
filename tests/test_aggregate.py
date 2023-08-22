@@ -122,6 +122,17 @@ def test_hint_error(db, docs):
         list(agg)
 
 
+def test_comment(db, docs):
+    agg = db.aggregate(Doc).match(i={'$gt': 0}).project(n='$i').comment('qwerty')
+    count = 0
+
+    for item in agg:
+        assert item['n'] > 0
+        count += 1
+
+    assert count == len([d.i for d in docs if d.i > 0])
+
+
 def test_repr(fake_aggregator):
     assert 'Aggregator' in repr(fake_aggregator)
     assert 'col' in repr(fake_aggregator)

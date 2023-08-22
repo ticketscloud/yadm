@@ -1,6 +1,6 @@
 from collections import OrderedDict
 from enum import Enum
-from typing import Union, Dict, List, Tuple
+from typing import Union, List, Tuple
 import warnings
 
 from pymongo import read_preferences, ReturnDocument
@@ -31,7 +31,7 @@ class BaseQuerySet:
     """
     def __init__(self, db, document_class, *,
                  cache=None, criteria=None, projection=None, hint=None, sort=None,
-                 lookup=None, slice=None,
+                 comment=None, lookup=None, slice=None,
                  batch_size=None, collection_params=None):
 
         self._db = db
@@ -40,6 +40,7 @@ class BaseQuerySet:
         self._criteria = criteria or {}
         self._projection = projection
         self._hint = hint
+        self._comment = comment
         self._sort = sort
         self._lookup = lookup or frozenset()
         self._slice = slice
@@ -48,8 +49,8 @@ class BaseQuerySet:
 
     def __repr__(self):
         return ("{s.__class__.__name__}({s._document_class.__collection__}"
-                " {s._criteria!r} {s._projection!r} {s._hint!r} {s._sort!r})"
-                "".format(s=self))
+                " {s._criteria!r} {s._projection!r} {s._hint!r} {s._comment!r}"
+                " {s._sort!r})".format(s=self))
 
     def __call__(self, criteria=None, projection=None):  # pragma: no cover
         return self.find(criteria, projection)
@@ -119,6 +120,7 @@ class BaseQuerySet:
                 self._criteria,
                 self._projection or None,
                 self._hint,
+                self._comment,
                 self._sort,
                 self._slice,
                 self._batch_size,
@@ -132,6 +134,7 @@ class BaseQuerySet:
                 self._collection,
                 self._criteria,
                 self._projection or None,
+                self._comment,
                 self._sort,
                 self._lookup,
                 self._slice,
@@ -140,11 +143,14 @@ class BaseQuerySet:
 
     @staticmethod
     def _get_cursor_find(collection, criteria, projection,
-                         hint, sort, slice, batch_size):
+                         hint, comment, sort, slice, batch_size):
         cursor = collection.find(criteria, projection)
 
         if hint is not None:
             cursor = cursor.hint(hint)
+
+        if comment is not None:
+            cursor = cursor.comment(comment)
 
         if sort is not None:
             cursor = cursor.sort(sort)
@@ -162,7 +168,7 @@ class BaseQuerySet:
         return cursor
 
     @staticmethod
-    def _get_cursor_aggregation(collection, criteria, projection,
+    def _get_cursor_aggregation(collection, criteria, projection, comment,
                                 sort, lookup, slice, batch_size):
         pipeline = []
 
@@ -181,11 +187,14 @@ class BaseQuerySet:
                 {'$unwind': f'${LOOKUPS_KEY}.{field_name}'},
             ])
 
-
         if sort:
             pipeline.append({'$sort': OrderedDict(sort)})
 
-        cursor = collection.aggregate(pipeline)
+        kwargs = {}
+        if comment:
+            kwargs['comment'] = comment
+
+        cursor = collection.aggregate(pipeline, **kwargs)
 
         if batch_size is not None:
             cursor = cursor.batch_size(batch_size)
@@ -202,7 +211,7 @@ class BaseQuerySet:
         return self._cache
 
     def copy(self, *, cache=None, criteria=None, projection=None,
-             hint=None, sort=None, lookup=None, slice=None,
+             hint=None, comment=None, sort=None, lookup=None, slice=None,
              batch_size=None, collection_params=None):
         """ Copy queryset with new parameters.
 
@@ -215,6 +224,7 @@ class BaseQuerySet:
             criteria=criteria or self._criteria,
             projection=projection or self._projection,
             hint=hint or self._hint,
+            comment=comment or self._comment,
             sort=sort or self._sort,
             lookup=lookup or self._lookup,
             slice=slice or self._slice,
@@ -308,6 +318,13 @@ class BaseQuerySet:
         """
         return self.copy(hint=index)
 
+    def comment(self, comment: str) -> 'BaseQuerySet':
+        """ Return queryset with commenting.
+
+            qs = qs.comment('qwerty')
+        """
+        return self.copy(comment=comment)
+
     def sort(self, *sort: Tuple[Tuple[str, int]]) -> 'BaseQuerySet':
         """ Return queryset with sorting.
 
@@ -388,7 +405,6 @@ class BaseQuerySet:
 
     def count_documents(self):
         raise NotImplementedError  # pragma: no cover
-
 
     def distinct(self, field):
         raise NotImplementedError  # pragma: no cover
@@ -530,8 +546,10 @@ class QuerySet(BaseQuerySet):
         if self._hint is not None:
             kwargs['hint'] = self._hint
 
-        return self._collection.count_documents(self._criteria, **kwargs)
+        if self._comment is not None:
+            kwargs['comment'] = self._comment
 
+        return self._collection.count_documents(self._criteria, **kwargs)
 
     def distinct(self, field):
         """ Distinct query.

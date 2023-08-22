@@ -1,5 +1,5 @@
 import pytest
-
+import pytest_asyncio
 
 from yadm.documents import Document
 from yadm.fields import IntegerField
@@ -11,7 +11,7 @@ class Doc(Document):
     i = IntegerField()
 
 
-@pytest.fixture(scope='function')
+@pytest_asyncio.fixture(scope='function')
 async def inserted(db):
     documents = [Doc(i=i) for i in range(10)]
     await db.insert_many(documents)

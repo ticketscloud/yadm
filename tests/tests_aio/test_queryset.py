@@ -251,6 +251,16 @@ async def test_hint(db, qs):
 
 
 @pytest.mark.asyncio
+async def test_comment(db, qs):
+    _qs = qs.comment('qwerty')
+    async for doc in _qs:
+        assert doc
+
+    _qs = qs.comment(None)
+    assert await _qs.count_documents()
+
+
+@pytest.mark.asyncio
 async def test_distinct(db, qs):
     res = await qs.distinct('i')
     assert isinstance(res, list)
