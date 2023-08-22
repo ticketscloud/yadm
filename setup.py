@@ -30,6 +30,7 @@ setup(
         ],
         'test': [
             'pytest',
+            'pytest-asyncio',
             'pytest-cov',
             'coveralls'
         ]
