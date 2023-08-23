@@ -235,6 +235,11 @@ Or traditional MongoDB syntax:
 CHANGES
 -------
 
+2.0.9 (2023-08-23)
+==================
+
+* Add ``comment`` methods for ``QuerySet`` and ``Aggregation`` to specify comment feature of MongoDB.
+
 2.0.8 (2021-09-23)
 ==================
 
