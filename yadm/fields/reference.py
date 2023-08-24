@@ -31,6 +31,8 @@ Or with asyncio:
     assert doc.rdoc == rdoc.id
 
 """
+from typing import Any
+
 from bson import ObjectId
 
 from yadm.common import EnclosedDocDescriptor
@@ -175,7 +177,7 @@ class ReferenceField(Field):
         return value.id
 
 
-class Reference(ObjectId):
+class Reference:
     """ Reference object.
 
     This is awaitable:
@@ -185,27 +187,28 @@ class Reference(ObjectId):
     document = None
 
     def __init__(self,
-                 _id: ObjectId,
+                 _id: Any,
                  parent: DocumentItemMixin,
                  document_class):
-        super().__init__(_id)
+        self._id = _id
         self.parent = parent
         self.db = parent.__db__
         self.document_class = document_class
 
     def __repr__(self):
-        n = self.__class__.__name__
         collection = self.document_class.__collection__
         status = '+' if self.document is not None else '-'
-        return "{}({}:{} {})".format(n, collection, str(self), status)
+        return "_id({}:{}{} {})".format(
+            collection, str(type(self._id)), self._id, status
+        )
 
     def __await__(self):
         return self.get().__await__()
 
     async def get(self, force: bool = False):
         if self.document is None or force:
-            self.document = await self.db(self.document_class).find_one(self)
+            self.document = await self.db(self.document_class).find_one({'_id': self._id})
             if self.document is None:  # pragma: no cover
-                self.document = await self.db.get_document(self.document_class, self)
+                self.document = await self.db.get_document(self.document_class, self._id)
 
         return self.document

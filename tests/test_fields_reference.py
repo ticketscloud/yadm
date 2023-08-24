@@ -6,6 +6,11 @@ from yadm.documents import Document, EmbeddedDocument
 from yadm import fields
 
 
+class DocRefIntId(Document):
+    __collection__ = 'testdocs_ref_int_id'
+    _id = fields.IntegerField()
+
+
 class DocRef(Document):
     __collection__ = 'testdocs_ref'
 
@@ -13,6 +18,7 @@ class DocRef(Document):
 class Doc(Document):
     __collection__ = 'testdocs'
     ref = fields.ReferenceField(DocRef)
+    ref_int = fields.ReferenceField(DocRefIntId)
 
 
 def test_get(db):
@@ -24,6 +30,17 @@ def test_get(db):
     assert doc._id == id
     assert isinstance(doc.ref, Document)
     assert doc.ref._id == id_ref
+
+
+def test_get_by_ref_int_id(db):
+    id_ref = db.db.testdocs_ref_int_id.insert_one({'_id': 1}).inserted_id
+    id = db.db.testdocs.insert_one({'ref_int': id_ref}).inserted_id
+
+    doc = db.get_queryset(Doc).find_one(id)
+
+    assert doc._id == id
+    assert isinstance(doc.ref_int, Document)
+    assert doc.ref_int._id == id_ref
 
 
 def test_get_broken(db):
